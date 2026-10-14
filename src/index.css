@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom pulse animations for team markers on Leaflet */
+@keyframes team-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--team-rgb, 239, 68, 68), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(var(--team-rgb, 239, 68, 68), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--team-rgb, 239, 68, 68), 0);
+  }
+}
+
+.team-radar-pin {
+  animation: team-pulse 2s infinite;
+}
+
+/* Custom Leaflet popup styling */
+.leaflet-popup-content-wrapper {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 6px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: #1e293b !important;
+}
