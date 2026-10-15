@@ -13,6 +13,7 @@ import { useGeolocation } from './hooks/useGeolocation.ts';
 import { PlayerHuntView } from './components/Player/PlayerHuntView.tsx';
 import { JoinTeamModal } from './components/Player/JoinTeamModal.tsx';
 import { GMDashboard } from './components/GM/GMDashboard.tsx';
+import { UserGuideSection } from './components/Home/UserGuideSection.tsx';
 import { Shield, Smartphone, ArrowRight, Lock, MapPin } from 'lucide-react';
 
 const LS_GM_AUTH = 'HERITAGE_GM_AUTH';
@@ -307,7 +308,7 @@ export const App: React.FC = () => {
       {/* 1. HOME / LANDING SCREEN (If on homepage with direct GM Login) */}
       {/* ========================================================================= */}
       {role === 'home' && (
-        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full text-center">
+        <div className="flex-1 overflow-y-auto py-8 px-4 sm:px-6 max-w-4xl mx-auto w-full flex flex-col items-center text-center">
           <div className="inline-flex p-4 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-400 mb-4 shadow-xl">
             <MapPin className="w-12 h-12" />
           </div>
@@ -319,7 +320,7 @@ export const App: React.FC = () => {
             An interactive outdoor photo scavenger hunt across Jonker Street, Dutch Square, A Famosa, Jalan Tokong, and St. Paul's Hill.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-xl text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl text-left">
             {/* Player Entry Card */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
               <div>
@@ -367,6 +368,9 @@ export const App: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Simple User Guide Covering GM and Player */}
+          <UserGuideSection />
         </div>
       )}
 
