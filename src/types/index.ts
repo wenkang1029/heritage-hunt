@@ -81,6 +81,8 @@ export interface TeamMember {
   nickname: string;
   joinedAt: number | string;
   isLeader?: boolean;
+  lastSeenAt?: number;
+  isOnline?: boolean;
 }
 
 export interface Team {

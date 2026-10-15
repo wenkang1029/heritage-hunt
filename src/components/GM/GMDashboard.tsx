@@ -7,11 +7,12 @@
  * zone configuration, and EXIF GPS bulk photo uploader.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import type {
   Game,
   Team,
+  TeamMember,
   Clue,
   Submission,
   GameStatus,
@@ -45,6 +46,7 @@ import {
   MousePointerClick,
   Maximize2,
   Square,
+  AlertTriangle,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 
@@ -105,6 +107,10 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   // Bulk Clue Upload State
   const [isUploadingClues, setIsUploadingClues] = useState<boolean>(false);
   const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
+
+  // Force Stop Game Confirmation Modal
+  const [showForceStopModal, setShowForceStopModal] = useState<boolean>(false);
+  const [pendingStatus, setPendingStatus] = useState<GameStatus | null>(null);
 
   // Zone Editing & Visual Map Plotting State
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
@@ -191,31 +197,59 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     }
   };
 
-  // Active players and team counts
+  // Real-time active players and online tab detection
+  const isMemberOnline = useCallback((member: TeamMember, team: Team) => {
+    if (member.isOnline === false) return false;
+    if (member.lastSeenAt) {
+      return Date.now() - Number(member.lastSeenAt) < 60000;
+    }
+    // Fallback: check team's lastActiveAt within last 60 seconds
+    if (team.lastActiveAt) {
+      const teamTime =
+        typeof team.lastActiveAt === 'number'
+          ? team.lastActiveAt
+          : new Date(team.lastActiveAt).getTime();
+      return Date.now() - teamTime < 60000;
+    }
+    return false;
+  }, []);
+
   const totalPlayersJoined = useMemo(
     () => teams.reduce((acc, t) => acc + (t.members ? t.members.length : 0), 0),
     [teams]
   );
 
-  const teamsWithPlayers = useMemo(
-    () => teams.filter((t) => t.members && t.members.length > 0),
-    [teams]
-  );
+  // Compute live active online players across all teams (tabs currently open)
+  const activeOnlinePlayers = useMemo(() => {
+    const list: { member: TeamMember; team: Team }[] = [];
+    teams.forEach((t) => {
+      if (t.members && Array.isArray(t.members)) {
+        t.members.forEach((m) => {
+          if (isMemberOnline(m, t)) {
+            list.push({ member: m, team: t });
+          }
+        });
+      }
+    });
+    return list;
+  }, [teams, isMemberOnline]);
 
-  const hasActivePlayers = totalPlayersJoined > 0;
+  const onlinePlayersCount = activeOnlinePlayers.length;
+  const hasActiveOnlinePlayers = onlinePlayersCount > 0;
 
-  // Handle Game Status Change (guarded against stopping ongoing games with active players)
-  const handleStatusChange = async (newStatus: GameStatus) => {
-    const isStoppingAction = newStatus !== 'active';
-    if (isStoppingAction && (game.status === 'active' || hasActivePlayers)) {
-      alert(
-        `Action Blocked: Cannot stop or pause the game while there is an ongoing game or players in the team (${totalPlayersJoined} active player(s) in ${teamsWithPlayers.length} team(s)).\n\nAll participants must finish and exit before the game can be stopped.`
-      );
+  // Handle Game Status Change
+  const handleStatusChange = async (newStatus: GameStatus, force: boolean = false) => {
+    const isStoppingAction = newStatus === 'ended' || newStatus === 'paused';
+    if (isStoppingAction && hasActiveOnlinePlayers && !force) {
+      setPendingStatus(newStatus);
+      setShowForceStopModal(true);
       return;
     }
 
     try {
       await gameService.updateGameStatus(game.id, newStatus);
+      setShowForceStopModal(false);
+      setPendingStatus(null);
     } catch (err: any) {
       alert('Failed to update game status: ' + err.message);
     }
@@ -496,14 +530,30 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             <span>New Game</span>
           </button>
 
-          {/* Active players stop protection indicator */}
-          {game.status === 'active' && hasActivePlayers && (
+          {/* Active players online status indicator */}
+          {game.status === 'active' && (
             <span
-              className="hidden md:flex items-center gap-1.5 text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-xl font-bold"
-              title="Stopping or pausing the game is blocked while players are actively in teams"
+              className={`hidden md:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-xl font-bold border transition-colors ${
+                hasActiveOnlinePlayers
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-800 text-slate-400 border-slate-700'
+              }`}
+              title={
+                hasActiveOnlinePlayers
+                  ? `${onlinePlayersCount} of ${totalPlayersJoined} total player(s) currently online with tabs open`
+                  : `All ${totalPlayersJoined} player tabs are closed / offline (Game can be stopped freely)`
+              }
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{totalPlayersJoined} Player(s) Active (Stop Protected)</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  hasActiveOnlinePlayers ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                }`}
+              />
+              <span>
+                {hasActiveOnlinePlayers
+                  ? `${onlinePlayersCount} Player(s) Online`
+                  : '0 Online (Ready to Stop)'}
+              </span>
             </span>
           )}
 
@@ -519,17 +569,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleStatusChange('paused')}
-                disabled={hasActivePlayers}
-                title={
-                  hasActivePlayers
-                    ? `Cannot pause game: ${totalPlayersJoined} player(s) are in teams`
-                    : 'Pause Game'
-                }
-                className={`font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors ${
-                  hasActivePlayers
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50'
-                    : 'bg-amber-600 hover:bg-amber-500 text-white cursor-pointer'
-                }`}
+                title="Pause Game"
+                className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
               >
                 <Pause className="w-3.5 h-3.5" />
                 <span>Pause</span>
@@ -537,17 +578,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <button
                 onClick={() => handleStatusChange('ended')}
-                disabled={hasActivePlayers}
-                title={
-                  hasActivePlayers
-                    ? `Cannot stop game: ${totalPlayersJoined} player(s) are in teams`
-                    : 'Stop Game'
-                }
-                className={`font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors ${
-                  hasActivePlayers
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50'
-                    : 'bg-rose-600 hover:bg-rose-500 text-white cursor-pointer'
-                }`}
+                title={hasActiveOnlinePlayers ? `Stop Game (${onlinePlayersCount} online)` : 'Stop Game'}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
               >
                 <Square className="w-3.5 h-3.5" />
                 <span>Stop Game</span>
@@ -1075,11 +1107,36 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       <QRCodeSVG value={teamJoinUrl} size={140} level="M" />
                     </div>
 
-                    <div className="text-[11px] text-slate-400 mb-1">
+                    <div className="text-[11px] text-slate-400 mb-1 w-full">
                       {hasPlayers ? (
-                        <span className="text-emerald-400 font-bold">
-                          ● {t.members.length} player(s) joined
-                        </span>
+                        <div className="space-y-1.5">
+                          <span className="text-emerald-400 font-bold block">
+                            ● {t.members.length} player(s) joined
+                          </span>
+                          <div className="flex flex-wrap items-center justify-center gap-1">
+                            {t.members.map((m) => {
+                              const online = isMemberOnline(m, t);
+                              return (
+                                <span
+                                  key={m.id || m.nickname}
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${
+                                    online
+                                      ? 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40 shadow-sm'
+                                      : 'bg-slate-800/80 text-slate-400 border-slate-700/60'
+                                  }`}
+                                  title={online ? 'Online now' : 'Tab closed / Offline'}
+                                >
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      online ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                                    }`}
+                                  />
+                                  <span>{m.nickname}</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
                       ) : (
                         <span className="text-slate-500">No players yet (Can be deleted)</span>
                       )}
@@ -1475,6 +1532,70 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Force Stop Game Confirmation Modal */}
+      {showForceStopModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-white">Active Players Detected</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Some participants still have their game tab open.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Currently Connected ({onlinePlayersCount}):
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+                {activeOnlinePlayers.map(({ member, team }) => (
+                  <span
+                    key={`${team.id}_${member.id || member.nickname}`}
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium bg-slate-900 border border-slate-700 text-slate-200"
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full ring-1 ring-white/30 shrink-0"
+                      style={{ background: team.color }}
+                    />
+                    <span>{member.nickname}</span>
+                    <span className="text-[10px] text-slate-400">({team.name})</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 mb-5">
+              Stopping the game will end the hunt for everyone. Are you sure you want to stop the game now?
+            </p>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForceStopModal(false);
+                  setPendingStatus(null);
+                }}
+                className="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs cursor-pointer transition-colors"
+              >
+                Keep Game Running
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusChange(pendingStatus || 'ended', true)}
+                className="w-1/2 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg cursor-pointer transition-colors"
+              >
+                Force Stop Game
+              </button>
+            </div>
           </div>
         </div>
       )}

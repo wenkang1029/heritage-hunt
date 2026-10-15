@@ -24,6 +24,7 @@ interface PlayerSession {
   teamId: string;
   nickname: string;
   pin: string;
+  playerId?: string;
 }
 
 export const App: React.FC = () => {
@@ -37,6 +38,7 @@ export const App: React.FC = () => {
   // Player session state
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
   const [playerNickname, setPlayerNickname] = useState<string>('');
+  const [playerId, setPlayerId] = useState<string>('');
   const [isJoining, setIsJoining] = useState<boolean>(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
@@ -137,6 +139,9 @@ export const App: React.FC = () => {
               if (matchedTeam) {
                 setCurrentTeam(matchedTeam);
                 setPlayerNickname(savedSession.nickname);
+                if (savedSession.playerId) {
+                  setPlayerId(savedSession.playerId);
+                }
               }
             }
           } catch {
@@ -181,9 +186,10 @@ export const App: React.FC = () => {
     try {
       setIsJoining(true);
       setJoinError(null);
-      const { team } = await gameService.joinTeamByPin(game.id, pin, nickname);
+      const { team, playerId: assignedPlayerId } = await gameService.joinTeamByPin(game.id, pin, nickname);
       setCurrentTeam(team);
       setPlayerNickname(nickname);
+      setPlayerId(assignedPlayerId);
 
       // Save player session so refreshing never logs them out!
       const session: PlayerSession = {
@@ -191,6 +197,7 @@ export const App: React.FC = () => {
         teamId: team.id,
         nickname,
         pin,
+        playerId: assignedPlayerId,
       };
       localStorage.setItem(LS_PLAYER_SESSION, JSON.stringify(session));
       updateUrlParams({ game: game.id, pin });
@@ -239,9 +246,9 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col">
+    <div className="h-[100dvh] max-h-[100dvh] bg-slate-950 flex flex-col overflow-hidden text-slate-100 font-sans antialiased selection:bg-rose-500 selection:text-white">
       {/* Universal Status & Perspective Bar */}
-      <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-1.5 flex items-center justify-between text-xs z-50">
+      <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-1.5 flex items-center justify-between text-xs shrink-0 z-50">
         <div className="flex items-center gap-2">
           <span className="flex h-2 w-2 relative">
             <span
@@ -300,7 +307,7 @@ export const App: React.FC = () => {
       {/* 1. HOME / LANDING SCREEN (If on homepage with direct GM Login) */}
       {/* ========================================================================= */}
       {role === 'home' && (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full text-center">
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 max-w-3xl mx-auto w-full text-center">
           <div className="inline-flex p-4 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-400 mb-4 shadow-xl">
             <MapPin className="w-12 h-12" />
           </div>
@@ -367,14 +374,16 @@ export const App: React.FC = () => {
       {/* 2. GM WAR ROOM */}
       {/* ========================================================================= */}
       {role === 'gm' && (
-        <GMDashboard
-          game={game}
-          teams={teams}
-          clues={clues}
-          submissions={submissions}
-          onGameChange={handleGameChange}
-          onLogout={handleLogoutGm}
-        />
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <GMDashboard
+            game={game}
+            teams={teams}
+            clues={clues}
+            submissions={submissions}
+            onGameChange={handleGameChange}
+            onLogout={handleLogoutGm}
+          />
+        </div>
       )}
 
       {/* ========================================================================= */}
@@ -397,6 +406,7 @@ export const App: React.FC = () => {
             submissions={submissions}
             playerCoords={playerCoords}
             nickname={playerNickname}
+            playerId={playerId}
           />
         )
       )}

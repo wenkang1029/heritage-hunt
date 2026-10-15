@@ -40,6 +40,7 @@ export interface PlayerHuntViewProps {
   submissions: Submission[];
   playerCoords: GeoCoordinate | null;
   nickname: string;
+  playerId?: string;
 }
 
 export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
@@ -50,6 +51,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   submissions,
   playerCoords,
   nickname,
+  playerId,
 }) => {
   const [activeTab, setActiveTab] = useState<'map' | 'clues' | 'leaderboard'>('map');
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
@@ -87,6 +89,47 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       previousCompletedCountRef.current = currentCompleted;
     }
   }, [currentTeam.completedClueIds, currentTeam.color]);
+
+  // Real-time Presence Heartbeat & Auto-detection of Tab Closure / Turn-off
+  useEffect(() => {
+    const pId = playerId || `player_${nickname}`;
+
+    // 1. Send initial heartbeat immediately
+    gameService.updatePlayerHeartbeat(game.id, currentTeam.id, pId, nickname);
+
+    // 2. Periodic heartbeat every 20 seconds while tab is active
+    const heartbeatTimer = setInterval(() => {
+      if (document.visibilityState !== 'hidden') {
+        gameService.updatePlayerHeartbeat(game.id, currentTeam.id, pId, nickname);
+      }
+    }, 20000);
+
+    // 3. Auto-detect when player closes tab or navigates away
+    const handleTabClose = () => {
+      gameService.markPlayerOffline(game.id, currentTeam.id, pId, nickname);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        gameService.updatePlayerHeartbeat(game.id, currentTeam.id, pId, nickname);
+      } else {
+        // Tab backgrounded or turned off
+        gameService.markPlayerOffline(game.id, currentTeam.id, pId, nickname);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleTabClose);
+    window.addEventListener('pagehide', handleTabClose);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(heartbeatTimer);
+      window.removeEventListener('beforeunload', handleTabClose);
+      window.removeEventListener('pagehide', handleTabClose);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      handleTabClose();
+    };
+  }, [game.id, currentTeam.id, playerId, nickname]);
 
   // Derived sets
   const completedClueIds = useMemo(
@@ -181,9 +224,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto bg-slate-950 text-slate-100 overflow-hidden relative">
+    <div className="flex-1 min-h-0 w-full max-w-lg mx-auto bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
       {/* 1. Mobile Header & Scoreboard */}
-      <header className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg z-20">
+      <header className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg z-30">
         <div className="flex items-center gap-2.5">
           <span
             className="w-4 h-4 rounded-full ring-2 ring-white/40 shadow-sm shrink-0"
@@ -231,9 +274,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       )}
 
       {/* 2. Main Content Area */}
-      <main className="flex-1 w-full h-full relative overflow-hidden">
+      <main className="flex-1 min-h-0 w-full relative overflow-hidden pb-16">
         {activeTab === 'map' && (
-          <div className="absolute inset-0 w-full h-full">
+          <div className="absolute inset-0 w-full h-full pb-16">
             <HuntMap
               zones={game.zones}
               clues={clues}
@@ -243,12 +286,13 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               completedClueIds={Array.from(completedClueIds)}
               onSelectClue={handleOpenNativeCamera}
               className="h-full w-full rounded-none border-none"
+              bottomOffsetClass="bottom-20"
             />
           </div>
         )}
 
         {activeTab === 'clues' && (
-          <div className="h-full overflow-y-auto p-4 space-y-4 pb-20">
+          <div className="h-full overflow-y-auto p-4 space-y-4 pb-28">
             {/* Zone Filter Chips */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
               <button
@@ -381,7 +425,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         )}
 
         {activeTab === 'leaderboard' && (
-          <div className="h-full overflow-y-auto p-4 pb-20">
+          <div className="h-full overflow-y-auto p-4 pb-28">
             <div className="text-center mb-4">
               <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-1" />
               <h2 className="text-lg font-black text-white">Live Leaderboard</h2>
@@ -443,36 +487,49 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         )}
       </main>
 
-      {/* 3. Bottom Navigation Bar */}
-      <nav className="h-16 bg-slate-900/95 border-t border-slate-800 flex items-center justify-around px-4 backdrop-blur-md shrink-0 z-20">
+      {/* 3. Bottom Navigation Bar - Fixed & Locked to Screen Bottom */}
+      <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto z-40 h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex items-center justify-around px-3 shadow-[0_-4px_25px_rgba(0,0,0,0.6)]">
         <button
           onClick={() => setActiveTab('map')}
-          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
-            activeTab === 'map' ? 'text-rose-500 font-bold' : 'text-slate-400 hover:text-slate-200'
+          className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl ${
+            activeTab === 'map'
+              ? 'text-rose-500 font-bold bg-rose-500/10'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <MapPin className="w-5 h-5" />
-          <span className="text-[11px]">Hunt Map</span>
+          <span className="text-[11px] leading-tight">Hunt Map</span>
         </button>
 
         <button
           onClick={() => setActiveTab('clues')}
-          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
-            activeTab === 'clues' ? 'text-rose-500 font-bold' : 'text-slate-400 hover:text-slate-200'
+          className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl relative ${
+            activeTab === 'clues'
+              ? 'text-rose-500 font-bold bg-rose-500/10'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <List className="w-5 h-5" />
-          <span className="text-[11px]">Clues ({clues.length})</span>
+          <div className="relative">
+            <List className="w-5 h-5" />
+            {clues.length > 0 && (
+              <span className="absolute -top-1.5 -right-3.5 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-sm">
+                {clues.length - completedClueIds.size}
+              </span>
+            )}
+          </div>
+          <span className="text-[11px] leading-tight">Clues</span>
         </button>
 
         <button
           onClick={() => setActiveTab('leaderboard')}
-          className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${
-            activeTab === 'leaderboard' ? 'text-rose-500 font-bold' : 'text-slate-400 hover:text-slate-200'
+          className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl ${
+            activeTab === 'leaderboard'
+              ? 'text-rose-500 font-bold bg-rose-500/10'
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Trophy className="w-5 h-5" />
-          <span className="text-[11px]">Leaderboard</span>
+          <span className="text-[11px] leading-tight">Leaderboard</span>
         </button>
       </nav>
 

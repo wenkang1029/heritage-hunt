@@ -298,6 +298,8 @@ export class MockAdapterService {
       id: playerId,
       nickname: nickname.trim(),
       joinedAt: Date.now(),
+      lastSeenAt: Date.now(),
+      isOnline: true,
     };
 
     const members = team.members ? [...team.members, member] : [member];
@@ -309,6 +311,66 @@ export class MockAdapterService {
 
     this.broadcastMutation();
     return { team: this.state.teams[team.id], playerId };
+  }
+
+  async updatePlayerHeartbeat(
+    _gameId: string,
+    teamId: string,
+    playerId: string,
+    nickname?: string
+  ): Promise<void> {
+    const team = this.state.teams[teamId];
+    if (!team) return;
+
+    let updated = false;
+    const members = (team.members || []).map((m) => {
+      if (m.id === playerId || (nickname && m.nickname === nickname)) {
+        updated = true;
+        return { ...m, id: playerId, lastSeenAt: Date.now(), isOnline: true };
+      }
+      return m;
+    });
+
+    if (!updated && nickname) {
+      members.push({
+        id: playerId,
+        nickname: nickname.trim(),
+        joinedAt: Date.now(),
+        lastSeenAt: Date.now(),
+        isOnline: true,
+      });
+    }
+
+    this.state.teams[teamId] = {
+      ...team,
+      members,
+      lastActiveAt: Date.now(),
+    };
+    this.broadcastMutation();
+  }
+
+  async markPlayerOffline(
+    _gameId: string,
+    teamId: string,
+    playerId: string,
+    nickname?: string
+  ): Promise<void> {
+    const team = this.state.teams[teamId];
+    if (!team) return;
+
+    const members = (team.members || []).map((m) => {
+      if (m.id === playerId || (nickname && m.nickname === nickname)) {
+        return { ...m, lastSeenAt: Date.now(), isOnline: false };
+      }
+      return m;
+    });
+
+    this.state.teams[teamId] = {
+      ...team,
+      members,
+      lastActiveAt: Date.now(),
+    };
+    this.broadcastMutation();
   }
 
   async updateTeamGps(_gameId: string, teamId: string, coords: GeoCoordinate): Promise<void> {

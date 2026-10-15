@@ -29,6 +29,7 @@ import { MELAKA_ZONES, DEFAULT_TEAMS } from '../data/melakaZones.ts';
 import type {
   Game,
   Team,
+  TeamMember,
   Clue,
   Submission,
   GeoCoordinate,
@@ -274,10 +275,12 @@ class UnifiedGameService implements IGameService {
     const teamData = teamDoc.data() as Team;
     const playerId = authUser?.uid || `player_${Date.now()}`;
 
-    const member = {
+    const member: TeamMember = {
       id: playerId,
       nickname: nickname.trim(),
       joinedAt: Date.now(),
+      lastSeenAt: Date.now(),
+      isOnline: true,
     };
 
     await updateDoc(teamDoc.ref, {
@@ -289,6 +292,97 @@ class UnifiedGameService implements IGameService {
       team: { ...teamData, id: teamDoc.id },
       playerId,
     };
+  }
+
+  async updatePlayerHeartbeat(
+    gameId: string,
+    teamId: string,
+    playerId: string,
+    nickname?: string
+  ): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.updatePlayerHeartbeat(gameId, teamId, playerId, nickname);
+    }
+
+    try {
+      const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
+      const snap = await getDoc(teamRef);
+      if (!snap.exists()) return;
+
+      const data = snap.data() as Team;
+      const members = data.members || [];
+      let updated = false;
+
+      const updatedMembers = members.map((m) => {
+        if (m.id === playerId || (nickname && m.nickname === nickname)) {
+          updated = true;
+          return {
+            ...m,
+            id: playerId,
+            lastSeenAt: Date.now(),
+            isOnline: true,
+          };
+        }
+        return m;
+      });
+
+      if (!updated && nickname) {
+        updatedMembers.push({
+          id: playerId,
+          nickname: nickname.trim(),
+          joinedAt: Date.now(),
+          lastSeenAt: Date.now(),
+          isOnline: true,
+        });
+      }
+
+      await updateDoc(teamRef, {
+        members: updatedMembers,
+        lastActiveAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.warn('Failed to update player heartbeat:', err);
+    }
+  }
+
+  async markPlayerOffline(
+    gameId: string,
+    teamId: string,
+    playerId: string,
+    nickname?: string
+  ): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.markPlayerOffline(gameId, teamId, playerId, nickname);
+    }
+
+    try {
+      const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
+      const snap = await getDoc(teamRef);
+      if (!snap.exists()) return;
+
+      const data = snap.data() as Team;
+      const members = data.members || [];
+
+      const updatedMembers = members.map((m) => {
+        if (m.id === playerId || (nickname && m.nickname === nickname)) {
+          return {
+            ...m,
+            lastSeenAt: Date.now(),
+            isOnline: false,
+          };
+        }
+        return m;
+      });
+
+      await updateDoc(teamRef, {
+        members: updatedMembers,
+        lastActiveAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.warn('Failed to mark player offline:', err);
+    }
   }
 
   async updateTeamGps(gameId: string, teamId: string, coords: GeoCoordinate): Promise<void> {

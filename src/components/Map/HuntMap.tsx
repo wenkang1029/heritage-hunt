@@ -253,6 +253,7 @@ export interface HuntMapProps {
   onCancelPlot?: () => void;
   isSavingPlot?: boolean;
   targetCenter?: GeoCoordinate | null;
+  bottomOffsetClass?: string;
 }
 
 export const HuntMap: React.FC<HuntMapProps> = ({
@@ -276,6 +277,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   onCancelPlot,
   isSavingPlot = false,
   targetCenter = null,
+  bottomOffsetClass = 'bottom-4',
 }) => {
   const [targetRecenter, setTargetRecenter] = React.useState<GeoCoordinate | null>(null);
 
@@ -607,7 +609,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
       )}
 
       {/* Map Recenter Buttons */}
-      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
+      <div className={`absolute ${bottomOffsetClass} right-4 z-[1000] flex flex-col gap-2`}>
         {playerCoords && (
           <button
             onClick={() => setTargetRecenter(playerCoords)}
