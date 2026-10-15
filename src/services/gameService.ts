@@ -486,7 +486,7 @@ class UnifiedGameService implements IGameService {
     await deleteDoc(clueRef);
   }
 
-  async initializeDefaultGame(): Promise<Game> {
+  async initializeDefaultGame(targetGameId: string = 'melaka-hunt-2026'): Promise<Game> {
     const firestore = this.getFirestoreDb();
     if (!firestore) {
       return mockAdapter.getGame();
@@ -494,7 +494,7 @@ class UnifiedGameService implements IGameService {
 
     try {
       await ensureAnonymousAuth();
-      const gameRef = doc(firestore, 'games', 'melaka-hunt-2026');
+      const gameRef = doc(firestore, 'games', targetGameId);
       const gameSnap = await getDoc(gameRef);
 
       if (gameSnap.exists()) {
@@ -560,6 +560,140 @@ class UnifiedGameService implements IGameService {
 
   async addClue(gameId: string, clue: Omit<Clue, 'id' | 'createdAt'>) {
     return this.createClue(gameId, clue);
+  }
+
+  async createGameWithTeams(
+    name: string,
+    numTeams: number,
+    durationMinutes: number = 120
+  ): Promise<Game> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.createGameWithTeams(name, numTeams, durationMinutes);
+    }
+
+    await ensureAnonymousAuth();
+    const gameId = `hunt-${Math.random().toString(36).substring(2, 7)}`;
+    const gameRef = doc(firestore, 'games', gameId);
+
+    const newGame: Game = {
+      id: gameId,
+      name: name.trim(),
+      status: 'active',
+      passCode: 'melaka2026',
+      durationMinutes,
+      timeRemainingSeconds: durationMinutes * 60,
+      startTime: Date.now(),
+      endTime: null,
+      isLeaderboardFrozen: false,
+      zones: [...MELAKA_ZONES],
+      createdAt: Date.now(),
+    };
+
+    await setDoc(gameRef, newGame);
+
+    const DEFAULT_PALETTES = [
+      { name: 'Team Crimson', color: '#DC2626', pin: '1001' },
+      { name: 'Team Cobalt', color: '#2563EB', pin: '2002' },
+      { name: 'Team Emerald', color: '#059669', pin: '3003' },
+      { name: 'Team Amber', color: '#D97706', pin: '4004' },
+      { name: 'Team Violet', color: '#7C3AED', pin: '5005' },
+      { name: 'Team Rose', color: '#E11D48', pin: '6006' },
+      { name: 'Team Cyan', color: '#0891B2', pin: '7007' },
+      { name: 'Team Lime', color: '#65A30D', pin: '8008' },
+      { name: 'Team Fuchsia', color: '#C026D3', pin: '9009' },
+      { name: 'Team Orange', color: '#EA580C', pin: '1234' },
+    ];
+
+    const clampedTeams = Math.max(2, Math.min(numTeams, 10));
+    for (let i = 0; i < clampedTeams; i++) {
+      const palette = DEFAULT_PALETTES[i];
+      const teamId = `team_${i + 1}`;
+      const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
+      await setDoc(teamRef, {
+        id: teamId,
+        gameId,
+        name: palette.name,
+        color: palette.color,
+        pin: palette.pin,
+        score: 0,
+        completedClueIds: [],
+        lastActiveAt: Date.now(),
+        members: [],
+        createdAt: Date.now(),
+      });
+    }
+
+    for (const clue of INITIAL_CLUES) {
+      const clueRef = doc(firestore, 'games', gameId, 'clues', clue.id);
+      await setDoc(clueRef, { ...clue, gameId });
+    }
+
+    return newGame;
+  }
+
+  async updateTeam(
+    gameId: string,
+    teamId: string,
+    updates: { name?: string; pin?: string; color?: string }
+  ): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.updateTeam(gameId, teamId, updates);
+    }
+
+    await ensureAnonymousAuth();
+    if (updates.pin) {
+      const cleanPin = updates.pin.trim();
+      const teamsCol = collection(firestore, 'games', gameId, 'teams');
+      const q = query(teamsCol, where('pin', '==', cleanPin));
+      const snap = await getDocs(q);
+      const conflict = snap.docs.find((d) => d.id !== teamId);
+      if (conflict) {
+        throw new Error(`PIN "${cleanPin}" is already assigned to "${conflict.data().name}"`);
+      }
+    }
+
+    const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
+    await updateDoc(teamRef, {
+      ...(updates.name ? { name: updates.name.trim() } : {}),
+      ...(updates.pin ? { pin: updates.pin.trim() } : {}),
+      ...(updates.color ? { color: updates.color } : {}),
+      lastActiveAt: serverTimestamp(),
+    });
+  }
+
+  async deleteTeam(gameId: string, teamId: string): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.deleteTeam(gameId, teamId);
+    }
+
+    await ensureAnonymousAuth();
+    const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
+    const snap = await getDoc(teamRef);
+    if (!snap.exists()) return;
+
+    const data = snap.data() as Team;
+    if (data.members && data.members.length > 0) {
+      throw new Error(`Cannot delete "${data.name}" because it already has ${data.members.length} player(s) joined.`);
+    }
+
+    await deleteDoc(teamRef);
+  }
+
+  async updateZones(gameId: string, zones: any[]): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.updateZones(gameId, zones);
+    }
+
+    await ensureAnonymousAuth();
+    const gameRef = doc(firestore, 'games', gameId);
+    await updateDoc(gameRef, {
+      zones,
+      updatedAt: serverTimestamp(),
+    });
   }
 }
 

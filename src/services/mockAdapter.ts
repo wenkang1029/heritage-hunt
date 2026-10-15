@@ -487,6 +487,125 @@ export class MockAdapterService {
     this.broadcastMutation();
   }
 
+  async createGameWithTeams(
+    name: string,
+    numTeams: number,
+    durationMinutes: number = 120
+  ): Promise<Game> {
+    const gameId = `melaka-hunt-${Date.now().toString(36)}`;
+    const newGame: Game = {
+      id: gameId,
+      name,
+      status: 'active',
+      passCode: 'melaka2026',
+      durationMinutes,
+      timeRemainingSeconds: durationMinutes * 60,
+      startTime: Date.now(),
+      endTime: null,
+      isLeaderboardFrozen: false,
+      zones: [...MELAKA_ZONES],
+      createdAt: Date.now(),
+    };
+
+    const DEFAULT_PALETTES = [
+      { name: 'Team Crimson', color: '#DC2626', pin: '1001' },
+      { name: 'Team Cobalt', color: '#2563EB', pin: '2002' },
+      { name: 'Team Emerald', color: '#059669', pin: '3003' },
+      { name: 'Team Amber', color: '#D97706', pin: '4004' },
+      { name: 'Team Violet', color: '#7C3AED', pin: '5005' },
+      { name: 'Team Rose', color: '#E11D48', pin: '6006' },
+      { name: 'Team Cyan', color: '#0891B2', pin: '7007' },
+      { name: 'Team Lime', color: '#65A30D', pin: '8008' },
+      { name: 'Team Fuchsia', color: '#C026D3', pin: '9009' },
+      { name: 'Team Orange', color: '#EA580C', pin: '1234' },
+    ];
+
+    const teamsMap: Record<string, Team> = {};
+    const clampedTeams = Math.max(2, Math.min(numTeams, 10));
+
+    for (let i = 0; i < clampedTeams; i++) {
+      const palette = DEFAULT_PALETTES[i];
+      const teamId = `team_${i + 1}`;
+      teamsMap[teamId] = {
+        id: teamId,
+        gameId,
+        name: palette.name,
+        color: palette.color,
+        pin: palette.pin,
+        score: 0,
+        completedClueIds: [],
+        lastActiveAt: Date.now(),
+        members: [],
+        createdAt: Date.now(),
+      };
+    }
+
+    const cluesMap: Record<string, Clue> = {};
+    for (const clue of INITIAL_CLUES) {
+      cluesMap[clue.id] = { ...clue, gameId };
+    }
+
+    this.state = {
+      game: newGame,
+      teams: teamsMap,
+      clues: cluesMap,
+      submissions: {},
+    };
+
+    this.broadcastMutation();
+    return newGame;
+  }
+
+  async updateTeam(
+    _gameId: string,
+    teamId: string,
+    updates: { name?: string; pin?: string; color?: string }
+  ): Promise<void> {
+    const team = this.state.teams[teamId];
+    if (!team) throw new Error('Team not found');
+
+    if (updates.pin && updates.pin !== team.pin) {
+      const cleanPin = updates.pin.trim();
+      const conflict = Object.values(this.state.teams).find(
+        (t) => t.id !== teamId && t.pin === cleanPin
+      );
+      if (conflict) {
+        throw new Error(`PIN "${cleanPin}" is already assigned to ${conflict.name}`);
+      }
+    }
+
+    this.state.teams[teamId] = {
+      ...team,
+      ...(updates.name ? { name: updates.name.trim() } : {}),
+      ...(updates.pin ? { pin: updates.pin.trim() } : {}),
+      ...(updates.color ? { color: updates.color } : {}),
+      lastActiveAt: Date.now(),
+    };
+
+    this.broadcastMutation();
+  }
+
+  async deleteTeam(_gameId: string, teamId: string): Promise<void> {
+    const team = this.state.teams[teamId];
+    if (!team) return;
+
+    if (team.members && team.members.length > 0) {
+      throw new Error(`Cannot delete "${team.name}" because it already has ${team.members.length} player(s) joined.`);
+    }
+
+    delete this.state.teams[teamId];
+    this.broadcastMutation();
+  }
+
+  async updateZones(_gameId: string, zones: any[]): Promise<void> {
+    this.state.game = {
+      ...this.state.game,
+      zones,
+      updatedAt: Date.now(),
+    };
+    this.broadcastMutation();
+  }
+
   /**
    * Resets the entire mock environment back to pristine default state.
    */

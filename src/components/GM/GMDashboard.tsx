@@ -3,7 +3,8 @@
  * Path: src/components/GM/GMDashboard.tsx
  *
  * Wide-screen organizer dashboard with live radar map, 1-click photo verification queue,
- * bulk clue photo uploader with auto EXIF GPS parsing, and team QR code generator.
+ * game creator with configurable teams, shareable game link, team editor & safe deletion,
+ * zone configuration, and EXIF GPS bulk photo uploader.
  */
 
 import React, { useState, useMemo } from 'react';
@@ -14,6 +15,7 @@ import type {
   Clue,
   Submission,
   GameStatus,
+  Zone,
 } from '../../types/index.ts';
 import { HuntMap } from '../Map/HuntMap.tsx';
 import { gameService } from '../../services/gameService.ts';
@@ -32,6 +34,13 @@ import {
   ArrowRight,
   Sparkles,
   ExternalLink,
+  Copy,
+  Check,
+  Edit2,
+  Trash2,
+  Layers,
+  LogOut,
+  Share2,
 } from 'lucide-react';
 
 export interface GMDashboardProps {
@@ -39,6 +48,8 @@ export interface GMDashboardProps {
   teams: Team[];
   clues: Clue[];
   submissions: Submission[];
+  onGameChange?: (game: Game) => void;
+  onLogout?: () => void;
 }
 
 export const GMDashboard: React.FC<GMDashboardProps> = ({
@@ -46,14 +57,40 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   teams,
   clues,
   submissions,
+  onGameChange,
+  onLogout,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Session persistence for GM
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('HERITAGE_GM_AUTH') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [passcode, setPasscode] = useState<string>('');
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'radar' | 'queue' | 'clues' | 'teams' | 'leaderboard'>('queue');
-
+  const [activeTab, setActiveTab] = useState<'queue' | 'radar' | 'clues' | 'teams' | 'zones' | 'leaderboard'>('queue');
   const [isProcessingAction, setIsProcessingAction] = useState<boolean>(false);
+
+  // Copy Link State
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+
+  // Create Game Modal
+  const [showCreateGameModal, setShowCreateGameModal] = useState<boolean>(false);
+  const [newGameName, setNewGameName] = useState('Melaka Heritage Scavenger Hunt');
+  const [newGameNumTeams, setNewGameNumTeams] = useState<number>(5);
+  const [newGameDuration, setNewGameDuration] = useState<number>(120);
+  const [isCreatingGame, setIsCreatingGame] = useState<boolean>(false);
+
+  // Edit Team Modal
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [editTeamName, setEditTeamName] = useState('');
+  const [editTeamPin, setEditTeamPin] = useState('');
+  const [editTeamColor, setEditTeamColor] = useState('');
+  const [editTeamError, setEditTeamError] = useState<string | null>(null);
 
   // New Team Form state
   const [newTeamName, setNewTeamName] = useState('');
@@ -64,6 +101,28 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const [isUploadingClues, setIsUploadingClues] = useState<boolean>(false);
   const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
 
+  // Zone Editing State
+  const [editingZone, setEditingZone] = useState<Zone | null>(null);
+  const [newZoneName, setNewZoneName] = useState('');
+  const [newZoneColor, setNewZoneColor] = useState('#DC2626');
+  const [newZoneDescription, setNewZoneDescription] = useState('');
+
+  // Calculate shareable Game Link for participants
+  const gameLink = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/?game=${game.id}`;
+    }
+    return `https://heritage-hunt.vercel.app/?game=${game.id}`;
+  }, [game.id]);
+
+  const handleCopyGameLink = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(gameLink);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 3000);
+    }
+  };
+
   // Authenticate GM
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +130,24 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     if (passcode.trim() === correctCode) {
       setIsAuthenticated(true);
       setAuthError(null);
+      try {
+        localStorage.setItem('HERITAGE_GM_AUTH', 'true');
+      } catch {
+        // Ignore localStorage error
+      }
     } else {
       setAuthError('Incorrect GM Passcode. Please try again.');
     }
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('HERITAGE_GM_AUTH');
+    } catch {
+      // Ignore
+    }
+    setIsAuthenticated(false);
+    if (onLogout) onLogout();
   };
 
   // Pending Submissions Queue
@@ -110,7 +184,29 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     }
   };
 
-  // Create New Team
+  // Create New Game with specified number of teams
+  const handleCreateGame = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsCreatingGame(true);
+      const createdGame = await gameService.createGameWithTeams(
+        newGameName,
+        newGameNumTeams,
+        newGameDuration
+      );
+      setShowCreateGameModal(false);
+      if (onGameChange) {
+        onGameChange(createdGame);
+      }
+      alert(`Game "${createdGame.name}" created! Participants can now join via the game link.`);
+    } catch (err: any) {
+      alert('Failed to create game: ' + err.message);
+    } finally {
+      setIsCreatingGame(false);
+    }
+  };
+
+  // Create Single New Team
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeamName.trim() || !newTeamPin.trim()) return;
@@ -125,7 +221,52 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     }
   };
 
-  // Handle Bulk Clue Photo Upload with EXIF GPS extraction
+  // Open Edit Team Modal
+  const handleOpenEditTeam = (team: Team) => {
+    setEditingTeam(team);
+    setEditTeamName(team.name);
+    setEditTeamPin(team.pin);
+    setEditTeamColor(team.color);
+    setEditTeamError(null);
+  };
+
+  // Save Edited Team
+  const handleSaveEditTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTeam) return;
+
+    try {
+      await gameService.updateTeam(game.id, editingTeam.id, {
+        name: editTeamName.trim(),
+        pin: editTeamPin.trim(),
+        color: editTeamColor,
+      });
+      setEditingTeam(null);
+    } catch (err: any) {
+      setEditTeamError(err.message || 'Failed to update team');
+    }
+  };
+
+  // Delete Team (Only if no players have joined)
+  const handleDeleteTeam = async (team: Team) => {
+    if (team.members && team.members.length > 0) {
+      alert(`Cannot delete "${team.name}" because it already has ${team.members.length} player(s) joined.`);
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${team.name}"? This cannot be undone.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await gameService.deleteTeam(game.id, team.id);
+    } catch (err: any) {
+      alert('Failed to delete team: ' + err.message);
+    }
+  };
+
+  // Bulk Clue Upload
   const handleBulkClueUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -140,7 +281,6 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         const compressed = await compressPhoto(file);
         const gps = await extractExifGps(file);
 
-        // Fallback coordinates within Melaka center if EXIF stripped
         const location = gps || {
           latitude: 2.1944 + (Math.random() - 0.5) * 0.005,
           longitude: 102.2491 + (Math.random() - 0.5) * 0.005,
@@ -152,7 +292,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           gameId: game.id,
           title,
           landmarkName: 'Melaka Historic Landmark',
-          zoneId: 'dutch-square',
+          zoneId: game.zones[0]?.id || 'dutch-square',
           points: 100,
           targetPhotoBase64: compressed.base64,
           location,
@@ -169,6 +309,29 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     }
   };
 
+  // Zone configuration update
+  const handleSaveZone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingZone) return;
+
+    try {
+      const updatedZones = game.zones.map((z) =>
+        z.id === editingZone.id
+          ? {
+              ...z,
+              name: newZoneName.trim() || z.name,
+              color: newZoneColor,
+              description: newZoneDescription.trim() || z.description,
+            }
+          : z
+      );
+      await gameService.updateZones(game.id, updatedZones);
+      setEditingZone(null);
+    } catch (err: any) {
+      alert('Failed to update zone: ' + err.message);
+    }
+  };
+
   // ============================================================================
   // Passcode Lock Screen
   // ============================================================================
@@ -180,9 +343,9 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           <div className="inline-flex p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-3">
             <Lock className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-black text-white">GM War Room Access</h2>
+          <h2 className="text-xl font-black text-white">Game Master Portal</h2>
           <p className="text-xs text-slate-400 mt-1 mb-5">
-            Enter the master passcode to open the Game Master dashboard.
+            Enter the master passcode to access the event management War Room.
           </p>
 
           {authError && (
@@ -204,7 +367,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               type="submit"
               className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
-              <span>Unlock Dashboard</span>
+              <span>Unlock War Room</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -222,7 +385,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Top War Room Control Bar */}
+      {/* 1. Top War Room Control Bar */}
       <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-md">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
@@ -230,19 +393,27 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           </div>
           <div>
             <h1 className="font-black text-base text-white flex items-center gap-2">
-              GM War Room
+              {game.name}
               <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700 font-mono">
                 {game.status.toUpperCase()}
               </span>
             </h1>
             <p className="text-xs text-slate-400">
-              Melaka Heritage Photo Hunt Control Center
+              Game ID: <strong className="text-amber-400 font-mono">{game.id}</strong>
             </p>
           </div>
         </div>
 
-        {/* Game State Control Buttons */}
+        {/* Game State Control Buttons & Create Game Button */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateGameModal(true)}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>New Game</span>
+          </button>
+
           {game.status !== 'active' ? (
             <button
               onClick={() => handleStatusChange('active')}
@@ -271,6 +442,14 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           >
             <Snowflake className="w-3.5 h-3.5" />
             <span>{game.isLeaderboardFrozen ? 'Unfreeze' : 'Freeze Leaderboard'}</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Log out Game Master"
+            className="bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
           </button>
         </div>
 
@@ -307,7 +486,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               activeTab === 'clues' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Clues Manager ({clues.length})
+            Clues ({clues.length})
           </button>
 
           <button
@@ -316,7 +495,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               activeTab === 'teams' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Teams & QR Codes ({teams.length})
+            Teams & PINs ({teams.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('zones')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              activeTab === 'zones' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Zones ({game.zones.length})</span>
           </button>
 
           <button
@@ -330,7 +519,45 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         </nav>
       </header>
 
-      {/* Main War Room Body */}
+      {/* 2. Shareable Participant Game Link Banner */}
+      <div className="bg-slate-900/60 border-b border-slate-800/80 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2">
+          <Share2 className="w-4 h-4 text-amber-400 shrink-0" />
+          <span className="font-bold text-slate-300">Participant Game Link:</span>
+          <code className="bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-amber-300 font-mono">
+            {gameLink}
+          </code>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCopyGameLink}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            {isCopied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy Participant Link</span>
+              </>
+            )}
+          </button>
+          <a
+            href={gameLink}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Open Link</span>
+          </a>
+        </div>
+      </div>
+
+      {/* 3. Main War Room Body */}
       <main className="flex-1 p-6 overflow-y-auto">
         {/* ========================================================================= */}
         {/* TAB 1: Verification Queue */}
@@ -368,7 +595,6 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between"
                     >
                       <div>
-                        {/* Team and Clue Header */}
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             <span
@@ -390,7 +616,6 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
                         {/* Side-by-Side Photo Comparison */}
                         <div className="grid grid-cols-2 gap-2 mb-3">
-                          {/* Target Photo */}
                           <div>
                             <span className="text-[10px] font-bold text-slate-400 block mb-1">
                               Target Landmark:
@@ -410,7 +635,6 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                             </div>
                           </div>
 
-                          {/* Submitted Team Selfie */}
                           <div>
                             <span className="text-[10px] font-bold text-emerald-400 block mb-1">
                               Team Selfie:
@@ -425,7 +649,6 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           </div>
                         </div>
 
-                        {/* Distance estimation badge */}
                         {sub.distanceFromClueMeters !== null && sub.distanceFromClueMeters !== undefined && (
                           <div className="text-[10px] text-slate-400 mb-3 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 inline-block">
                             Distance from landmark: <strong className="text-slate-200">{Math.round(sub.distanceFromClueMeters)}m</strong>
@@ -433,7 +656,6 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         )}
                       </div>
 
-                      {/* 1-Click Verification Action Buttons */}
                       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800">
                         <button
                           onClick={() => handleReviewAction(sub, 'approve')}
@@ -491,11 +713,10 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               <div>
                 <h2 className="text-lg font-black text-white">Clues & Landmark Manager</h2>
                 <p className="text-xs text-slate-400">
-                  Bulk upload cropped photos. EXIF GPS coordinates will be automatically extracted to drop map pins!
+                  Bulk upload photos from your machine. EXIF GPS coordinates will auto-drop map pins!
                 </p>
               </div>
 
-              {/* Bulk Photo Upload Button */}
               <label className="bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-lg transition-all">
                 <Upload className="w-4 h-4" />
                 <span>{isUploadingClues ? 'Processing Photos...' : 'Bulk Upload Clue Photos'}</span>
@@ -572,7 +793,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               <div>
                 <h2 className="text-lg font-black text-white">Teams & QR Join Codes</h2>
                 <p className="text-xs text-slate-400">
-                  Players can scan these QR codes directly with their smartphone cameras to join their team instantly.
+                  Players can scan these QR codes or enter the 4-digit PIN to join.
                 </p>
               </div>
 
@@ -614,9 +835,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {teams.map((t) => {
-                const joinUrl = typeof window !== 'undefined'
-                  ? `${window.location.origin}/play?pin=${t.pin}`
-                  : `https://heritage-hunt.vercel.app/play?pin=${t.pin}`;
+                const teamJoinUrl = `${gameLink}&pin=${t.pin}`;
+                const hasPlayers = t.members && t.members.length > 0;
 
                 return (
                   <div
@@ -628,32 +848,55 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       style={{ background: t.color }}
                     />
 
-                    <span
-                      className="w-4 h-4 rounded-full mb-2"
-                      style={{ background: t.color }}
-                    />
+                    <div className="flex items-center justify-between w-full mb-2">
+                      <span
+                        className="w-4 h-4 rounded-full"
+                        style={{ background: t.color }}
+                      />
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleOpenEditTeam(t)}
+                          title="Edit Team Name and PIN"
+                          className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTeam(t)}
+                          disabled={hasPlayers}
+                          title={hasPlayers ? `Cannot delete: ${t.members.length} player(s) joined` : 'Delete Team'}
+                          className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                            hasPlayers
+                              ? 'bg-slate-800/40 text-slate-600 cursor-not-allowed'
+                              : 'bg-rose-950/60 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-800/40'
+                          }`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
                     <h3 className="font-black text-base text-white">{t.name}</h3>
-                    <div className="mt-1 mb-4 flex items-center gap-1.5">
+                    <div className="mt-1 mb-3 flex items-center gap-1.5">
                       <span className="text-xs text-slate-400">Team PIN:</span>
                       <span className="text-base font-black font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                         {t.pin}
                       </span>
                     </div>
 
-                    {/* Printable / Scanable QR Code */}
-                    <div className="p-3 bg-white rounded-2xl shadow-md mb-4">
-                      <QRCodeSVG value={joinUrl} size={150} level="M" />
+                    <div className="p-3 bg-white rounded-2xl shadow-md mb-3">
+                      <QRCodeSVG value={teamJoinUrl} size={140} level="M" />
                     </div>
 
-                    <a
-                      href={joinUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      <span>{joinUrl}</span>
-                    </a>
+                    <div className="text-[11px] text-slate-400 mb-1">
+                      {hasPlayers ? (
+                        <span className="text-emerald-400 font-bold">
+                          ● {t.members.length} player(s) joined
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">No players yet (Can be deleted)</span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -662,7 +905,68 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 5: Leaderboard */}
+        {/* TAB 5: Zone Configuration */}
+        {/* ========================================================================= */}
+        {activeTab === 'zones' && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-black text-white">Zone Configuration</h2>
+                <p className="text-xs text-slate-400">
+                  Configure search zones across historical Melaka.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {game.zones.map((zone) => (
+                <div
+                  key={zone.id}
+                  className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className="w-3.5 h-3.5 rounded-full"
+                        style={{ background: zone.color }}
+                      />
+                      <button
+                        onClick={() => {
+                          setEditingZone(zone);
+                          setNewZoneName(zone.name);
+                          setNewZoneColor(zone.color);
+                          setNewZoneDescription(zone.description || '');
+                        }}
+                        className="text-xs text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span>Edit Zone</span>
+                      </button>
+                    </div>
+
+                    <h3 className="font-bold text-sm text-white">{zone.name}</h3>
+                    {zone.localName && (
+                      <span className="text-[11px] text-slate-400 block mb-1">
+                        {zone.localName}
+                      </span>
+                    )}
+                    <p className="text-xs text-slate-300 mt-2 line-clamp-3">
+                      {zone.description}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+                    <span>Center: {zone.center.latitude.toFixed(4)}, {zone.center.longitude.toFixed(4)}</span>
+                    <span className="font-mono text-slate-400">{zone.polygon.length} vertices</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 6: Leaderboard */}
         {/* ========================================================================= */}
         {activeTab === 'leaderboard' && (
           <div className="max-w-2xl mx-auto">
@@ -706,6 +1010,229 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           </div>
         )}
       </main>
+
+      {/* ========================================================================= */}
+      {/* MODAL: Create New Game */}
+      {/* ========================================================================= */}
+      {showCreateGameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+            <h3 className="text-lg font-black text-white mb-1">Create New Hunt Game</h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Set up a new event room with automatically generated teams.
+            </p>
+
+            <form onSubmit={handleCreateGame} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Game Event Name
+                </label>
+                <input
+                  type="text"
+                  value={newGameName}
+                  onChange={(e) => setNewGameName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Number of Teams (2 to 10)
+                </label>
+                <input
+                  type="number"
+                  min={2}
+                  max={10}
+                  value={newGameNumTeams}
+                  onChange={(e) => setNewGameNumTeams(parseInt(e.target.value, 10))}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-amber-400 font-bold"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Duration (Minutes)
+                </label>
+                <input
+                  type="number"
+                  min={10}
+                  max={360}
+                  value={newGameDuration}
+                  onChange={(e) => setNewGameDuration(parseInt(e.target.value, 10))}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateGameModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingGame}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg"
+                >
+                  {isCreatingGame ? 'Creating Game...' : 'Create & Launch Game'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: Edit Team Name & PIN */}
+      {/* ========================================================================= */}
+      {editingTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+            <h3 className="text-base font-black text-white mb-1">Edit Team Details</h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Update team name or 4-digit PIN code.
+            </p>
+
+            {editTeamError && (
+              <div className="mb-3 p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+                {editTeamError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEditTeam} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Team Name
+                </label>
+                <input
+                  type="text"
+                  value={editTeamName}
+                  onChange={(e) => setEditTeamName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  4-Digit Numeric PIN
+                </label>
+                <input
+                  type="text"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={editTeamPin}
+                  onChange={(e) => setEditTeamPin(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-amber-400 font-mono"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Team Color
+                </label>
+                <input
+                  type="color"
+                  value={editTeamColor}
+                  onChange={(e) => setEditTeamColor(e.target.value)}
+                  className="w-full h-9 rounded-xl cursor-pointer bg-transparent border-0"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingTeam(null)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: Edit Zone */}
+      {/* ========================================================================= */}
+      {editingZone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+            <h3 className="text-base font-black text-white mb-1">Edit Zone</h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Update zone title, color, or description.
+            </p>
+
+            <form onSubmit={handleSaveZone} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Zone Name
+                </label>
+                <input
+                  type="text"
+                  value={newZoneName}
+                  onChange={(e) => setNewZoneName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Zone Color
+                </label>
+                <input
+                  type="color"
+                  value={newZoneColor}
+                  onChange={(e) => setNewZoneColor(e.target.value)}
+                  className="w-full h-9 rounded-xl cursor-pointer bg-transparent border-0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={newZoneDescription}
+                  onChange={(e) => setNewZoneDescription(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingZone(null)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"
+                >
+                  Save Zone
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
