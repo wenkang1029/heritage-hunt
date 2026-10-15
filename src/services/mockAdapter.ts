@@ -13,6 +13,7 @@ import type {
   GeoCoordinate,
   Unsubscribe,
   GameStatus,
+  Zone,
 } from '../types/index.ts';
 import { calculateHaversineDistance } from '../utils/haversine.ts';
 import {
@@ -77,7 +78,20 @@ export class MockAdapterService {
       endTime: null,
       isLeaderboardFrozen: false,
       isFrozen: false,
-      zones: [...MELAKA_ZONES],
+      zones: (() => {
+        if (typeof window !== 'undefined') {
+          try {
+            const saved = localStorage.getItem('HERITAGE_SAVED_ZONES');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+          } catch {
+            // ignore
+          }
+        }
+        return [...MELAKA_ZONES];
+      })(),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -552,9 +566,28 @@ export class MockAdapterService {
   async createGameWithTeams(
     name: string,
     numTeams: number,
-    durationMinutes: number = 120
+    durationMinutes: number = 120,
+    inheritedZones?: Zone[]
   ): Promise<Game> {
     const gameId = `melaka-hunt-${Date.now().toString(36)}`;
+    let zonesToUse: Zone[] = inheritedZones && inheritedZones.length > 0 ? [...inheritedZones] : [];
+    if (zonesToUse.length === 0 && typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('HERITAGE_SAVED_ZONES');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            zonesToUse = parsed;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    if (zonesToUse.length === 0) {
+      zonesToUse = [...MELAKA_ZONES];
+    }
+
     const newGame: Game = {
       id: gameId,
       name,
@@ -565,7 +598,7 @@ export class MockAdapterService {
       startTime: Date.now(),
       endTime: null,
       isLeaderboardFrozen: false,
-      zones: [...MELAKA_ZONES],
+      zones: zonesToUse,
       createdAt: Date.now(),
     };
 
@@ -665,6 +698,13 @@ export class MockAdapterService {
       zones,
       updatedAt: Date.now(),
     };
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('HERITAGE_SAVED_ZONES', JSON.stringify(zones));
+      } catch {
+        // ignore
+      }
+    }
     this.broadcastMutation();
   }
 

@@ -35,6 +35,7 @@ import type {
   GeoCoordinate,
   Unsubscribe,
   GameStatus,
+  Zone,
 } from '../types/index.ts';
 import { calculateHaversineDistance } from '../utils/haversine.ts';
 
@@ -595,8 +596,19 @@ class UnifiedGameService implements IGameService {
         return { id: gameSnap.id, ...gameSnap.data() } as Game;
       }
 
+      // Check if global settings/zones exists
+      let initialZones: Zone[] = [...MELAKA_ZONES];
+      try {
+        const settingsSnap = await getDoc(doc(firestore, 'settings', 'zones'));
+        if (settingsSnap.exists() && Array.isArray(settingsSnap.data()?.zones) && settingsSnap.data().zones.length > 0) {
+          initialZones = settingsSnap.data().zones;
+        }
+      } catch (e) {
+        console.warn('Could not read settings/zones:', e);
+      }
+
       const defaultGame: Game = {
-        id: 'melaka-hunt-2026',
+        id: targetGameId,
         name: 'Melaka Heritage Photo Hunt 2026',
         status: 'active',
         passCode: 'melaka2026',
@@ -605,7 +617,7 @@ class UnifiedGameService implements IGameService {
         startTime: Date.now(),
         endTime: null,
         isLeaderboardFrozen: false,
-        zones: [...MELAKA_ZONES],
+        zones: initialZones,
         createdAt: Date.now(),
       };
 
@@ -666,16 +678,51 @@ class UnifiedGameService implements IGameService {
   async createGameWithTeams(
     name: string,
     numTeams: number,
-    durationMinutes: number = 120
+    durationMinutes: number = 120,
+    inheritedZones?: Zone[],
+    sourceGameId?: string
   ): Promise<Game> {
     const firestore = this.getFirestoreDb();
     if (!firestore) {
-      return mockAdapter.createGameWithTeams(name, numTeams, durationMinutes);
+      return mockAdapter.createGameWithTeams(name, numTeams, durationMinutes, inheritedZones);
     }
 
     await ensureAnonymousAuth();
     const gameId = `hunt-${Math.random().toString(36).substring(2, 7)}`;
     const gameRef = doc(firestore, 'games', gameId);
+
+    // Determine zones to use:
+    // 1. inheritedZones if provided
+    // 2. Global settings/zones doc in Firestore
+    // 3. localStorage 'HERITAGE_SAVED_ZONES'
+    // 4. Fallback to MELAKA_ZONES (which has all 6 restored zones)
+    let zonesToUse: Zone[] = inheritedZones && inheritedZones.length > 0 ? [...inheritedZones] : [];
+    if (zonesToUse.length === 0) {
+      try {
+        const settingsSnap = await getDoc(doc(firestore, 'settings', 'zones'));
+        if (settingsSnap.exists() && Array.isArray(settingsSnap.data()?.zones) && settingsSnap.data().zones.length > 0) {
+          zonesToUse = settingsSnap.data().zones;
+        }
+      } catch (e) {
+        console.warn('Could not fetch global settings/zones:', e);
+      }
+    }
+    if (zonesToUse.length === 0 && typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('HERITAGE_SAVED_ZONES');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            zonesToUse = parsed;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    if (zonesToUse.length === 0) {
+      zonesToUse = [...MELAKA_ZONES];
+    }
 
     const newGame: Game = {
       id: gameId,
@@ -687,7 +734,7 @@ class UnifiedGameService implements IGameService {
       startTime: Date.now(),
       endTime: null,
       isLeaderboardFrozen: false,
-      zones: [...MELAKA_ZONES],
+      zones: zonesToUse,
       createdAt: Date.now(),
     };
 
@@ -725,9 +772,13 @@ class UnifiedGameService implements IGameService {
       });
     }
 
-    // Seed new game with the 121 real Melaka heritage clues
+    // Seed new game with the 121 real Melaka heritage clues from sourceGameId or hunt-nkvcz
     try {
-      const srcCluesSnap = await getDocs(collection(firestore, 'games', 'hunt-nkvcz', 'clues'));
+      const clueSourceId = sourceGameId || 'hunt-nkvcz';
+      let srcCluesSnap = await getDocs(collection(firestore, 'games', clueSourceId, 'clues'));
+      if (srcCluesSnap.empty && clueSourceId !== 'hunt-nkvcz') {
+        srcCluesSnap = await getDocs(collection(firestore, 'games', 'hunt-nkvcz', 'clues'));
+      }
       if (!srcCluesSnap.empty) {
         for (const clueDoc of srcCluesSnap.docs) {
           const clueRef = doc(firestore, 'games', gameId, 'clues', clueDoc.id);
@@ -803,6 +854,24 @@ class UnifiedGameService implements IGameService {
       zones,
       updatedAt: serverTimestamp(),
     });
+
+    // Also persist zones to global settings/zones and localStorage
+    // so any future game created will inherit these zones
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('HERITAGE_SAVED_ZONES', JSON.stringify(zones));
+      }
+      await setDoc(
+        doc(firestore, 'settings', 'zones'),
+        {
+          zones,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('Could not persist global settings/zones:', e);
+    }
   }
 }
 

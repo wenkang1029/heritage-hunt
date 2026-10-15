@@ -381,7 +381,9 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       const createdGame = await gameService.createGameWithTeams(
         newGameName,
         newGameNumTeams,
-        newGameDuration
+        newGameDuration,
+        game.zones,
+        game.id
       );
       setShowCreateGameModal(false);
       if (onGameChange) {
