@@ -43,7 +43,9 @@ import {
   LogOut,
   Share2,
   MousePointerClick,
+  Maximize2,
 } from 'lucide-react';
+import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 
 export interface GMDashboardProps {
   game: Game;
@@ -111,6 +113,14 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const [activePlotZone, setActivePlotZone] = useState<Zone | null>(null);
   const [plotVertices, setPlotVertices] = useState<GeoCoordinate[]>([]);
   const [isSavingPlot, setIsSavingPlot] = useState<boolean>(false);
+
+  // Fullscreen uncropped image lightbox state
+  const [lightboxImage, setLightboxImage] = useState<{
+    url: string;
+    title?: string;
+    subtitle?: string;
+    badge?: string;
+  } | null>(null);
 
   // Calculate shareable Game Link for participants
   const gameLink = useMemo(() => {
@@ -667,16 +677,42 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         {/* Side-by-Side Photo Comparison */}
                         <div className="grid grid-cols-2 gap-2 mb-3">
                           <div>
-                            <span className="text-[10px] font-bold text-slate-400 block mb-1">
-                              Target Landmark:
-                            </span>
-                            <div className="w-full h-36 rounded-xl overflow-hidden bg-slate-950 border border-slate-700">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold text-slate-400">
+                                Target Landmark:
+                              </span>
+                              {targetClue?.targetPhotoBase64 && (
+                                <span className="text-[9px] text-amber-400 flex items-center gap-0.5 font-semibold">
+                                  <Maximize2 className="w-2.5 h-2.5" />
+                                  <span>View full</span>
+                                </span>
+                              )}
+                            </div>
+                            <div
+                              onClick={() => {
+                                if (targetClue?.targetPhotoBase64) {
+                                  setLightboxImage({
+                                    url: targetClue.targetPhotoBase64,
+                                    title: targetClue.title,
+                                    subtitle: targetClue.landmarkName || targetClue.zoneId,
+                                    badge: 'Target Landmark',
+                                  });
+                                }
+                              }}
+                              className="w-full h-36 rounded-xl overflow-hidden bg-slate-950 border border-slate-700 relative cursor-pointer group flex items-center justify-center"
+                              title="Tap to view full uncropped photo"
+                            >
                               {targetClue?.targetPhotoBase64 ? (
-                                <img
-                                  src={targetClue.targetPhotoBase64}
-                                  alt="Target"
-                                  className="w-full h-full object-cover"
-                                />
+                                <>
+                                  <img
+                                    src={targetClue.targetPhotoBase64}
+                                    alt="Target"
+                                    className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform"
+                                  />
+                                  <div className="absolute top-1.5 right-1.5 bg-slate-900/80 p-1 rounded-md text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Maximize2 className="w-3.5 h-3.5" />
+                                  </div>
+                                </>
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-600">
                                   No Target
@@ -686,15 +722,35 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           </div>
 
                           <div>
-                            <span className="text-[10px] font-bold text-emerald-400 block mb-1">
-                              Team Selfie:
-                            </span>
-                            <div className="w-full h-36 rounded-xl overflow-hidden bg-slate-950 border-2 border-emerald-500/50">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold text-emerald-400">
+                                Team Selfie:
+                              </span>
+                              <span className="text-[9px] text-emerald-400 flex items-center gap-0.5 font-semibold">
+                                <Maximize2 className="w-2.5 h-2.5" />
+                                <span>View full</span>
+                              </span>
+                            </div>
+                            <div
+                              onClick={() => {
+                                setLightboxImage({
+                                  url: sub.selfieBase64,
+                                  title: `${sub.teamName} Submission Selfie`,
+                                  subtitle: sub.clueTitle,
+                                  badge: 'Team Selfie',
+                                });
+                              }}
+                              className="w-full h-36 rounded-xl overflow-hidden bg-slate-950 border-2 border-emerald-500/50 relative cursor-pointer group flex items-center justify-center"
+                              title="Tap to view full uncropped selfie"
+                            >
                               <img
                                 src={sub.selfieBase64}
                                 alt="Selfie"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform"
                               />
+                              <div className="absolute top-1.5 right-1.5 bg-slate-900/80 p-1 rounded-md text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Maximize2 className="w-3.5 h-3.5" />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -793,13 +849,31 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                   key={clue.id}
                   className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col"
                 >
-                  <div className="w-full h-36 bg-slate-950 overflow-hidden">
+                  <div
+                    onClick={() => {
+                      if (clue.targetPhotoBase64) {
+                        setLightboxImage({
+                          url: clue.targetPhotoBase64,
+                          title: clue.title,
+                          subtitle: clue.landmarkName || clue.zoneId,
+                          badge: 'Target Landmark',
+                        });
+                      }
+                    }}
+                    className="w-full h-36 bg-slate-950 overflow-hidden relative cursor-pointer group flex items-center justify-center border-b border-slate-800"
+                    title="Tap to view full uncropped photo"
+                  >
                     {clue.targetPhotoBase64 ? (
-                      <img
-                        src={clue.targetPhotoBase64}
-                        alt={clue.title}
-                        className="w-full h-full object-cover"
-                      />
+                      <>
+                        <img
+                          src={clue.targetPhotoBase64}
+                          alt={clue.title}
+                          className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform"
+                        />
+                        <div className="absolute top-2 right-2 bg-slate-900/80 p-1.5 rounded-lg text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shadow">
+                          <Maximize2 className="w-4 h-4" />
+                        </div>
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xs text-slate-600">
                         No Image
@@ -1341,6 +1415,16 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Fullscreen Uncropped Image Lightbox Modal */}
+      <ImageLightboxModal
+        isOpen={!!lightboxImage}
+        onClose={() => setLightboxImage(null)}
+        imageUrl={lightboxImage?.url || null}
+        title={lightboxImage?.title}
+        subtitle={lightboxImage?.subtitle}
+        badge={lightboxImage?.badge}
+      />
     </div>
   );
 };
