@@ -181,7 +181,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-lg mx-auto bg-slate-950 text-slate-100 overflow-hidden relative">
+    <div className="flex flex-col h-[100dvh] w-full max-w-lg mx-auto bg-slate-950 text-slate-100 overflow-hidden relative">
       {/* 1. Mobile Header & Scoreboard */}
       <header className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg z-20">
         <div className="flex items-center gap-2.5">
@@ -231,18 +231,20 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       )}
 
       {/* 2. Main Content Area */}
-      <main className="flex-1 relative overflow-hidden">
+      <main className="flex-1 w-full h-full relative overflow-hidden">
         {activeTab === 'map' && (
-          <HuntMap
-            zones={game.zones}
-            clues={clues}
-            teams={teams}
-            currentTeamId={currentTeam.id}
-            playerCoords={playerCoords}
-            completedClueIds={Array.from(completedClueIds)}
-            onSelectClue={handleOpenNativeCamera}
-            className="h-full w-full rounded-none border-none"
-          />
+          <div className="absolute inset-0 w-full h-full">
+            <HuntMap
+              zones={game.zones}
+              clues={clues}
+              teams={teams}
+              currentTeamId={currentTeam.id}
+              playerCoords={playerCoords}
+              completedClueIds={Array.from(completedClueIds)}
+              onSelectClue={handleOpenNativeCamera}
+              className="h-full w-full rounded-none border-none"
+            />
+          </div>
         )}
 
         {activeTab === 'clues' && (

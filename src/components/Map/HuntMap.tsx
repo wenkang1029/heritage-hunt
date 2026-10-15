@@ -201,6 +201,31 @@ function MapCursorHandler({ isPlotting }: { isPlotting: boolean }) {
   return null;
 }
 
+// Map Dynamic Mobile Viewport Resize Handler
+function MapResizeHandler() {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 150);
+    const t2 = setTimeout(() => map.invalidateSize(), 500);
+
+    const onResize = () => {
+      map.invalidateSize();
+    };
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [map]);
+  return null;
+}
+
 // ============================================================================
 // Main HuntMap Component
 // ============================================================================
@@ -257,13 +282,13 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   const completedSet = useMemo(() => new Set(completedClueIds), [completedClueIds]);
 
   return (
-    <div className={`relative ${className} overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl`}>
+    <div className={`relative ${className} overflow-hidden bg-slate-950`}>
       <MapContainer
         center={[MELAKA_MAP_CENTER.latitude, MELAKA_MAP_CENTER.longitude]}
         zoom={16}
         scrollWheelZoom={true}
         className="h-full w-full z-0"
-        style={{ minHeight: '380px', height: '100%', width: '100%' }}
+        style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -271,6 +296,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
           maxZoom={19}
         />
 
+        <MapResizeHandler />
         <MapController targetCenter={targetCenter} recenterTrigger={targetRecenter} />
         <MapPlotClickHandler enabled={isPlottingZone} onAddPoint={onPlotPointAdd} />
         <MapCursorHandler isPlotting={isPlottingZone} />

@@ -25,7 +25,7 @@ import {
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured, ensureAnonymousAuth } from './firebase.ts';
 import { mockAdapter } from './mockAdapter.ts';
-import { MELAKA_ZONES, INITIAL_CLUES, DEFAULT_TEAMS } from '../data/melakaZones.ts';
+import { MELAKA_ZONES, DEFAULT_TEAMS } from '../data/melakaZones.ts';
 import type {
   Game,
   Team,
@@ -522,11 +522,16 @@ class UnifiedGameService implements IGameService {
         await setDoc(teamRef, team);
       }
 
-      if (INITIAL_CLUES && INITIAL_CLUES.length > 0) {
-        for (const clue of INITIAL_CLUES) {
-          const clueRef = doc(firestore, 'games', defaultGame.id, 'clues', clue.id);
-          await setDoc(clueRef, clue);
+      try {
+        const srcCluesSnap = await getDocs(collection(firestore, 'games', 'hunt-nkvcz', 'clues'));
+        if (!srcCluesSnap.empty) {
+          for (const clueDoc of srcCluesSnap.docs) {
+            const clueRef = doc(firestore, 'games', defaultGame.id, 'clues', clueDoc.id);
+            await setDoc(clueRef, { ...clueDoc.data(), gameId: defaultGame.id });
+          }
         }
+      } catch (e) {
+        console.warn('Could not copy clues during bootstrap:', e);
       }
 
       return defaultGame;
@@ -626,11 +631,17 @@ class UnifiedGameService implements IGameService {
       });
     }
 
-    if (INITIAL_CLUES && INITIAL_CLUES.length > 0) {
-      for (const clue of INITIAL_CLUES) {
-        const clueRef = doc(firestore, 'games', gameId, 'clues', clue.id);
-        await setDoc(clueRef, { ...clue, gameId });
+    // Seed new game with the 121 real Melaka heritage clues
+    try {
+      const srcCluesSnap = await getDocs(collection(firestore, 'games', 'hunt-nkvcz', 'clues'));
+      if (!srcCluesSnap.empty) {
+        for (const clueDoc of srcCluesSnap.docs) {
+          const clueRef = doc(firestore, 'games', gameId, 'clues', clueDoc.id);
+          await setDoc(clueRef, { ...clueDoc.data(), gameId });
+        }
       }
+    } catch (e) {
+      console.warn('Could not copy clue bank to new game:', e);
     }
 
     return newGame;

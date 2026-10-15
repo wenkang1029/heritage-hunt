@@ -63,8 +63,6 @@ export const App: React.FC = () => {
 
   // 1. Detect Initial Route & Restore Persistent Session on Page Load / Refresh
   useEffect(() => {
-    let unsubs: (() => void)[] = [];
-
     async function initApp() {
       if (typeof window === 'undefined') return;
 
@@ -85,11 +83,10 @@ export const App: React.FC = () => {
         }
       }
 
-      // Determine target game ID to load
-      const targetGameId = urlGameId || savedPlayerSession?.gameId || savedGameId || 'melaka-hunt-2026';
+      // Determine target game ID to load (defaulting to active room hunt-nkvcz)
+      const targetGameId = urlGameId || savedPlayerSession?.gameId || savedGameId || 'hunt-nkvcz';
 
       try {
-        // Load or initialize default game
         const loadedGame = await gameService.initializeDefaultGame(targetGameId);
         setGame(loadedGame);
         localStorage.setItem(LS_ACTIVE_GAME_ID, loadedGame.id);
@@ -104,53 +101,71 @@ export const App: React.FC = () => {
         } else {
           setRole('home');
         }
-
-        // Subscriptions
-        unsubs.push(
-          gameService.subscribeToGame(loadedGame.id, (g) => {
-            if (g) setGame(g);
-          })
-        );
-
-        unsubs.push(
-          gameService.subscribeToTeams(loadedGame.id, (t) => {
-            setTeams(t);
-
-            // Re-connect saved player session seamlessly if present
-            if (savedPlayerSession && savedPlayerSession.gameId === loadedGame.id) {
-              const matchedTeam = t.find((team) => team.id === savedPlayerSession!.teamId);
-              if (matchedTeam) {
-                setCurrentTeam(matchedTeam);
-                setPlayerNickname(savedPlayerSession.nickname);
-              }
-            } else {
-              setCurrentTeam((prev) => (prev ? t.find((item) => item.id === prev.id) || prev : null));
-            }
-          })
-        );
-
-        unsubs.push(
-          gameService.subscribeToClues(loadedGame.id, (c) => {
-            setClues(c);
-          })
-        );
-
-        unsubs.push(
-          gameService.subscribeToSubmissions(loadedGame.id, (s) => {
-            setSubmissions(s);
-          })
-        );
       } catch (err: any) {
         console.error('Failed to load application:', err);
       }
     }
 
     initApp();
+  }, [updateUrlParams]);
+
+  // 2. Reactively Subscribe to Game Data whenever active game ID changes
+  useEffect(() => {
+    if (!game?.id) return;
+    const gameId = game.id;
+    const unsubs: (() => void)[] = [];
+
+    // Subscribe to Game document
+    unsubs.push(
+      gameService.subscribeToGame(gameId, (g) => {
+        if (g) setGame(g);
+      })
+    );
+
+    // Subscribe to Teams
+    unsubs.push(
+      gameService.subscribeToTeams(gameId, (t) => {
+        setTeams(t);
+
+        // Re-connect saved player session seamlessly if present
+        const savedPlayerSessionRaw = localStorage.getItem(LS_PLAYER_SESSION);
+        if (savedPlayerSessionRaw) {
+          try {
+            const savedSession: PlayerSession = JSON.parse(savedPlayerSessionRaw);
+            if (savedSession.gameId === gameId) {
+              const matchedTeam = t.find((team) => team.id === savedSession.teamId);
+              if (matchedTeam) {
+                setCurrentTeam(matchedTeam);
+                setPlayerNickname(savedSession.nickname);
+              }
+            }
+          } catch {
+            // Ignore parse error
+          }
+        } else {
+          setCurrentTeam((prev) => (prev ? t.find((item) => item.id === prev.id) || prev : null));
+        }
+      })
+    );
+
+    // Subscribe to Clues (guarantees player receives 100% up-to-date GM clues)
+    unsubs.push(
+      gameService.subscribeToClues(gameId, (c) => {
+        setClues(c);
+      })
+    );
+
+    // Subscribe to Submissions
+    unsubs.push(
+      gameService.subscribeToSubmissions(gameId, (s) => {
+        setSubmissions(s);
+      })
+    );
 
     return () => {
       unsubs.forEach((unsub) => unsub());
     };
-  }, [updateUrlParams]);
+  }, [game?.id]);
 
   // GPS Tracking for Player
   const { currentCoords: playerCoords } = useGeolocation({

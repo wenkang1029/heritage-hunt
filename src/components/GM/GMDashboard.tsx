@@ -44,6 +44,7 @@ import {
   Share2,
   MousePointerClick,
   Maximize2,
+  Square,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 
@@ -190,8 +191,29 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     }
   };
 
-  // Handle Game Status Change
+  // Active players and team counts
+  const totalPlayersJoined = useMemo(
+    () => teams.reduce((acc, t) => acc + (t.members ? t.members.length : 0), 0),
+    [teams]
+  );
+
+  const teamsWithPlayers = useMemo(
+    () => teams.filter((t) => t.members && t.members.length > 0),
+    [teams]
+  );
+
+  const hasActivePlayers = totalPlayersJoined > 0;
+
+  // Handle Game Status Change (guarded against stopping ongoing games with active players)
   const handleStatusChange = async (newStatus: GameStatus) => {
+    const isStoppingAction = newStatus !== 'active';
+    if (isStoppingAction && (game.status === 'active' || hasActivePlayers)) {
+      alert(
+        `Action Blocked: Cannot stop or pause the game while there is an ongoing game or players in the team (${totalPlayersJoined} active player(s) in ${teamsWithPlayers.length} team(s)).\n\nAll participants must finish and exit before the game can be stopped.`
+      );
+      return;
+    }
+
     try {
       await gameService.updateGameStatus(game.id, newStatus);
     } catch (err: any) {
@@ -474,6 +496,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             <span>New Game</span>
           </button>
 
+          {/* Active players stop protection indicator */}
+          {game.status === 'active' && hasActivePlayers && (
+            <span
+              className="hidden md:flex items-center gap-1.5 text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-xl font-bold"
+              title="Stopping or pausing the game is blocked while players are actively in teams"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{totalPlayersJoined} Player(s) Active (Stop Protected)</span>
+            </span>
+          )}
+
           {game.status !== 'active' ? (
             <button
               onClick={() => handleStatusChange('active')}
@@ -483,13 +516,43 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               <span>Start Game</span>
             </button>
           ) : (
-            <button
-              onClick={() => handleStatusChange('paused')}
-              className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors"
-            >
-              <Pause className="w-3.5 h-3.5" />
-              <span>Pause Game</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handleStatusChange('paused')}
+                disabled={hasActivePlayers}
+                title={
+                  hasActivePlayers
+                    ? `Cannot pause game: ${totalPlayersJoined} player(s) are in teams`
+                    : 'Pause Game'
+                }
+                className={`font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors ${
+                  hasActivePlayers
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50'
+                    : 'bg-amber-600 hover:bg-amber-500 text-white cursor-pointer'
+                }`}
+              >
+                <Pause className="w-3.5 h-3.5" />
+                <span>Pause</span>
+              </button>
+
+              <button
+                onClick={() => handleStatusChange('ended')}
+                disabled={hasActivePlayers}
+                title={
+                  hasActivePlayers
+                    ? `Cannot stop game: ${totalPlayersJoined} player(s) are in teams`
+                    : 'Stop Game'
+                }
+                className={`font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors ${
+                  hasActivePlayers
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50'
+                    : 'bg-rose-600 hover:bg-rose-500 text-white cursor-pointer'
+                }`}
+              >
+                <Square className="w-3.5 h-3.5" />
+                <span>Stop Game</span>
+              </button>
+            </div>
           )}
 
           <button
