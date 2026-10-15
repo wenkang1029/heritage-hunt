@@ -72,6 +72,7 @@ export const App: React.FC = () => {
       const params = new URLSearchParams(window.location.search);
       const urlGameId = params.get('game');
       const urlMode = params.get('mode');
+      const urlPin = params.get('pin');
 
       const savedGameId = localStorage.getItem(LS_ACTIVE_GAME_ID);
       const isGmAuthed = localStorage.getItem(LS_GM_AUTH) === 'true';
@@ -98,9 +99,9 @@ export const App: React.FC = () => {
         if (urlMode === 'gm' || isGmAuthed) {
           setRole('gm');
           updateUrlParams({ game: loadedGame.id, mode: 'gm' });
-        } else if (urlGameId || savedPlayerSession) {
+        } else if (urlGameId || savedPlayerSession || urlPin) {
           setRole('player');
-          updateUrlParams({ game: loadedGame.id });
+          updateUrlParams({ game: loadedGame.id, pin: urlPin || undefined });
         } else {
           setRole('home');
         }

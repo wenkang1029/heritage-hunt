@@ -29,9 +29,11 @@ import {
   UploadCloud,
   HelpCircle,
   Maximize2,
+  Compass,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
+import { InteractiveTour, type TourStep } from '../Common/InteractiveTour.tsx';
 
 export interface PlayerHuntViewProps {
   game: Game;
@@ -74,6 +76,72 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     subtitle?: string;
     badge?: string;
   } | null>(null);
+
+  // Interactive Onboarding Tour State for Player
+  const [showTour, setShowTour] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('melaka_hunt_seen_player_tour') !== 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [tourStepIndex, setTourStepIndex] = useState<number>(0);
+
+  const playerTourSteps = useMemo<TourStep[]>(
+    () => [
+      {
+        id: 'player-welcome',
+        title: 'Welcome, Heritage Explorer!',
+        description:
+          'You are on the street representing your team in the Melaka Heritage Photo Hunt! Look at the header bar above to view your squad color, nickname, live score, and completed clues count.',
+        icon: <Trophy className="w-5 h-5 text-amber-400" />,
+        badge: 'Step 1: Your Squad',
+        tips: 'Your session is saved automatically. If you close your browser or refresh, you will remain in your team.',
+        tabKey: 'map',
+      },
+      {
+        id: 'player-map',
+        title: '1. Hunt Map & Heritage Zones',
+        description:
+          'Navigate through Melaka’s historic core. Color-coded polygon zones outline Jonker Street, Dutch Square, A Famosa, and St. Paul’s Hill. Your real-time GPS position appears right on the map as you explore!',
+        icon: <MapPin className="w-5 h-5 text-rose-500" />,
+        badge: 'Step 2: Map Tab',
+        tips: 'Keep GPS enabled on your phone so your team marker updates live for the Game Master radar.',
+        tabKey: 'map',
+      },
+      {
+        id: 'player-clues',
+        title: '2. Clues & Target Landmarks',
+        description:
+          'Switch to the Clues tab to browse historic targets. Filter by heritage zone or view all. Each card shows the points reward, landmark hint, and a photo. Tap any photo to view the full uncropped image in high resolution!',
+        icon: <List className="w-5 h-5 text-amber-400" />,
+        badge: 'Step 3: Clues Tab',
+        tips: 'Scout out distinctive colonial carvings, Dutch brickwork, and alleyway details.',
+        tabKey: 'clues',
+      },
+      {
+        id: 'player-camera',
+        title: '3. Snap Selfie & Earn Points',
+        description:
+          'When you arrive at the landmark, tap "Capture Landmark Selfie"! Take a clear selfie photo with your team and the landmark. The app compresses the image in seconds (< 150KB) and uploads it for GM verification.',
+        icon: <Camera className="w-5 h-5 text-emerald-400" />,
+        badge: 'Step 4: Camera Verification',
+        tips: 'Creative and fast submissions can earn +25 bonus points from the Game Master!',
+        tabKey: 'clues',
+      },
+      {
+        id: 'player-leaderboard',
+        title: '4. Live Leaderboard & Standings',
+        description:
+          'Track your team’s rank and score in real time. Compete with rival squads to find the most landmarks and take the #1 podium spot!',
+        icon: <Trophy className="w-5 h-5 text-amber-400" />,
+        badge: 'Step 5: Leaderboard Tab',
+        tips: 'Tap the compass icon in the top header anytime to reopen this walkthrough.',
+        tabKey: 'leaderboard',
+      },
+    ],
+    []
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousCompletedCountRef = useRef<number>(currentTeam.completedClueIds?.length || 0);
@@ -279,6 +347,19 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               {completedClueIds.size}/{clues.length}
             </span>
           </div>
+
+          {/* Tour Guide Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setTourStepIndex(0);
+              setShowTour(true);
+            }}
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 shadow-sm cursor-pointer transition-colors"
+            title="Open Interactive Tour Guide"
+          >
+            <Compass className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
@@ -750,6 +831,18 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         title={lightboxImage?.title}
         subtitle={lightboxImage?.subtitle}
         badge={lightboxImage?.badge}
+      />
+
+      {/* Interactive Onboarding Tour Guide for Player */}
+      <InteractiveTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+        tourName="Player Scavenger Hunt"
+        steps={playerTourSteps}
+        currentStepIndex={tourStepIndex}
+        onStepChange={setTourStepIndex}
+        onTabChange={(tabKey) => setActiveTab(tabKey)}
+        storageKey="melaka_hunt_seen_player_tour"
       />
     </div>
   );

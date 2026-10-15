@@ -30,7 +30,6 @@ import {
   Trophy,
   Play,
   Pause,
-  Snowflake,
   Upload,
   Lock,
   ArrowRight,
@@ -48,9 +47,11 @@ import {
   Square,
   AlertTriangle,
   X,
+  Compass,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
+import { InteractiveTour, type TourStep } from '../Common/InteractiveTour.tsx';
 
 export interface GMDashboardProps {
   game: Game;
@@ -137,6 +138,92 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     subtitle?: string;
     badge?: string;
   } | null>(null);
+
+  // Interactive Onboarding Tour State for GM
+  const [showTour, setShowTour] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('melaka_hunt_seen_gm_tour') !== 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [tourStepIndex, setTourStepIndex] = useState<number>(0);
+
+  const gmTourSteps = useMemo<TourStep[]>(
+    () => [
+      {
+        id: 'gm-overview',
+        title: 'Welcome to the GM War Room',
+        description:
+          'This is your central command center. In the header bar above, track connected participants, start the hunt with "Start Game", and use "Pause" or "Stop Game" when finished.',
+        icon: <Radio className="w-5 h-5 text-amber-400" />,
+        badge: 'Header Controls',
+        tips: 'Click "Copy Link" or the "QR Code" icon to invite teams and players.',
+        tabKey: 'queue',
+      },
+      {
+        id: 'gm-queue',
+        title: '1. Live Verification Queue',
+        description:
+          'Whenever player squads find a landmark, their selfie photo appears here in real time. Inspect each photo and click "Approve" (green) to award points, "+Bonus" (+25 pts) for great shots, or "Reject" (red) if incorrect.',
+        icon: <CheckCircle className="w-5 h-5 text-emerald-400" />,
+        badge: 'Tab: Submissions',
+        tips: 'Tap any clue thumbnail or player selfie to view the uncropped high-resolution photo.',
+        tabKey: 'queue',
+      },
+      {
+        id: 'gm-radar',
+        title: '2. Real-Time Radar Tracker',
+        description:
+          'Track all participating squads roaming the streets of Melaka. Pulsing colored radar pins represent each team’s real-time GPS coordinates and movement across heritage zones.',
+        icon: <Radio className="w-5 h-5 text-rose-500" />,
+        badge: 'Tab: Live Radar',
+        tips: 'Click on any team marker or zone boundary on the map to inspect live details.',
+        tabKey: 'radar',
+      },
+      {
+        id: 'gm-clues',
+        title: '3. Clues & Landmark Manager',
+        description:
+          'Manage all heritage scavenger clues. Photos fill each card with natural framing. Tap any card thumbnail to view the uncropped photo. Click "Upload Clues" to bulk-import photos with automatic GPS extraction!',
+        icon: <Sparkles className="w-5 h-5 text-amber-400" />,
+        badge: 'Tab: Clues & Landmarks',
+        tips: '121 historical Melaka landmarks are currently cataloged and ready.',
+        tabKey: 'clues',
+      },
+      {
+        id: 'gm-teams',
+        title: '4. Teams & PIN Management',
+        description:
+          'Manage squads and credentials. View each team’s 4-digit PIN, online player status, member count, and total score. Click "Add Team" to create additional squads or edit team colors and PINs.',
+        icon: <PlusCircle className="w-5 h-5 text-rose-400" />,
+        badge: 'Tab: Squads & PINs',
+        tips: 'Players can scan your direct team link or type the 4-digit PIN to join instantly.',
+        tabKey: 'teams',
+      },
+      {
+        id: 'gm-zones',
+        title: '5. Visual Zone Boundary Editor',
+        description:
+          'Configure heritage zones (Jonker Street, Dutch Square, A Famosa, etc.). Use "Create New Zone" or "Delete" to customize zones, or click "Plot on Map" to click points directly on the Leaflet map to visually draw custom polygon boundaries!',
+        icon: <Layers className="w-5 h-5 text-rose-400" />,
+        badge: 'Tab: Zone Editor',
+        tips: 'Plotting points interactively redraws the polygon boundary in real time.',
+        tabKey: 'zones',
+      },
+      {
+        id: 'gm-leaderboard',
+        title: '6. Official Event Leaderboard',
+        description:
+          'Follow live team scores, verified landmarks count, and current rankings. When you stop the game, the top team claims the Melaka Heritage Scavenger Hunt Trophy!',
+        icon: <Trophy className="w-5 h-5 text-amber-400" />,
+        badge: 'Tab: Leaderboard',
+        tips: 'Click the "Tour Guide" button in the header bar anytime to revisit this walkthrough.',
+        tabKey: 'leaderboard',
+      },
+    ],
+    []
+  );
 
   // Calculate shareable Game Link for participants
   const gameLink = useMemo(() => {
@@ -751,15 +838,16 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           )}
 
           <button
-            onClick={() => handleStatusChange(game.isLeaderboardFrozen ? 'active' : 'frozen')}
-            className={`font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors border ${
-              game.isLeaderboardFrozen
-                ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300'
-                : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300'
-            }`}
+            type="button"
+            onClick={() => {
+              setTourStepIndex(0);
+              setShowTour(true);
+            }}
+            className="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700 text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
+            title="Open Interactive Tour Guide"
           >
-            <Snowflake className="w-3.5 h-3.5" />
-            <span>{game.isLeaderboardFrozen ? 'Unfreeze' : 'Freeze Leaderboard'}</span>
+            <Compass className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Tour Guide</span>
           </button>
 
           <button
@@ -1909,6 +1997,18 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         title={lightboxImage?.title}
         subtitle={lightboxImage?.subtitle}
         badge={lightboxImage?.badge}
+      />
+
+      {/* Interactive Onboarding Tour Guide for GM */}
+      <InteractiveTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+        tourName="Game Master War Room"
+        steps={gmTourSteps}
+        currentStepIndex={tourStepIndex}
+        onStepChange={setTourStepIndex}
+        onTabChange={(tabKey) => setActiveTab(tabKey)}
+        storageKey="melaka_hunt_seen_gm_tour"
       />
     </div>
   );

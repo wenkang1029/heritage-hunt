@@ -236,7 +236,7 @@ export const UserGuideSection: React.FC = () => {
                   <div className="text-xs">
                     <h4 className="font-bold text-white text-sm mb-0.5">4. 1-Click Verification & Game Controls</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Review incoming selfies in real time with <strong className="text-emerald-400">Approve</strong>, <strong className="text-amber-400">+Bonus</strong>, or <strong className="text-rose-400">Reject</strong>. Use <strong className="text-cyan-400">Freeze Leaderboard</strong> for the final minutes, and stop the game once players finish.
+                      Review incoming selfies in real time with <strong className="text-emerald-400">Approve</strong>, <strong className="text-amber-400">+Bonus</strong>, or <strong className="text-rose-400">Reject</strong>, track team scores on the live leaderboard, and stop the game once players finish.
                     </p>
                   </div>
                 </div>
