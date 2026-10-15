@@ -47,6 +47,7 @@ import {
   Maximize2,
   Square,
   AlertTriangle,
+  X,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 
@@ -112,11 +113,16 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const [showForceStopModal, setShowForceStopModal] = useState<boolean>(false);
   const [pendingStatus, setPendingStatus] = useState<GameStatus | null>(null);
 
-  // Zone Editing & Visual Map Plotting State
+  // Zone Editing, Creating & Visual Map Plotting State
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneColor, setNewZoneColor] = useState('#DC2626');
   const [newZoneDescription, setNewZoneDescription] = useState('');
+  const [showCreateZoneModal, setShowCreateZoneModal] = useState<boolean>(false);
+  const [createZoneName, setCreateZoneName] = useState<string>('');
+  const [createZoneLocalName, setCreateZoneLocalName] = useState<string>('');
+  const [createZoneColor, setCreateZoneColor] = useState<string>('#3B82F6');
+  const [createZoneDescription, setCreateZoneDescription] = useState<string>('');
   const [activePlotZone, setActivePlotZone] = useState<Zone | null>(null);
   const [plotVertices, setPlotVertices] = useState<GeoCoordinate[]>([]);
   const [isSavingPlot, setIsSavingPlot] = useState<boolean>(false);
@@ -445,6 +451,81 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       alert('Failed to save plotted zone: ' + (err.message || 'Unknown error'));
     } finally {
       setIsSavingPlot(false);
+    }
+  };
+
+  // Create New Zone
+  const handleCreateZone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createZoneName.trim()) {
+      alert('Please enter a zone name.');
+      return;
+    }
+
+    try {
+      const zoneId = `zone_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const center = { latitude: 2.1944, longitude: 102.2491 }; // Melaka Historic Core center
+      // Starter 3-point polygon around Melaka core
+      const starterPolygon: GeoCoordinate[] = [
+        { latitude: 2.1955, longitude: 102.2485 },
+        { latitude: 2.1960, longitude: 102.2505 },
+        { latitude: 2.1935, longitude: 102.2495 },
+      ];
+
+      const newZone: Zone = {
+        id: zoneId,
+        name: createZoneName.trim(),
+        localName: createZoneLocalName.trim() || undefined,
+        description: createZoneDescription.trim() || 'Custom heritage zone in Melaka',
+        color: createZoneColor,
+        borderColor: createZoneColor,
+        fillColor: createZoneColor,
+        center,
+        polygon: starterPolygon,
+      };
+
+      const updatedZones = [...game.zones, newZone];
+      await gameService.updateZones(game.id, updatedZones);
+
+      setShowCreateZoneModal(false);
+      setCreateZoneName('');
+      setCreateZoneLocalName('');
+      setCreateZoneDescription('');
+
+      const startPlot = window.confirm(
+        `Zone "${newZone.name}" created! Would you like to plot its boundary points on the map now?`
+      );
+      if (startPlot) {
+        handleStartPlotting(newZone);
+      }
+    } catch (err: any) {
+      alert('Failed to create zone: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+  // Delete Zone
+  const handleDeleteZone = async (zone: Zone) => {
+    const cluesInZone = clues.filter((c) => c.zoneId === zone.id);
+    let confirmMsg = `Are you sure you want to delete zone "${zone.name}"? This action cannot be undone.`;
+    if (cluesInZone.length > 0) {
+      confirmMsg = `Warning: Zone "${zone.name}" currently has ${cluesInZone.length} clue(s) assigned to it.\n\nDeleting this zone will remove it from the map. Are you sure you want to proceed?`;
+    }
+
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const remainingZones = game.zones.filter((z) => z.id !== zone.id);
+      if (remainingZones.length === 0) {
+        alert('You must have at least one zone in the game.');
+        return;
+      }
+      await gameService.updateZones(game.id, remainingZones);
+      if (activePlotZone?.id === zone.id) {
+        setActivePlotZone(null);
+        setPlotVertices([]);
+      }
+    } catch (err: any) {
+      alert('Failed to delete zone: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -955,7 +1036,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         });
                       }
                     }}
-                    className="w-full h-36 bg-slate-950 overflow-hidden relative cursor-pointer group flex items-center justify-center border-b border-slate-800"
+                    className="w-full h-44 sm:h-48 bg-slate-950 overflow-hidden relative cursor-pointer group flex items-center justify-center border-b border-slate-800"
                     title="Tap to view full uncropped photo"
                   >
                     {clue.targetPhotoBase64 ? (
@@ -963,9 +1044,15 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         <img
                           src={clue.targetPhotoBase64}
                           alt={clue.title}
-                          className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                        <div className="absolute top-2 right-2 bg-slate-900/80 p-1.5 rounded-lg text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shadow">
+                        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="bg-slate-900/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-700 shadow-lg flex items-center gap-1.5">
+                            <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                            <span>View Full Image</span>
+                          </span>
+                        </div>
+                        <div className="absolute top-2 right-2 bg-slate-900/80 p-1.5 rounded-lg text-slate-300 shadow">
                           <Maximize2 className="w-4 h-4" />
                         </div>
                       </>
@@ -1164,14 +1251,22 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 </p>
               </div>
 
-              {activePlotZone && (
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                {activePlotZone && (
                   <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 animate-pulse">
                     <MousePointerClick className="w-4 h-4 text-amber-400" />
-                    <span>Plotting: {activePlotZone.name} ({plotVertices.length} points)</span>
+                    <span>Plotting: {activePlotZone.name} ({plotVertices.length} pts)</span>
                   </span>
-                </div>
-              )}
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowCreateZoneModal(true)}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg cursor-pointer transition-all shrink-0"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Create New Zone</span>
+                </button>
+              </div>
             </div>
 
             {/* Interactive Leaflet Zone Plotting Map */}
@@ -1219,19 +1314,31 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         />
                         <span className="text-xs font-bold text-slate-300">{zone.name}</span>
                       </div>
-                      <button
-                        onClick={() => {
-                          setEditingZone(zone);
-                          setNewZoneName(zone.name);
-                          setNewZoneColor(zone.color);
-                          setNewZoneDescription(zone.description || '');
-                        }}
-                        className="text-xs text-slate-400 hover:text-white font-semibold flex items-center gap-1 cursor-pointer"
-                        title="Edit Zone Details"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        <span>Details</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingZone(zone);
+                            setNewZoneName(zone.name);
+                            setNewZoneColor(zone.color);
+                            setNewZoneDescription(zone.description || '');
+                          }}
+                          className="text-xs text-slate-400 hover:text-white font-semibold flex items-center gap-1 cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-800 transition-colors"
+                          title="Edit Zone Details"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                          <span>Details</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteZone(zone)}
+                          className="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 cursor-pointer px-1.5 py-0.5 rounded hover:bg-rose-500/10 transition-colors"
+                          title="Delete Zone"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
                     </div>
 
                     <h3 className="font-bold text-sm text-white">{zone.name}</h3>
@@ -1529,6 +1636,118 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                   className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"
                 >
                   Save Zone
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create New Zone Modal */}
+      {showCreateZoneModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl animate-fade-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-rose-500" />
+                <span>Create New Zone</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowCreateZoneModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateZone} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Zone Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Little India & Kampung Jawa"
+                  value={createZoneName}
+                  onChange={(e) => setCreateZoneName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Local / Subtitle Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Heritage Enclave 4"
+                  value={createZoneLocalName}
+                  onChange={(e) => setCreateZoneLocalName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Map Highlight Color
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={createZoneColor}
+                    onChange={(e) => setCreateZoneColor(e.target.value)}
+                    className="w-12 h-9 rounded-xl cursor-pointer bg-transparent border-0"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {['#DC2626', '#EA580C', '#EAB308', '#16A34A', '#0284C7', '#8B5CF6', '#EC4899'].map(
+                      (presetColor) => (
+                        <button
+                          key={presetColor}
+                          type="button"
+                          onClick={() => setCreateZoneColor(presetColor)}
+                          className={`w-6 h-6 rounded-full border transition-transform hover:scale-110 cursor-pointer ${
+                            createZoneColor === presetColor ? 'border-white scale-110 ring-2 ring-white/50' : 'border-white/20'
+                          }`}
+                          style={{ background: presetColor }}
+                        />
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Describe landmarks or boundaries included in this zone..."
+                  value={createZoneDescription}
+                  onChange={(e) => setCreateZoneDescription(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                />
+              </div>
+
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-[11px] text-slate-400">
+                <span className="text-amber-400 font-bold">Interactive Boundary:</span> After creating, you will be prompted to visually click points directly on the interactive map to plot its boundary!
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateZoneModal(false)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md cursor-pointer"
+                >
+                  Create Zone
                 </button>
               </div>
             </form>
