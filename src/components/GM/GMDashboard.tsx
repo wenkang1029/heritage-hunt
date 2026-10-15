@@ -48,6 +48,8 @@ import {
   AlertTriangle,
   X,
   Compass,
+  ChevronDown,
+  Users,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
@@ -148,6 +150,18 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     }
   });
   const [tourStepIndex, setTourStepIndex] = useState<number>(0);
+
+  // Leaderboard team members dropdown state
+  const [expandedLeaderboardTeams, setExpandedLeaderboardTeams] = useState<Set<string>>(new Set());
+
+  const toggleLeaderboardTeamExpand = (teamId: string) => {
+    setExpandedLeaderboardTeams((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamId)) next.delete(teamId);
+      else next.add(teamId);
+      return next;
+    });
+  };
 
   const gmTourSteps = useMemo<TourStep[]>(
     () => [
@@ -1553,38 +1567,145 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               <Trophy className="w-10 h-10 text-amber-400 mx-auto mb-2" />
               <h2 className="text-xl font-black text-white">Event Leaderboard</h2>
               <p className="text-xs text-slate-400">
-                Official real-time rankings and scores for all participating teams.
+                Official real-time rankings and scores for all participating teams. Click on any squad to view its members.
               </p>
             </div>
 
             <div className="space-y-3">
-              {teams.map((t, idx) => (
-                <div
-                  key={t.id}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between shadow-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-black text-base text-slate-500 w-6 text-center">
-                      #{idx + 1}
-                    </span>
-                    <span
-                      className="w-4 h-4 rounded-full ring-2 ring-white/30"
-                      style={{ background: t.color }}
-                    />
-                    <div>
-                      <h4 className="font-bold text-sm text-white">{t.name}</h4>
-                      <span className="text-xs text-slate-400">
-                        PIN: #{t.pin} • {t.completedClueIds?.length || 0} clues completed
-                      </span>
-                    </div>
-                  </div>
+              {[...teams]
+                .sort((a, b) => b.score - a.score)
+                .map((t, idx) => {
+                  const isExpanded = expandedLeaderboardTeams.has(t.id);
+                  const memberCount = t.members?.length || 0;
 
-                  <div className="text-right">
-                    <span className="text-xl font-black text-amber-400">{t.score}</span>
-                    <span className="text-[10px] text-slate-500 block">points</span>
-                  </div>
-                </div>
-              ))}
+                  return (
+                    <div
+                      key={t.id}
+                      className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 shadow-lg transition-all"
+                    >
+                      {/* Team Card Header */}
+                      <div
+                        className="flex items-center justify-between cursor-pointer select-none"
+                        onClick={() => toggleLeaderboardTeamExpand(t.id)}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 pr-2">
+                          <span
+                            className={`font-black text-base w-6 text-center ${
+                              idx === 0
+                                ? 'text-amber-400'
+                                : idx === 1
+                                ? 'text-slate-300'
+                                : idx === 2
+                                ? 'text-amber-600'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            #{idx + 1}
+                          </span>
+                          <span
+                            className="w-4 h-4 rounded-full ring-2 ring-white/30 shrink-0"
+                            style={{ background: t.color }}
+                          />
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm text-white truncate">{t.name}</h4>
+                            <span className="text-xs text-slate-400 block truncate">
+                              PIN: #{t.pin} • {t.completedClueIds?.length || 0} clues completed
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <span className="text-xl font-black text-amber-400">{t.score}</span>
+                            <span className="text-[10px] text-slate-500 block leading-none">points</span>
+                          </div>
+
+                          {/* Dropdown Toggle Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleLeaderboardTeamExpand(t.id);
+                            }}
+                            className={`px-2.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
+                              isExpanded
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                            }`}
+                            title={isExpanded ? 'Hide team members' : 'View team members'}
+                          >
+                            <Users className="w-3.5 h-3.5 text-amber-400" />
+                            <span className="text-[11px] font-mono font-bold">{memberCount}</span>
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                isExpanded ? 'rotate-180 text-amber-400' : 'text-slate-400'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dropdown Drawer: Team Members List */}
+                      {isExpanded && (
+                        <div className="mt-3.5 pt-3.5 border-t border-slate-800/80 animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between mb-2 px-1">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Squad Members ({memberCount})</span>
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {t.members?.filter((m) => m.isOnline !== false).length || 0} active
+                            </span>
+                          </div>
+
+                          {t.members && t.members.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                              {t.members.map((m) => {
+                                const isOnline = m.isOnline !== false;
+                                return (
+                                  <div
+                                    key={m.id || m.nickname}
+                                    className="bg-slate-950/80 border border-slate-800/90 rounded-xl px-3 py-2 flex items-center justify-between text-xs"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span
+                                        className={`w-2 h-2 rounded-full shrink-0 ${
+                                          isOnline
+                                            ? 'bg-emerald-400 ring-2 ring-emerald-400/30'
+                                            : 'bg-slate-600'
+                                        }`}
+                                        title={isOnline ? 'Online' : 'Offline'}
+                                      />
+                                      <span className="font-semibold text-slate-200 truncate">
+                                        {m.nickname}
+                                      </span>
+                                      {m.isLeader && (
+                                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                          Leader
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span
+                                      className={`text-[10px] shrink-0 font-medium ${
+                                        isOnline ? 'text-emerald-400' : 'text-slate-500'
+                                      }`}
+                                    >
+                                      {isOnline ? 'Online' : 'Offline'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-center py-3 text-xs text-slate-500 italic bg-slate-950/40 rounded-xl border border-slate-800/60 mt-1">
+                              No players have joined this squad yet.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}

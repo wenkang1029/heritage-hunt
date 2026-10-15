@@ -30,6 +30,8 @@ import {
   HelpCircle,
   Maximize2,
   Compass,
+  ChevronDown,
+  Users,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
@@ -86,6 +88,18 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     }
   });
   const [tourStepIndex, setTourStepIndex] = useState<number>(0);
+
+  // Leaderboard team members dropdown state
+  const [expandedLeaderboardTeams, setExpandedLeaderboardTeams] = useState<Set<string>>(new Set());
+
+  const toggleLeaderboardTeamExpand = (teamId: string) => {
+    setExpandedLeaderboardTeams((prev) => {
+      const next = new Set(prev);
+      if (next.has(teamId)) next.delete(teamId);
+      else next.add(teamId);
+      return next;
+    });
+  };
 
   const playerTourSteps = useMemo<TourStep[]>(
     () => [
@@ -527,59 +541,172 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             <div className="text-center mb-4">
               <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-1" />
               <h2 className="text-lg font-black text-white">Live Leaderboard</h2>
-              {game.isLeaderboardFrozen && (
-                <div className="mt-2 p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-bold animate-pulse">
-                  ❄️ Scores are frozen for the final round!
-                </div>
-              )}
+              <p className="text-[11px] text-slate-400">
+                Official squad rankings. Tap any team to view its squad members!
+              </p>
             </div>
 
             <div className="space-y-2.5">
-              {teams.map((t, idx) => {
-                const isMe = t.id === currentTeam.id;
-                return (
-                  <div
-                    key={t.id}
-                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
-                      isMe
-                        ? 'bg-slate-900 border-amber-500/50 shadow-lg shadow-amber-500/5'
-                        : 'bg-slate-900/60 border-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="font-black text-sm text-slate-400 w-5 text-center">
-                        #{idx + 1}
-                      </span>
-                      <span
-                        className="w-3.5 h-3.5 rounded-full ring-2 ring-white/30 shrink-0"
-                        style={{ background: t.color }}
-                      />
-                      <div>
-                        <div className="font-bold text-sm text-white flex items-center gap-1.5">
-                          {t.name}
-                          {isMe && (
-                            <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold">
-                              You
+              {[...teams]
+                .sort((a, b) => b.score - a.score)
+                .map((t, idx) => {
+                  const isMe = t.id === currentTeam.id;
+                  const isExpanded = expandedLeaderboardTeams.has(t.id);
+                  const memberCount = t.members?.length || 0;
+
+                  return (
+                    <div
+                      key={t.id}
+                      className={`p-3.5 rounded-2xl border transition-all ${
+                        isMe
+                          ? 'bg-slate-900 border-amber-500/50 shadow-lg shadow-amber-500/5'
+                          : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {/* Team Card Header */}
+                      <div
+                        className="flex items-center justify-between cursor-pointer select-none"
+                        onClick={() => toggleLeaderboardTeamExpand(t.id)}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 pr-2">
+                          <span
+                            className={`font-black text-sm w-5 text-center ${
+                              idx === 0
+                                ? 'text-amber-400'
+                                : idx === 1
+                                ? 'text-slate-300'
+                                : idx === 2
+                                ? 'text-amber-600'
+                                : 'text-slate-500'
+                            }`}
+                          >
+                            #{idx + 1}
+                          </span>
+                          <span
+                            className="w-3.5 h-3.5 rounded-full ring-2 ring-white/30 shrink-0"
+                            style={{ background: t.color }}
+                          />
+                          <div className="min-w-0">
+                            <div className="font-bold text-sm text-white flex items-center gap-1.5 truncate">
+                              <span className="truncate">{t.name}</span>
+                              {isMe && (
+                                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold shrink-0">
+                                  You
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-slate-400 block truncate">
+                              {t.completedClueIds?.length || 0} clues found
                             </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          <div className="text-right">
+                            <span className="text-base font-black text-amber-400 leading-none">
+                              {t.score}
+                            </span>
+                            <span className="text-[10px] text-slate-500 block leading-none mt-0.5">
+                              points
+                            </span>
+                          </div>
+
+                          {/* Dropdown Toggle Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleLeaderboardTeamExpand(t.id);
+                            }}
+                            className={`px-2 py-1 rounded-lg border transition-all flex items-center gap-1 text-[11px] font-bold cursor-pointer ${
+                              isExpanded
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-700'
+                            }`}
+                            title={isExpanded ? 'Hide members' : 'View members'}
+                          >
+                            <Users className="w-3 h-3 text-amber-400" />
+                            <span className="font-mono">{memberCount}</span>
+                            <ChevronDown
+                              className={`w-3 h-3 transition-transform duration-200 ${
+                                isExpanded ? 'rotate-180 text-amber-400' : 'text-slate-400'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dropdown Drawer: Team Members */}
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-slate-800/80 animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between mb-2 px-0.5">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                              <Users className="w-3 h-3 text-amber-400" />
+                              <span>Squad Members ({memberCount})</span>
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {t.members?.filter((m) => m.isOnline !== false).length || 0} active
+                            </span>
+                          </div>
+
+                          {t.members && t.members.length > 0 ? (
+                            <div className="space-y-1.5 mt-1">
+                              {t.members.map((m) => {
+                                const isOnline = m.isOnline !== false;
+                                const isCurrentPlayer = m.nickname === nickname;
+                                return (
+                                  <div
+                                    key={m.id || m.nickname}
+                                    className={`px-2.5 py-1.5 rounded-xl border flex items-center justify-between text-xs transition-colors ${
+                                      isCurrentPlayer
+                                        ? 'bg-amber-500/10 border-amber-500/30'
+                                        : 'bg-slate-950/70 border-slate-800/80'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span
+                                        className={`w-2 h-2 rounded-full shrink-0 ${
+                                          isOnline
+                                            ? 'bg-emerald-400 ring-2 ring-emerald-400/30'
+                                            : 'bg-slate-600'
+                                        }`}
+                                        title={isOnline ? 'Online' : 'Offline'}
+                                      />
+                                      <span className="font-medium text-slate-200 truncate">
+                                        {m.nickname}
+                                      </span>
+                                      {isCurrentPlayer && (
+                                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300">
+                                          You
+                                        </span>
+                                      )}
+                                      {m.isLeader && (
+                                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                          Leader
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span
+                                      className={`text-[10px] font-medium shrink-0 ${
+                                        isOnline ? 'text-emerald-400' : 'text-slate-500'
+                                      }`}
+                                    >
+                                      {isOnline ? 'Active' : 'Offline'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-center py-2.5 text-[11px] text-slate-500 italic bg-slate-950/40 rounded-xl border border-slate-800/60 mt-1">
+                              No players have joined this squad yet.
+                            </div>
                           )}
                         </div>
-                        <span className="text-[11px] text-slate-400">
-                          {t.completedClueIds?.length || 0} clues found
-                        </span>
-                      </div>
+                      )}
                     </div>
-
-                    <div className="text-right">
-                      <span className="text-base font-black text-amber-400">
-                        {t.score}
-                      </span>
-                      <span className="text-[10px] text-slate-500 block leading-none">
-                        points
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         )}
