@@ -50,6 +50,7 @@ import {
   X,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
+import { useDialog } from '../../context/DialogContext.tsx';
 
 export interface GMDashboardProps {
   game: Game;
@@ -68,6 +69,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   onGameChange,
   onLogout,
 }) => {
+  const { showAlert, showConfirm } = useDialog();
+
   // Session persistence for GM
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     try {
@@ -197,7 +200,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         rejectionReason: action === 'reject' ? 'Photo does not clearly match the landmark detail.' : undefined,
       });
     } catch (err: any) {
-      alert('Review action error: ' + (err.message || 'Unknown error'));
+      await showAlert({
+        title: 'Review Action Failed',
+        message: 'Review action error: ' + (err.message || 'Unknown error'),
+        variant: 'danger',
+      });
     } finally {
       setIsProcessingAction(false);
     }
@@ -257,7 +264,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       setShowForceStopModal(false);
       setPendingStatus(null);
     } catch (err: any) {
-      alert('Failed to update game status: ' + err.message);
+      await showAlert({
+        title: 'Status Update Failed',
+        message: 'Failed to update game status: ' + err.message,
+        variant: 'danger',
+      });
     }
   };
 
@@ -275,9 +286,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       if (onGameChange) {
         onGameChange(createdGame);
       }
-      alert(`Game "${createdGame.name}" created! Participants can now join via the game link.`);
+      await showAlert({
+        title: 'Game Created',
+        message: `Game "${createdGame.name}" created! Participants can now join via the game link.`,
+        variant: 'success',
+      });
     } catch (err: any) {
-      alert('Failed to create game: ' + err.message);
+      await showAlert({
+        title: 'Game Creation Failed',
+        message: 'Failed to create game: ' + err.message,
+        variant: 'danger',
+      });
     } finally {
       setIsCreatingGame(false);
     }
@@ -292,9 +311,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       await gameService.createTeam(game.id, newTeamName.trim(), newTeamColor, newTeamPin.trim());
       setNewTeamName('');
       setNewTeamPin('');
-      alert(`Team "${newTeamName}" created successfully!`);
+      await showAlert({
+        title: 'Team Created',
+        message: `Team "${newTeamName}" created successfully!`,
+        variant: 'success',
+      });
     } catch (err: any) {
-      alert('Failed to create team: ' + err.message);
+      await showAlert({
+        title: 'Team Creation Failed',
+        message: 'Failed to create team: ' + err.message,
+        variant: 'danger',
+      });
     }
   };
 
@@ -327,19 +354,31 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   // Delete Team (Only if no players have joined)
   const handleDeleteTeam = async (team: Team) => {
     if (team.members && team.members.length > 0) {
-      alert(`Cannot delete "${team.name}" because it already has ${team.members.length} player(s) joined.`);
+      await showAlert({
+        title: 'Cannot Delete Team',
+        message: `Cannot delete "${team.name}" because it already has ${team.members.length} player(s) joined.`,
+        variant: 'warning',
+      });
       return;
     }
 
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${team.name}"? This cannot be undone.`
-    );
+    const confirmDelete = await showConfirm({
+      title: 'Delete Team',
+      message: `Are you sure you want to delete team "${team.name}"? This action cannot be undone.`,
+      confirmText: 'Delete Team',
+      cancelText: 'Cancel',
+      variant: 'danger',
+    });
     if (!confirmDelete) return;
 
     try {
       await gameService.deleteTeam(game.id, team.id);
     } catch (err: any) {
-      alert('Failed to delete team: ' + err.message);
+      await showAlert({
+        title: 'Delete Team Failed',
+        message: 'Failed to delete team: ' + err.message,
+        variant: 'danger',
+      });
     }
   };
 
@@ -380,7 +419,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       setUploadFeedback(`✓ Successfully added ${addedCount} clue photos with GPS pins!`);
       setTimeout(() => setUploadFeedback(null), 5000);
     } catch (err: any) {
-      alert('Bulk upload error: ' + err.message);
+      await showAlert({
+        title: 'Bulk Upload Failed',
+        message: 'Bulk upload error: ' + err.message,
+        variant: 'danger',
+      });
     } finally {
       setIsUploadingClues(false);
     }
@@ -405,7 +448,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       await gameService.updateZones(game.id, updatedZones);
       setEditingZone(null);
     } catch (err: any) {
-      alert('Failed to update zone: ' + err.message);
+      await showAlert({
+        title: 'Update Failed',
+        message: 'Failed to update zone: ' + err.message,
+        variant: 'danger',
+      });
     }
   };
 
@@ -424,7 +471,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const handleSavePlotZone = async () => {
     if (!activePlotZone) return;
     if (plotVertices.length < 3) {
-      alert('A zone polygon must contain at least 3 boundary points.');
+      await showAlert({
+        title: 'Insufficient Points',
+        message: 'A zone polygon must contain at least 3 boundary points.',
+        variant: 'warning',
+      });
       return;
     }
     setIsSavingPlot(true);
@@ -448,7 +499,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       setActivePlotZone(null);
       setPlotVertices([]);
     } catch (err: any) {
-      alert('Failed to save plotted zone: ' + (err.message || 'Unknown error'));
+      await showAlert({
+        title: 'Save Failed',
+        message: 'Failed to save plotted zone: ' + (err.message || 'Unknown error'),
+        variant: 'danger',
+      });
     } finally {
       setIsSavingPlot(false);
     }
@@ -458,7 +513,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const handleCreateZone = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createZoneName.trim()) {
-      alert('Please enter a zone name.');
+      await showAlert({
+        title: 'Zone Name Required',
+        message: 'Please enter a zone name.',
+        variant: 'warning',
+      });
       return;
     }
 
@@ -492,14 +551,22 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       setCreateZoneLocalName('');
       setCreateZoneDescription('');
 
-      const startPlot = window.confirm(
-        `Zone "${newZone.name}" created! Would you like to plot its boundary points on the map now?`
-      );
+      const startPlot = await showConfirm({
+        title: 'Zone Created!',
+        message: `Zone "${newZone.name}" created! Would you like to plot its boundary points on the map now?`,
+        confirmText: 'Plot on Map',
+        cancelText: 'Later',
+        variant: 'info',
+      });
       if (startPlot) {
         handleStartPlotting(newZone);
       }
     } catch (err: any) {
-      alert('Failed to create zone: ' + (err.message || 'Unknown error'));
+      await showAlert({
+        title: 'Creation Failed',
+        message: 'Failed to create zone: ' + (err.message || 'Unknown error'),
+        variant: 'danger',
+      });
     }
   };
 
@@ -511,12 +578,23 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       confirmMsg = `Warning: Zone "${zone.name}" currently has ${cluesInZone.length} clue(s) assigned to it.\n\nDeleting this zone will remove it from the map. Are you sure you want to proceed?`;
     }
 
-    if (!window.confirm(confirmMsg)) return;
+    const confirmed = await showConfirm({
+      title: 'Delete Zone',
+      message: confirmMsg,
+      confirmText: 'Delete Zone',
+      cancelText: 'Cancel',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
 
     try {
       const remainingZones = game.zones.filter((z) => z.id !== zone.id);
       if (remainingZones.length === 0) {
-        alert('You must have at least one zone in the game.');
+        await showAlert({
+          title: 'Cannot Delete Zone',
+          message: 'You must have at least one zone in the game.',
+          variant: 'warning',
+        });
         return;
       }
       await gameService.updateZones(game.id, remainingZones);
@@ -525,7 +603,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         setPlotVertices([]);
       }
     } catch (err: any) {
-      alert('Failed to delete zone: ' + (err.message || 'Unknown error'));
+      await showAlert({
+        title: 'Delete Failed',
+        message: 'Failed to delete zone: ' + (err.message || 'Unknown error'),
+        variant: 'danger',
+      });
     }
   };
 

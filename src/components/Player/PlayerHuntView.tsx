@@ -31,6 +31,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
+import { useDialog } from '../../context/DialogContext.tsx';
 
 export interface PlayerHuntViewProps {
   game: Game;
@@ -53,6 +54,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   nickname,
   playerId,
 }) => {
+  const { showAlert } = useDialog();
   const [activeTab, setActiveTab] = useState<'map' | 'clues' | 'leaderboard'>('map');
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState<string>('all');
@@ -181,7 +183,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       setCapturedPreview(compressed.base64);
       setCompressionStats(`Compressed: ${originalSize} ➔ ${compressedSize} (< 150 KB)`);
     } catch (err: any) {
-      alert('Photo compression error: ' + (err.message || 'Unknown error'));
+      await showAlert({
+        title: 'Compression Error',
+        message: 'Photo compression error: ' + (err.message || 'Unknown error'),
+        variant: 'danger',
+      });
     } finally {
       setIsCompressing(false);
       // Reset input value so same photo can be re-selected if retrying
@@ -212,12 +218,23 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       setSubmissionFeedback('Selfie submitted! Waiting for Game Master verification.');
       setIsCapturing(false);
+      const submittedTitle = selectedClue.title;
       setSelectedClue(null);
       setCapturedPreview(null);
 
+      await showAlert({
+        title: 'Selfie Submitted!',
+        message: `Your selfie for "${submittedTitle}" was uploaded successfully! Waiting for Game Master verification.`,
+        variant: 'success',
+      });
+
       setTimeout(() => setSubmissionFeedback(null), 5000);
     } catch (err: any) {
-      alert('Submission failed: ' + (err.message || 'Please try again.'));
+      await showAlert({
+        title: 'Submission Failed',
+        message: 'Submission failed: ' + (err.message || 'Please try again.'),
+        variant: 'danger',
+      });
     } finally {
       setIsSubmitting(false);
     }
