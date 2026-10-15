@@ -16,6 +16,7 @@ import type {
   Submission,
   GameStatus,
   Zone,
+  GeoCoordinate,
 } from '../../types/index.ts';
 import { HuntMap } from '../Map/HuntMap.tsx';
 import { gameService } from '../../services/gameService.ts';
@@ -41,6 +42,7 @@ import {
   Layers,
   LogOut,
   Share2,
+  MousePointerClick,
 } from 'lucide-react';
 
 export interface GMDashboardProps {
@@ -101,11 +103,14 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const [isUploadingClues, setIsUploadingClues] = useState<boolean>(false);
   const [uploadFeedback, setUploadFeedback] = useState<string | null>(null);
 
-  // Zone Editing State
+  // Zone Editing & Visual Map Plotting State
   const [editingZone, setEditingZone] = useState<Zone | null>(null);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneColor, setNewZoneColor] = useState('#DC2626');
   const [newZoneDescription, setNewZoneDescription] = useState('');
+  const [activePlotZone, setActivePlotZone] = useState<Zone | null>(null);
+  const [plotVertices, setPlotVertices] = useState<GeoCoordinate[]>([]);
+  const [isSavingPlot, setIsSavingPlot] = useState<boolean>(false);
 
   // Calculate shareable Game Link for participants
   const gameLink = useMemo(() => {
@@ -329,6 +334,51 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       setEditingZone(null);
     } catch (err: any) {
       alert('Failed to update zone: ' + err.message);
+    }
+  };
+
+  const handleStartPlotting = (zone: Zone) => {
+    setActivePlotZone(zone);
+    setPlotVertices(zone.polygon ? [...zone.polygon] : []);
+    if (activeTab !== 'zones') {
+      setActiveTab('zones');
+    }
+    const mapEl = document.getElementById('gm-zone-map-editor');
+    if (mapEl) {
+      mapEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSavePlotZone = async () => {
+    if (!activePlotZone) return;
+    if (plotVertices.length < 3) {
+      alert('A zone polygon must contain at least 3 boundary points.');
+      return;
+    }
+    setIsSavingPlot(true);
+    try {
+      const sumLat = plotVertices.reduce((acc, p) => acc + p.latitude, 0);
+      const sumLng = plotVertices.reduce((acc, p) => acc + p.longitude, 0);
+      const newCenter = {
+        latitude: Number((sumLat / plotVertices.length).toFixed(6)),
+        longitude: Number((sumLng / plotVertices.length).toFixed(6)),
+      };
+      const updatedZones = game.zones.map((z) =>
+        z.id === activePlotZone.id
+          ? {
+              ...z,
+              polygon: plotVertices,
+              center: newCenter,
+            }
+          : z
+      );
+      await gameService.updateZones(game.id, updatedZones);
+      setActivePlotZone(null);
+      setPlotVertices([]);
+    } catch (err: any) {
+      alert('Failed to save plotted zone: ' + (err.message || 'Unknown error'));
+    } finally {
+      setIsSavingPlot(false);
     }
   };
 
@@ -905,31 +955,76 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         )}
 
         {/* ========================================================================= */}
-        {/* TAB 5: Zone Configuration */}
+        {/* TAB 5: Zone Configuration & Interactive Map Plotting */}
         {/* ========================================================================= */}
         {activeTab === 'zones' && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-black text-white">Zone Configuration</h2>
+                <h2 className="text-lg font-black text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-rose-500" />
+                  <span>Zone Map & Boundary Editor</span>
+                </h2>
                 <p className="text-xs text-slate-400">
-                  Configure search zones across historical Melaka.
+                  Click <strong className="text-amber-400">"Plot on Map"</strong> on any zone below to draw and adjust its polygon boundary directly on the map.
                 </p>
               </div>
+
+              {activePlotZone && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 animate-pulse">
+                    <MousePointerClick className="w-4 h-4 text-amber-400" />
+                    <span>Plotting: {activePlotZone.name} ({plotVertices.length} points)</span>
+                  </span>
+                </div>
+              )}
             </div>
 
+            {/* Interactive Leaflet Zone Plotting Map */}
+            <div id="gm-zone-map-editor" className="rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative">
+              <HuntMap
+                zones={game.zones}
+                clues={clues}
+                teams={teams}
+                className="h-[480px] w-full"
+                isPlottingZone={!!activePlotZone}
+                plottingZoneId={activePlotZone?.id}
+                plottingZoneName={activePlotZone?.name}
+                plottingZoneColor={activePlotZone?.color}
+                plottingPoints={plotVertices}
+                onPlotPointAdd={(p) => setPlotVertices((prev) => [...prev, p])}
+                onUndoPoint={() => setPlotVertices((prev) => prev.slice(0, -1))}
+                onClearPoints={() => setPlotVertices([])}
+                onSavePlot={handleSavePlotZone}
+                onCancelPlot={() => {
+                  setActivePlotZone(null);
+                  setPlotVertices([]);
+                }}
+                isSavingPlot={isSavingPlot}
+                targetCenter={activePlotZone?.center}
+              />
+            </div>
+
+            {/* Zone Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {game.zones.map((zone) => (
                 <div
                   key={zone.id}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col justify-between"
+                  className={`bg-slate-900 border rounded-2xl p-4 shadow-lg flex flex-col justify-between transition-all ${
+                    activePlotZone?.id === zone.id
+                      ? 'border-amber-500/60 ring-2 ring-amber-500/30'
+                      : 'border-slate-800 hover:border-slate-700'
+                  }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span
-                        className="w-3.5 h-3.5 rounded-full"
-                        style={{ background: zone.color }}
-                      />
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-3.5 h-3.5 rounded-full shadow"
+                          style={{ background: zone.color }}
+                        />
+                        <span className="text-xs font-bold text-slate-300">{zone.name}</span>
+                      </div>
                       <button
                         onClick={() => {
                           setEditingZone(zone);
@@ -937,10 +1032,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           setNewZoneColor(zone.color);
                           setNewZoneDescription(zone.description || '');
                         }}
-                        className="text-xs text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer"
+                        className="text-xs text-slate-400 hover:text-white font-semibold flex items-center gap-1 cursor-pointer"
+                        title="Edit Zone Details"
                       >
                         <Edit2 className="w-3 h-3" />
-                        <span>Edit Zone</span>
+                        <span>Details</span>
                       </button>
                     </div>
 
@@ -950,14 +1046,26 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         {zone.localName}
                       </span>
                     )}
-                    <p className="text-xs text-slate-300 mt-2 line-clamp-3">
+                    <p className="text-xs text-slate-300 mt-2 line-clamp-2">
                       {zone.description}
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Center: {zone.center.latitude.toFixed(4)}, {zone.center.longitude.toFixed(4)}</span>
-                    <span className="font-mono text-slate-400">{zone.polygon.length} vertices</span>
+                  <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {zone.polygon.length} boundary points
+                    </span>
+                    <button
+                      onClick={() => handleStartPlotting(zone)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        activePlotZone?.id === zone.id
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                          : 'bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/20'
+                      }`}
+                    >
+                      <MousePointerClick className="w-3.5 h-3.5" />
+                      <span>{activePlotZone?.id === zone.id ? 'Plotting...' : 'Plot on Map'}</span>
+                    </button>
                   </div>
                 </div>
               ))}

@@ -522,9 +522,11 @@ class UnifiedGameService implements IGameService {
         await setDoc(teamRef, team);
       }
 
-      for (const clue of INITIAL_CLUES) {
-        const clueRef = doc(firestore, 'games', defaultGame.id, 'clues', clue.id);
-        await setDoc(clueRef, clue);
+      if (INITIAL_CLUES && INITIAL_CLUES.length > 0) {
+        for (const clue of INITIAL_CLUES) {
+          const clueRef = doc(firestore, 'games', defaultGame.id, 'clues', clue.id);
+          await setDoc(clueRef, clue);
+        }
       }
 
       return defaultGame;
@@ -624,9 +626,11 @@ class UnifiedGameService implements IGameService {
       });
     }
 
-    for (const clue of INITIAL_CLUES) {
-      const clueRef = doc(firestore, 'games', gameId, 'clues', clue.id);
-      await setDoc(clueRef, { ...clue, gameId });
+    if (INITIAL_CLUES && INITIAL_CLUES.length > 0) {
+      for (const clue of INITIAL_CLUES) {
+        const clueRef = doc(firestore, 'games', gameId, 'clues', clue.id);
+        await setDoc(clueRef, { ...clue, gameId });
+      }
     }
 
     return newGame;

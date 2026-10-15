@@ -1,0 +1,1212 @@
+[
+  {
+    "file": "IMG_9264.jpeg",
+    "time": "02:36:56",
+    "zone": "jonker-street",
+    "lat": 2.19705,
+    "lng": 102.247519,
+    "clusterId": 1,
+    "osmName": "Kneading peace",
+    "road": "Jalan Hang Lekiu"
+  },
+  {
+    "file": "IMG_9266.jpeg",
+    "time": "02:37:22",
+    "zone": "jonker-street",
+    "lat": 2.197058,
+    "lng": 102.247519,
+    "clusterId": 1,
+    "osmName": "Kneading peace",
+    "road": "Jalan Hang Lekiu"
+  },
+  {
+    "file": "IMG_9267.jpeg",
+    "time": "02:38:04",
+    "zone": "jonker-street",
+    "lat": 2.196911,
+    "lng": 102.247642,
+    "clusterId": 2,
+    "osmName": "HOTEL ZAMBURGER HERITAGE MELAKA",
+    "road": "Jalan Tukang Emas"
+  },
+  {
+    "file": "IMG_9268.jpeg",
+    "time": "02:38:59",
+    "zone": "jonker-street",
+    "lat": 2.196639,
+    "lng": 102.247842,
+    "clusterId": 3,
+    "osmName": "Kooya Handicraft",
+    "road": "Jalan Tukang Emas"
+  },
+  {
+    "file": "IMG_9269.jpeg",
+    "time": "02:40:01",
+    "zone": "jonker-street",
+    "lat": 2.196589,
+    "lng": 102.247847,
+    "clusterId": 3,
+    "osmName": "Kooya Handicraft",
+    "road": "Jalan Tukang Emas"
+  },
+  {
+    "file": "IMG_9270.jpeg",
+    "time": "02:40:16",
+    "zone": "jonker-street",
+    "lat": 2.196581,
+    "lng": 102.247856,
+    "clusterId": 3,
+    "osmName": "Kooya Handicraft",
+    "road": "Jalan Tukang Emas"
+  },
+  {
+    "file": "IMG_9271.jpeg",
+    "time": "02:42:21",
+    "zone": "jonker-street",
+    "lat": 2.197264,
+    "lng": 102.247331,
+    "clusterId": 4,
+    "osmName": "Koyami",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9272.jpeg",
+    "time": "02:44:16",
+    "zone": "jalan-tokong",
+    "lat": 2.197528,
+    "lng": 102.246972,
+    "clusterId": 5,
+    "osmName": "Jalan Tokong",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9275.jpeg",
+    "time": "03:06:47",
+    "zone": "jalan-tokong",
+    "lat": 2.197375,
+    "lng": 102.246742,
+    "clusterId": 6,
+    "osmName": "Jalan Tokong",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9277.jpeg",
+    "time": "03:12:48",
+    "zone": "jalan-tokong",
+    "lat": 2.197867,
+    "lng": 102.246819,
+    "clusterId": 7,
+    "osmName": "Xiang Lin Si Temple",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9279.jpeg",
+    "time": "03:13:38",
+    "zone": "jalan-tokong",
+    "lat": 2.197936,
+    "lng": 102.246933,
+    "clusterId": 7,
+    "osmName": "Xiang Lin Si Temple",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9280.jpeg",
+    "time": "03:14:16",
+    "zone": "jalan-tokong",
+    "lat": 2.197975,
+    "lng": 102.246886,
+    "clusterId": 7,
+    "osmName": "Xiang Lin Si Temple",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9284.jpeg",
+    "time": "03:16:34",
+    "zone": "jalan-tokong",
+    "lat": 2.197817,
+    "lng": 102.246444,
+    "clusterId": 8,
+    "osmName": "49",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9286.jpeg",
+    "time": "03:19:09",
+    "zone": "jalan-tokong",
+    "lat": 2.197875,
+    "lng": 102.245803,
+    "clusterId": 9,
+    "osmName": "49",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9288.jpeg",
+    "time": "03:19:52",
+    "zone": "jalan-tokong",
+    "lat": 2.197894,
+    "lng": 102.245681,
+    "clusterId": 9,
+    "osmName": "49",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9289.jpeg",
+    "time": "03:20:50",
+    "zone": "jalan-tokong",
+    "lat": 2.197944,
+    "lng": 102.245422,
+    "clusterId": 10,
+    "osmName": "Jonker Boutique Hotel",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9290.jpeg",
+    "time": "03:21:01",
+    "zone": "jalan-tokong",
+    "lat": 2.197933,
+    "lng": 102.245422,
+    "clusterId": 10,
+    "osmName": "Jonker Boutique Hotel",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9291.jpeg",
+    "time": "03:21:39",
+    "zone": "jalan-tokong",
+    "lat": 2.197878,
+    "lng": 102.245278,
+    "clusterId": 11,
+    "osmName": "Jonker Boutique Hotel",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9292.jpeg",
+    "time": "03:22:54",
+    "zone": "jalan-tokong",
+    "lat": 2.197806,
+    "lng": 102.245383,
+    "clusterId": 11,
+    "osmName": "Jonker Boutique Hotel",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9293.jpeg",
+    "time": "03:23:03",
+    "zone": "jalan-tokong",
+    "lat": 2.197817,
+    "lng": 102.245392,
+    "clusterId": 10,
+    "osmName": "Jonker Boutique Hotel",
+    "road": "Jalan Tokong"
+  },
+  {
+    "file": "IMG_9298.jpeg",
+    "time": "03:38:54",
+    "zone": "jalan-tokong",
+    "lat": 2.197439,
+    "lng": 102.245597,
+    "clusterId": 12,
+    "osmName": "Persatuan Hainan Melaka",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9299.jpeg",
+    "time": "03:39:43",
+    "zone": "jalan-tokong",
+    "lat": 2.197536,
+    "lng": 102.245767,
+    "clusterId": 13,
+    "osmName": "142",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9301.jpeg",
+    "time": "03:41:18",
+    "zone": "jalan-tokong",
+    "lat": 2.197225,
+    "lng": 102.246033,
+    "clusterId": 14,
+    "osmName": "Jalan Hang Jebat",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9303.jpeg",
+    "time": "03:44:33",
+    "zone": "jalan-tokong",
+    "lat": 2.197064,
+    "lng": 102.246131,
+    "clusterId": 15,
+    "osmName": "Authentic old style Chinese beer pub",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9304.jpeg",
+    "time": "03:47:36",
+    "zone": "jalan-tokong",
+    "lat": 2.196847,
+    "lng": 102.246331,
+    "clusterId": 16,
+    "osmName": "Taste Better One Bite Durian Puff",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9305.jpeg",
+    "time": "03:48:11",
+    "zone": "jalan-tokong",
+    "lat": 2.196811,
+    "lng": 102.246392,
+    "clusterId": 16,
+    "osmName": "Taste Better One Bite Durian Puff",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9306.jpeg",
+    "time": "03:48:21",
+    "zone": "jalan-tokong",
+    "lat": 2.196811,
+    "lng": 102.246392,
+    "clusterId": 16,
+    "osmName": "Taste Better One Bite Durian Puff",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9307.jpeg",
+    "time": "03:49:35",
+    "zone": "jonker-street",
+    "lat": 2.196697,
+    "lng": 102.246506,
+    "clusterId": 17,
+    "osmName": "Night market jonkerwalk Kooya Handicraft",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9308.jpeg",
+    "time": "03:50:02",
+    "zone": "jonker-street",
+    "lat": 2.196714,
+    "lng": 102.246528,
+    "clusterId": 17,
+    "osmName": "Night market jonkerwalk Kooya Handicraft",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9310.jpeg",
+    "time": "03:52:20",
+    "zone": "jonker-street",
+    "lat": 2.196122,
+    "lng": 102.247139,
+    "clusterId": 18,
+    "osmName": "Jonker Walking Art Flea Market",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9311.jpeg",
+    "time": "03:52:24",
+    "zone": "jonker-street",
+    "lat": 2.196119,
+    "lng": 102.247139,
+    "clusterId": 18,
+    "osmName": "Jonker Walking Art Flea Market",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9313.jpeg",
+    "time": "03:53:11",
+    "zone": "jonker-street",
+    "lat": 2.196089,
+    "lng": 102.247283,
+    "clusterId": 19,
+    "osmName": "Mamee Jonker House",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9314.jpeg",
+    "time": "03:53:41",
+    "zone": "jonker-street",
+    "lat": 2.196014,
+    "lng": 102.247331,
+    "clusterId": 19,
+    "osmName": "Mamee Jonker House",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9315.jpeg",
+    "time": "03:54:21",
+    "zone": "jonker-street",
+    "lat": 2.195978,
+    "lng": 102.247367,
+    "clusterId": 20,
+    "osmName": "Mamee Jonker House",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9316.jpeg",
+    "time": "03:55:00",
+    "zone": "jonker-street",
+    "lat": 2.195944,
+    "lng": 102.247444,
+    "clusterId": 20,
+    "osmName": "Mamee Jonker House",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9317.jpeg",
+    "time": "03:55:11",
+    "zone": "jonker-street",
+    "lat": 2.196047,
+    "lng": 102.247606,
+    "clusterId": 21,
+    "osmName": "Famosa White Coffee",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9318.jpeg",
+    "time": "03:55:44",
+    "zone": "jonker-street",
+    "lat": 2.195861,
+    "lng": 102.247483,
+    "clusterId": 22,
+    "osmName": "Famosa White Coffee",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9319.jpeg",
+    "time": "03:56:28",
+    "zone": "jonker-street",
+    "lat": 2.195661,
+    "lng": 102.247567,
+    "clusterId": 23,
+    "osmName": "Old Shop",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9321.jpeg",
+    "time": "03:56:54",
+    "zone": "jonker-street",
+    "lat": 2.195653,
+    "lng": 102.247619,
+    "clusterId": 23,
+    "osmName": "Old Shop",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9322.jpeg",
+    "time": "03:57:09",
+    "zone": "jonker-street",
+    "lat": 2.195658,
+    "lng": 102.247619,
+    "clusterId": 23,
+    "osmName": "Old Shop",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9323.jpeg",
+    "time": "03:57:53",
+    "zone": "jonker-street",
+    "lat": 2.195458,
+    "lng": 102.247794,
+    "clusterId": 24,
+    "osmName": "Famosa Chicken Rice Ball",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9326.jpeg",
+    "time": "03:59:41",
+    "zone": "jonker-street",
+    "lat": 2.195325,
+    "lng": 102.248,
+    "clusterId": 25,
+    "osmName": "Jonker Gallery",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9327.jpeg",
+    "time": "04:00:02",
+    "zone": "jonker-street",
+    "lat": 2.195328,
+    "lng": 102.248061,
+    "clusterId": 25,
+    "osmName": "Jonker Gallery",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9330.jpeg",
+    "time": "04:01:44",
+    "zone": "dutch-square",
+    "lat": 2.194958,
+    "lng": 102.248283,
+    "clusterId": 26,
+    "osmName": "San Shu Gong",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9332.jpeg",
+    "time": "04:02:24",
+    "zone": "dutch-square",
+    "lat": 2.195025,
+    "lng": 102.2483,
+    "clusterId": 26,
+    "osmName": "San Shu Gong",
+    "road": "Jalan Hang Jebat"
+  },
+  {
+    "file": "IMG_9333.jpeg",
+    "time": "04:03:25",
+    "zone": "dutch-square",
+    "lat": 2.194767,
+    "lng": 102.248481,
+    "clusterId": 27,
+    "osmName": "Jambatan Tan Kim Seng",
+    "road": "Jambatan Tan Kim Seng"
+  },
+  {
+    "file": "IMG_9336.jpeg",
+    "time": "04:04:31",
+    "zone": "dutch-square",
+    "lat": 2.194836,
+    "lng": 102.248489,
+    "clusterId": 27,
+    "osmName": "Jambatan Tan Kim Seng",
+    "road": "Jambatan Tan Kim Seng"
+  },
+  {
+    "file": "IMG_9337.jpeg",
+    "time": "04:04:48",
+    "zone": "dutch-square",
+    "lat": 2.194808,
+    "lng": 102.248506,
+    "clusterId": 27,
+    "osmName": "Jambatan Tan Kim Seng",
+    "road": "Jambatan Tan Kim Seng"
+  },
+  {
+    "file": "IMG_9338.jpeg",
+    "time": "04:06:21",
+    "zone": "dutch-square",
+    "lat": 2.194753,
+    "lng": 102.248689,
+    "clusterId": 28,
+    "osmName": "Jambatan Tan Kim Seng",
+    "road": "Jambatan Tan Kim Seng"
+  },
+  {
+    "file": "IMG_9339.jpeg",
+    "time": "04:14:02",
+    "zone": "dutch-square",
+    "lat": 2.194897,
+    "lng": 102.2491,
+    "clusterId": 29,
+    "osmName": "Cheng Ho",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9340.jpeg",
+    "time": "04:14:11",
+    "zone": "dutch-square",
+    "lat": 2.194964,
+    "lng": 102.248992,
+    "clusterId": 29,
+    "osmName": "Cheng Ho",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9342.jpeg",
+    "time": "04:15:11",
+    "zone": "dutch-square",
+    "lat": 2.1952,
+    "lng": 102.248658,
+    "clusterId": 30,
+    "osmName": "The Coffee Jar",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9343.jpeg",
+    "time": "04:15:42",
+    "zone": "dutch-square",
+    "lat": 2.195275,
+    "lng": 102.248719,
+    "clusterId": 30,
+    "osmName": "The Coffee Jar",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9344.jpeg",
+    "time": "04:16:02",
+    "zone": "dutch-square",
+    "lat": 2.195414,
+    "lng": 102.248764,
+    "clusterId": 31,
+    "osmName": "Pin Pin Hiong",
+    "road": "Jalan Tukang Besi"
+  },
+  {
+    "file": "IMG_9345.jpeg",
+    "time": "04:16:30",
+    "zone": "dutch-square",
+    "lat": 2.1954,
+    "lng": 102.248878,
+    "clusterId": 31,
+    "osmName": "Pin Pin Hiong",
+    "road": "Jalan Tukang Besi"
+  },
+  {
+    "file": "IMG_9346.jpeg",
+    "time": "04:17:05",
+    "zone": "dutch-square",
+    "lat": 2.195189,
+    "lng": 102.249022,
+    "clusterId": 32,
+    "osmName": "46",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9347.jpeg",
+    "time": "04:17:21",
+    "zone": "dutch-square",
+    "lat": 2.195189,
+    "lng": 102.249008,
+    "clusterId": 32,
+    "osmName": "46",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9348.jpeg",
+    "time": "04:19:07",
+    "zone": "dutch-square",
+    "lat": 2.195603,
+    "lng": 102.249031,
+    "clusterId": 33,
+    "osmName": "71",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9349.jpeg",
+    "time": "04:19:31",
+    "zone": "dutch-square",
+    "lat": 2.195772,
+    "lng": 102.249175,
+    "clusterId": 34,
+    "osmName": "85",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9351.jpeg",
+    "time": "04:25:46",
+    "zone": "dutch-square",
+    "lat": 2.196289,
+    "lng": 102.250992,
+    "clusterId": 35,
+    "osmName": "Discovery Cafe & Guesthouse",
+    "road": "Jalan Bunga Raya"
+  },
+  {
+    "file": "IMG_9361.jpeg",
+    "time": "05:32:17",
+    "zone": "dutch-square",
+    "lat": 2.196147,
+    "lng": 102.250694,
+    "clusterId": 36,
+    "osmName": "Jambatan Chan Koon Cheng",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9363.jpeg",
+    "time": "05:33:47",
+    "zone": "dutch-square",
+    "lat": 2.196139,
+    "lng": 102.250686,
+    "clusterId": 36,
+    "osmName": "Jambatan Chan Koon Cheng",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9364.jpeg",
+    "time": "05:35:32",
+    "zone": "dutch-square",
+    "lat": 2.195814,
+    "lng": 102.250511,
+    "clusterId": 37,
+    "osmName": "Lorong Hang Jebat",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9365.jpeg",
+    "time": "05:35:59",
+    "zone": "dutch-square",
+    "lat": 2.195853,
+    "lng": 102.250458,
+    "clusterId": 37,
+    "osmName": "Lorong Hang Jebat",
+    "road": "Lorong Hang Jebat"
+  },
+  {
+    "file": "IMG_9366.jpeg",
+    "time": "05:37:17",
+    "zone": "dutch-square",
+    "lat": 2.195572,
+    "lng": 102.250253,
+    "clusterId": 38,
+    "osmName": "Bastion Victoria",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9367.jpeg",
+    "time": "05:40:28",
+    "zone": "dutch-square",
+    "lat": 2.195019,
+    "lng": 102.249633,
+    "clusterId": 39,
+    "osmName": "7",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9368.jpeg",
+    "time": "05:40:37",
+    "zone": "dutch-square",
+    "lat": 2.195,
+    "lng": 102.249572,
+    "clusterId": 39,
+    "osmName": "7",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9369.jpeg",
+    "time": "05:41:19",
+    "zone": "dutch-square",
+    "lat": 2.194914,
+    "lng": 102.249442,
+    "clusterId": 40,
+    "osmName": "Melaka Folks Art Gallery",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9370.jpeg",
+    "time": "05:42:42",
+    "zone": "dutch-square",
+    "lat": 2.194589,
+    "lng": 102.249108,
+    "clusterId": 41,
+    "osmName": "Jalan Laksamana",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9371.jpeg",
+    "time": "05:43:27",
+    "zone": "dutch-square",
+    "lat": 2.194458,
+    "lng": 102.249092,
+    "clusterId": 41,
+    "osmName": "Jalan Laksamana",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9372.jpeg",
+    "time": "05:43:46",
+    "zone": "dutch-square",
+    "lat": 2.194453,
+    "lng": 102.2491,
+    "clusterId": 42,
+    "osmName": "Dutch Square (Red Square) Melaka",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9373.jpeg",
+    "time": "05:44:06",
+    "zone": "dutch-square",
+    "lat": 2.194472,
+    "lng": 102.249039,
+    "clusterId": 42,
+    "osmName": "Dutch Square (Red Square) Melaka",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9374.jpeg",
+    "time": "05:44:20",
+    "zone": "dutch-square",
+    "lat": 2.194447,
+    "lng": 102.249,
+    "clusterId": 42,
+    "osmName": "Dutch Square (Red Square) Melaka",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9376.jpeg",
+    "time": "05:45:00",
+    "zone": "dutch-square",
+    "lat": 2.194361,
+    "lng": 102.248864,
+    "clusterId": 43,
+    "osmName": "Welcome To Melaka Sign",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9378.jpeg",
+    "time": "05:45:35",
+    "zone": "dutch-square",
+    "lat": 2.194317,
+    "lng": 102.248842,
+    "clusterId": 43,
+    "osmName": "Welcome To Melaka Sign",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9379.jpeg",
+    "time": "05:45:51",
+    "zone": "dutch-square",
+    "lat": 2.194303,
+    "lng": 102.248825,
+    "clusterId": 43,
+    "osmName": "Welcome To Melaka Sign",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9381.jpeg",
+    "time": "05:46:41",
+    "zone": "dutch-square",
+    "lat": 2.194311,
+    "lng": 102.248725,
+    "clusterId": 44,
+    "osmName": "Bandar Hilir",
+    "road": ""
+  },
+  {
+    "file": "IMG_9382.jpeg",
+    "time": "05:47:48",
+    "zone": "dutch-square",
+    "lat": 2.194417,
+    "lng": 102.24845,
+    "clusterId": 45,
+    "osmName": "Boat Cruise Ticket",
+    "road": "Jambatan Tan Kim Seng"
+  },
+  {
+    "file": "IMG_9383.jpeg",
+    "time": "05:48:27",
+    "zone": "dutch-square",
+    "lat": 2.19435,
+    "lng": 102.248269,
+    "clusterId": 46,
+    "osmName": "Jambatan Tan Kim Seng",
+    "road": "Jambatan Tan Kim Seng"
+  },
+  {
+    "file": "IMG_9384.jpeg",
+    "time": "05:48:48",
+    "zone": "dutch-square",
+    "lat": 2.194356,
+    "lng": 102.248269,
+    "clusterId": 46,
+    "osmName": "Jambatan Tan Kim Seng",
+    "road": "Jambatan Tan Kim Seng"
+  },
+  {
+    "file": "IMG_9385.jpeg",
+    "time": "05:49:36",
+    "zone": "dutch-square",
+    "lat": 2.194203,
+    "lng": 102.248275,
+    "clusterId": 47,
+    "osmName": "Bastion Middleburg",
+    "road": "Jalan Tun Khalil Yaakob"
+  },
+  {
+    "file": "IMG_9386.jpeg",
+    "time": "05:50:49",
+    "zone": "dutch-square",
+    "lat": 2.194161,
+    "lng": 102.248069,
+    "clusterId": 48,
+    "osmName": "Bastion Middleburg",
+    "road": "Jalan Tun Khalil Yaakob"
+  },
+  {
+    "file": "IMG_9387.jpeg",
+    "time": "05:51:27",
+    "zone": "dutch-square",
+    "lat": 2.194108,
+    "lng": 102.248169,
+    "clusterId": 48,
+    "osmName": "Bastion Middleburg",
+    "road": "Jalan Tun Khalil Yaakob"
+  },
+  {
+    "file": "IMG_9388.jpeg",
+    "time": "05:52:02",
+    "zone": "dutch-square",
+    "lat": 2.194172,
+    "lng": 102.248344,
+    "clusterId": 47,
+    "osmName": "Bastion Middleburg",
+    "road": "Jalan Tun Khalil Yaakob"
+  },
+  {
+    "file": "IMG_9389.jpeg",
+    "time": "05:53:51",
+    "zone": "dutch-square",
+    "lat": 2.193739,
+    "lng": 102.248244,
+    "clusterId": 49,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9390.jpeg",
+    "time": "05:55:16",
+    "zone": "st-pauls-hill",
+    "lat": 2.193253,
+    "lng": 102.248436,
+    "clusterId": 50,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9391.jpeg",
+    "time": "05:55:30",
+    "zone": "st-pauls-hill",
+    "lat": 2.193256,
+    "lng": 102.248444,
+    "clusterId": 50,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9392.jpeg",
+    "time": "05:57:28",
+    "zone": "dutch-square",
+    "lat": 2.193769,
+    "lng": 102.248811,
+    "clusterId": 51,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9393.jpeg",
+    "time": "05:57:53",
+    "zone": "dutch-square",
+    "lat": 2.193767,
+    "lng": 102.248825,
+    "clusterId": 51,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9394.jpeg",
+    "time": "05:58:41",
+    "zone": "dutch-square",
+    "lat": 2.193608,
+    "lng": 102.248939,
+    "clusterId": 52,
+    "osmName": "Kereta Bomba Lama",
+    "road": "Jalan Gereja"
+  },
+  {
+    "file": "IMG_9395.jpeg",
+    "time": "05:59:51",
+    "zone": "st-pauls-hill",
+    "lat": 2.193444,
+    "lng": 102.248986,
+    "clusterId": 53,
+    "osmName": "Dutch Square",
+    "road": "Jalan Laksamana"
+  },
+  {
+    "file": "IMG_9396.jpeg",
+    "time": "06:01:27",
+    "zone": "st-pauls-hill",
+    "lat": 2.192886,
+    "lng": 102.248811,
+    "clusterId": 54,
+    "osmName": "Kota A Famosa",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "FullSizeRender.jpeg",
+    "time": "06:03:06",
+    "zone": "st-pauls-hill",
+    "lat": 2.192742,
+    "lng": 102.249131,
+    "clusterId": 55,
+    "osmName": "Fotografi Panorama",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9398.jpeg",
+    "time": "06:04:25",
+    "zone": "st-pauls-hill",
+    "lat": 2.192792,
+    "lng": 102.249375,
+    "clusterId": 56,
+    "osmName": "St. Paul",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9399.jpeg",
+    "time": "06:05:26",
+    "zone": "st-pauls-hill",
+    "lat": 2.192658,
+    "lng": 102.249497,
+    "clusterId": 57,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9400.jpeg",
+    "time": "06:05:50",
+    "zone": "st-pauls-hill",
+    "lat": 2.192517,
+    "lng": 102.249528,
+    "clusterId": 58,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9401.jpeg",
+    "time": "06:06:05",
+    "zone": "st-pauls-hill",
+    "lat": 2.192508,
+    "lng": 102.249564,
+    "clusterId": 58,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9402.jpeg",
+    "time": "06:08:32",
+    "zone": "st-pauls-hill",
+    "lat": 2.192617,
+    "lng": 102.249878,
+    "clusterId": 59,
+    "osmName": "Kubur Belanda",
+    "road": "Jalan Istana"
+  },
+  {
+    "file": "IMG_9403.jpeg",
+    "time": "06:08:50",
+    "zone": "st-pauls-hill",
+    "lat": 2.192575,
+    "lng": 102.249894,
+    "clusterId": 59,
+    "osmName": "Kubur Belanda",
+    "road": "Jalan Istana"
+  },
+  {
+    "file": "IMG_9405.jpeg",
+    "time": "06:09:54",
+    "zone": "st-pauls-hill",
+    "lat": 2.192414,
+    "lng": 102.249786,
+    "clusterId": 60,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9406.jpeg",
+    "time": "06:12:05",
+    "zone": "a-famosa",
+    "lat": 2.192017,
+    "lng": 102.250197,
+    "clusterId": 61,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9407.jpeg",
+    "time": "06:13:26",
+    "zone": "a-famosa",
+    "lat": 2.191936,
+    "lng": 102.250458,
+    "clusterId": 62,
+    "osmName": "Kota A Famosa",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9409.jpeg",
+    "time": "06:15:20",
+    "zone": "a-famosa",
+    "lat": 2.191425,
+    "lng": 102.2501,
+    "clusterId": 63,
+    "osmName": "Malaya Independence Memorial",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9410.jpeg",
+    "time": "06:16:58",
+    "zone": "a-famosa",
+    "lat": 2.191383,
+    "lng": 102.249956,
+    "clusterId": 64,
+    "osmName": "Santiago Bastion Ruins",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9411.jpeg",
+    "time": "06:18:34",
+    "zone": "a-famosa",
+    "lat": 2.191367,
+    "lng": 102.249442,
+    "clusterId": 65,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9412.jpeg",
+    "time": "06:19:09",
+    "zone": "a-famosa",
+    "lat": 2.191433,
+    "lng": 102.249231,
+    "clusterId": 66,
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9413.jpeg",
+    "time": "06:20:01",
+    "zone": "st-pauls-hill",
+    "lat": 2.191497,
+    "lng": 102.248931,
+    "clusterId": 67,
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9414.jpeg",
+    "time": "06:20:11",
+    "zone": "st-pauls-hill",
+    "lat": 2.191497,
+    "lng": 102.2489,
+    "clusterId": 67,
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9415.jpeg",
+    "time": "06:20:46",
+    "zone": "st-pauls-hill",
+    "lat": 2.191558,
+    "lng": 102.248756,
+    "clusterId": 68,
+    "osmName": "Lang Rajawali",
+    "road": "Jalan Taman"
+  },
+  {
+    "file": "IMG_9416.jpeg",
+    "time": "06:21:31",
+    "zone": "st-pauls-hill",
+    "lat": 2.191811,
+    "lng": 102.248664,
+    "clusterId": 69,
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9417.jpeg",
+    "time": "06:23:27",
+    "zone": "st-pauls-hill",
+    "lat": 2.192522,
+    "lng": 102.248389,
+    "clusterId": 70,
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9418.jpeg",
+    "time": "06:24:11",
+    "zone": "st-pauls-hill",
+    "lat": 2.192867,
+    "lng": 102.248389,
+    "clusterId": 71,
+    "osmName": "Jalan Kota",
+    "road": "Jalan Kota"
+  },
+  {
+    "file": "IMG_9420.jpeg",
+    "time": "06:55:53",
+    "zone": "jonker-street",
+    "lat": 2.196058,
+    "lng": 102.247894,
+    "clusterId": 72,
+    "osmName": "57",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9421.jpeg",
+    "time": "06:56:39",
+    "zone": "jonker-street",
+    "lat": 2.196356,
+    "lng": 102.248436,
+    "clusterId": 73,
+    "osmName": "68",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9422.jpeg",
+    "time": "06:57:05",
+    "zone": "jonker-street",
+    "lat": 2.196369,
+    "lng": 102.248458,
+    "clusterId": 73,
+    "osmName": "68",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9423.jpeg",
+    "time": "06:57:11",
+    "zone": "jonker-street",
+    "lat": 2.196369,
+    "lng": 102.248458,
+    "clusterId": 73,
+    "osmName": "68",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9424.jpeg",
+    "time": "06:57:43",
+    "zone": "jonker-street",
+    "lat": 2.196411,
+    "lng": 102.248511,
+    "clusterId": 73,
+    "osmName": "68",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9425.jpeg",
+    "time": "06:58:04",
+    "zone": "jonker-street",
+    "lat": 2.196408,
+    "lng": 102.248519,
+    "clusterId": 73,
+    "osmName": "68",
+    "road": "Jalan Hang Kasturi"
+  },
+  {
+    "file": "IMG_9426.jpeg",
+    "time": "06:58:26",
+    "zone": "jonker-street",
+    "lat": 2.196453,
+    "lng": 102.248567,
+    "clusterId": 74,
+    "osmName": "33",
+    "road": "Jalan Kampung Kuli"
+  },
+  {
+    "file": "IMG_9427.jpeg",
+    "time": "06:58:54",
+    "zone": "jonker-street",
+    "lat": 2.196494,
+    "lng": 102.248581,
+    "clusterId": 74,
+    "osmName": "33",
+    "road": "Jalan Kampung Kuli"
+  },
+  {
+    "file": "IMG_9428.jpeg",
+    "time": "07:00:45",
+    "zone": "jonker-street",
+    "lat": 2.197058,
+    "lng": 102.248719,
+    "clusterId": 75,
+    "osmName": "91",
+    "road": "Jalan Hang Kasturi"
+  }
+]

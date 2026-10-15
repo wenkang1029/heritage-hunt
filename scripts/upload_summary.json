@@ -1,0 +1,16 @@
+{
+  "totalUploaded": 121,
+  "gameId": "hunt-nkvcz",
+  "zoneCounts": {
+    "jonker-street": 32,
+    "jalan-tokong": 20,
+    "dutch-square": 45,
+    "st-pauls-hill": 18,
+    "a-famosa": 6
+  },
+  "avgPhotoKB": 72,
+  "maxPhotoKB": 107,
+  "minPhotoKB": 16,
+  "allUnder120KB": true,
+  "timestamp": "2026-10-15T04:26:07.424Z"
+}

@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Raw photo assets for batch processing
+raw_photos/*
+!raw_photos/README.md

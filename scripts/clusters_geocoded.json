@@ -1,0 +1,2750 @@
+[
+  {
+    "id": 1,
+    "zone": "jonker-street",
+    "centerLat": 2.19705,
+    "centerLng": 102.247519,
+    "photos": [
+      {
+        "index": 1,
+        "file": "IMG_9264.jpeg",
+        "time": "02:36:56",
+        "zone": "jonker-street",
+        "lat": 2.19705,
+        "lng": 102.247519,
+        "dist": 91
+      },
+      {
+        "index": 2,
+        "file": "IMG_9266.jpeg",
+        "time": "02:37:22",
+        "zone": "jonker-street",
+        "lat": 2.197058,
+        "lng": 102.247519,
+        "dist": 91
+      }
+    ],
+    "osmName": "Kneading peace",
+    "address": {
+      "amenity": "Kneading peace",
+      "house_number": "37",
+      "road": "Jalan Hang Lekiu",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Kneading peace, 37, Jalan Hang Lekiu, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 2,
+    "zone": "jonker-street",
+    "centerLat": 2.196911,
+    "centerLng": 102.247642,
+    "photos": [
+      {
+        "index": 3,
+        "file": "IMG_9267.jpeg",
+        "time": "02:38:04",
+        "zone": "jonker-street",
+        "lat": 2.196911,
+        "lng": 102.247642,
+        "dist": 84
+      }
+    ],
+    "osmName": "HOTEL ZAMBURGER HERITAGE MELAKA",
+    "address": {
+      "tourism": "HOTEL ZAMBURGER HERITAGE MELAKA",
+      "house_number": "No. 28",
+      "road": "Jalan Tukang Emas",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75200",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "HOTEL ZAMBURGER HERITAGE MELAKA, No. 28, Jalan Tukang Emas, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75200, Malaysia"
+  },
+  {
+    "id": 3,
+    "zone": "jonker-street",
+    "centerLat": 2.196639,
+    "centerLng": 102.247842,
+    "photos": [
+      {
+        "index": 4,
+        "file": "IMG_9268.jpeg",
+        "time": "02:38:59",
+        "zone": "jonker-street",
+        "lat": 2.196639,
+        "lng": 102.247842,
+        "dist": 81
+      },
+      {
+        "index": 5,
+        "file": "IMG_9269.jpeg",
+        "time": "02:40:01",
+        "zone": "jonker-street",
+        "lat": 2.196589,
+        "lng": 102.247847,
+        "dist": 79
+      },
+      {
+        "index": 6,
+        "file": "IMG_9270.jpeg",
+        "time": "02:40:16",
+        "zone": "jonker-street",
+        "lat": 2.196581,
+        "lng": 102.247856,
+        "dist": 79
+      }
+    ],
+    "osmName": "Kooya Handicraft",
+    "address": {
+      "shop": "Kooya Handicraft",
+      "house_number": "10",
+      "road": "Jalan Tukang Emas",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75200",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Kooya Handicraft, 10, Jalan Tukang Emas, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75200, Malaysia"
+  },
+  {
+    "id": 4,
+    "zone": "jonker-street",
+    "centerLat": 2.197264,
+    "centerLng": 102.247331,
+    "photos": [
+      {
+        "index": 7,
+        "file": "IMG_9271.jpeg",
+        "time": "02:42:21",
+        "zone": "jonker-street",
+        "lat": 2.197264,
+        "lng": 102.247331,
+        "dist": 108
+      }
+    ],
+    "osmName": "Koyami",
+    "address": {
+      "amenity": "Koyami",
+      "house_number": "9",
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Koyami, 9, Jalan Tokong, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 5,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197528,
+    "centerLng": 102.246972,
+    "photos": [
+      {
+        "index": 8,
+        "file": "IMG_9272.jpeg",
+        "time": "02:44:16",
+        "zone": "jalan-tokong",
+        "lat": 2.197528,
+        "lng": 102.246972,
+        "dist": 88
+      }
+    ],
+    "osmName": "Jalan Tokong",
+    "address": {
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Tokong, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 6,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197375,
+    "centerLng": 102.246742,
+    "photos": [
+      {
+        "index": 9,
+        "file": "IMG_9275.jpeg",
+        "time": "03:06:47",
+        "zone": "jalan-tokong",
+        "lat": 2.197375,
+        "lng": 102.246742,
+        "dist": 70
+      }
+    ],
+    "osmName": "Jalan Tokong",
+    "address": {
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Tokong, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 7,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197867,
+    "centerLng": 102.246819,
+    "photos": [
+      {
+        "index": 10,
+        "file": "IMG_9277.jpeg",
+        "time": "03:12:48",
+        "zone": "jalan-tokong",
+        "lat": 2.197867,
+        "lng": 102.246819,
+        "dist": 71
+      },
+      {
+        "index": 11,
+        "file": "IMG_9279.jpeg",
+        "time": "03:13:38",
+        "zone": "jalan-tokong",
+        "lat": 2.197936,
+        "lng": 102.246933,
+        "dist": 86
+      },
+      {
+        "index": 12,
+        "file": "IMG_9280.jpeg",
+        "time": "03:14:16",
+        "zone": "jalan-tokong",
+        "lat": 2.197975,
+        "lng": 102.246886,
+        "dist": 82
+      }
+    ],
+    "osmName": "Xiang Lin Si Temple",
+    "address": {
+      "amenity": "Xiang Lin Si Temple",
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Xiang Lin Si Temple, Jalan Tokong, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 8,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197817,
+    "centerLng": 102.246444,
+    "photos": [
+      {
+        "index": 13,
+        "file": "IMG_9284.jpeg",
+        "time": "03:16:34",
+        "zone": "jalan-tokong",
+        "lat": 2.197817,
+        "lng": 102.246444,
+        "dist": 30
+      }
+    ],
+    "osmName": "49",
+    "address": {
+      "house_number": "49",
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "49, Jalan Tokong, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 9,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197875,
+    "centerLng": 102.245803,
+    "photos": [
+      {
+        "index": 14,
+        "file": "IMG_9286.jpeg",
+        "time": "03:19:09",
+        "zone": "jalan-tokong",
+        "lat": 2.197875,
+        "lng": 102.245803,
+        "dist": 48
+      },
+      {
+        "index": 15,
+        "file": "IMG_9288.jpeg",
+        "time": "03:19:52",
+        "zone": "jalan-tokong",
+        "lat": 2.197894,
+        "lng": 102.245681,
+        "dist": 62
+      }
+    ],
+    "osmName": "49",
+    "address": {
+      "house_number": "49",
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "49, Jalan Tokong, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 10,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197944,
+    "centerLng": 102.245422,
+    "photos": [
+      {
+        "index": 16,
+        "file": "IMG_9289.jpeg",
+        "time": "03:20:50",
+        "zone": "jalan-tokong",
+        "lat": 2.197944,
+        "lng": 102.245422,
+        "dist": 91
+      },
+      {
+        "index": 17,
+        "file": "IMG_9290.jpeg",
+        "time": "03:21:01",
+        "zone": "jalan-tokong",
+        "lat": 2.197933,
+        "lng": 102.245422,
+        "dist": 90
+      },
+      {
+        "index": 20,
+        "file": "IMG_9293.jpeg",
+        "time": "03:23:03",
+        "zone": "jalan-tokong",
+        "lat": 2.197817,
+        "lng": 102.245392,
+        "dist": 91
+      }
+    ],
+    "osmName": "Jonker Boutique Hotel",
+    "address": {
+      "tourism": "Jonker Boutique Hotel",
+      "house_number": "88",
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jonker Boutique Hotel, 88, Jalan Tokong, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 11,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197878,
+    "centerLng": 102.245278,
+    "photos": [
+      {
+        "index": 18,
+        "file": "IMG_9291.jpeg",
+        "time": "03:21:39",
+        "zone": "jalan-tokong",
+        "lat": 2.197878,
+        "lng": 102.245278,
+        "dist": 104
+      },
+      {
+        "index": 19,
+        "file": "IMG_9292.jpeg",
+        "time": "03:22:54",
+        "zone": "jalan-tokong",
+        "lat": 2.197806,
+        "lng": 102.245383,
+        "dist": 91
+      }
+    ],
+    "osmName": "Jonker Boutique Hotel",
+    "address": {
+      "tourism": "Jonker Boutique Hotel",
+      "house_number": "88",
+      "road": "Jalan Tokong",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jonker Boutique Hotel, 88, Jalan Tokong, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 12,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197439,
+    "centerLng": 102.245597,
+    "photos": [
+      {
+        "index": 21,
+        "file": "IMG_9298.jpeg",
+        "time": "03:38:54",
+        "zone": "jalan-tokong",
+        "lat": 2.197439,
+        "lng": 102.245597,
+        "dist": 73
+      }
+    ],
+    "osmName": "Persatuan Hainan Melaka",
+    "address": {
+      "office": "Persatuan Hainan Melaka",
+      "house_number": "115",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75200",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Persatuan Hainan Melaka, 115, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75200, Malaysia"
+  },
+  {
+    "id": 13,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197536,
+    "centerLng": 102.245767,
+    "photos": [
+      {
+        "index": 22,
+        "file": "IMG_9299.jpeg",
+        "time": "03:39:43",
+        "zone": "jalan-tokong",
+        "lat": 2.197536,
+        "lng": 102.245767,
+        "dist": 51
+      }
+    ],
+    "osmName": "142",
+    "address": {
+      "amenity": "142",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "142, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 14,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197225,
+    "centerLng": 102.246033,
+    "photos": [
+      {
+        "index": 23,
+        "file": "IMG_9301.jpeg",
+        "time": "03:41:18",
+        "zone": "jalan-tokong",
+        "lat": 2.197225,
+        "lng": 102.246033,
+        "dist": 56
+      }
+    ],
+    "osmName": "Jalan Hang Jebat",
+    "address": {
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 15,
+    "zone": "jalan-tokong",
+    "centerLat": 2.197064,
+    "centerLng": 102.246131,
+    "photos": [
+      {
+        "index": 24,
+        "file": "IMG_9303.jpeg",
+        "time": "03:44:33",
+        "zone": "jalan-tokong",
+        "lat": 2.197064,
+        "lng": 102.246131,
+        "dist": 71
+      }
+    ],
+    "osmName": "Authentic old style Chinese beer pub",
+    "address": {
+      "amenity": "Authentic old style Chinese beer pub",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Authentic old style Chinese beer pub, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 16,
+    "zone": "jalan-tokong",
+    "centerLat": 2.196847,
+    "centerLng": 102.246331,
+    "photos": [
+      {
+        "index": 25,
+        "file": "IMG_9304.jpeg",
+        "time": "03:47:36",
+        "zone": "jalan-tokong",
+        "lat": 2.196847,
+        "lng": 102.246331,
+        "dist": 96
+      },
+      {
+        "index": 26,
+        "file": "IMG_9305.jpeg",
+        "time": "03:48:11",
+        "zone": "jalan-tokong",
+        "lat": 2.196811,
+        "lng": 102.246392,
+        "dist": 101
+      },
+      {
+        "index": 27,
+        "file": "IMG_9306.jpeg",
+        "time": "03:48:21",
+        "zone": "jalan-tokong",
+        "lat": 2.196811,
+        "lng": 102.246392,
+        "dist": 101
+      }
+    ],
+    "osmName": "Taste Better One Bite Durian Puff",
+    "address": {
+      "shop": "Taste Better One Bite Durian Puff",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Taste Better One Bite Durian Puff, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 17,
+    "zone": "jonker-street",
+    "centerLat": 2.196697,
+    "centerLng": 102.246506,
+    "photos": [
+      {
+        "index": 28,
+        "file": "IMG_9307.jpeg",
+        "time": "03:49:35",
+        "zone": "jonker-street",
+        "lat": 2.196697,
+        "lng": 102.246506,
+        "dist": 89
+      },
+      {
+        "index": 29,
+        "file": "IMG_9308.jpeg",
+        "time": "03:50:02",
+        "zone": "jonker-street",
+        "lat": 2.196714,
+        "lng": 102.246528,
+        "dist": 88
+      }
+    ],
+    "osmName": "Night market jonkerwalk Kooya Handicraft",
+    "address": {
+      "shop": "Night market jonkerwalk Kooya Handicraft",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Night market jonkerwalk Kooya Handicraft, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 18,
+    "zone": "jonker-street",
+    "centerLat": 2.196122,
+    "centerLng": 102.247139,
+    "photos": [
+      {
+        "index": 30,
+        "file": "IMG_9310.jpeg",
+        "time": "03:52:20",
+        "zone": "jonker-street",
+        "lat": 2.196122,
+        "lng": 102.247139,
+        "dist": 21
+      },
+      {
+        "index": 31,
+        "file": "IMG_9311.jpeg",
+        "time": "03:52:24",
+        "zone": "jonker-street",
+        "lat": 2.196119,
+        "lng": 102.247139,
+        "dist": 21
+      }
+    ],
+    "osmName": "Jonker Walking Art Flea Market",
+    "address": {
+      "shop": "Jonker Walking Art Flea Market",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jonker Walking Art Flea Market, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 19,
+    "zone": "jonker-street",
+    "centerLat": 2.196089,
+    "centerLng": 102.247283,
+    "photos": [
+      {
+        "index": 32,
+        "file": "IMG_9313.jpeg",
+        "time": "03:53:11",
+        "zone": "jonker-street",
+        "lat": 2.196089,
+        "lng": 102.247283,
+        "dist": 25
+      },
+      {
+        "index": 33,
+        "file": "IMG_9314.jpeg",
+        "time": "03:53:41",
+        "zone": "jonker-street",
+        "lat": 2.196014,
+        "lng": 102.247331,
+        "dist": 35
+      }
+    ],
+    "osmName": "Mamee Jonker House",
+    "address": {
+      "amenity": "Mamee Jonker House",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Mamee Jonker House, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 20,
+    "zone": "jonker-street",
+    "centerLat": 2.195978,
+    "centerLng": 102.247367,
+    "photos": [
+      {
+        "index": 34,
+        "file": "IMG_9315.jpeg",
+        "time": "03:54:21",
+        "zone": "jonker-street",
+        "lat": 2.195978,
+        "lng": 102.247367,
+        "dist": 40
+      },
+      {
+        "index": 35,
+        "file": "IMG_9316.jpeg",
+        "time": "03:55:00",
+        "zone": "jonker-street",
+        "lat": 2.195944,
+        "lng": 102.247444,
+        "dist": 48
+      }
+    ],
+    "osmName": "Mamee Jonker House",
+    "address": {
+      "amenity": "Mamee Jonker House",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Mamee Jonker House, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 21,
+    "zone": "jonker-street",
+    "centerLat": 2.196047,
+    "centerLng": 102.247606,
+    "photos": [
+      {
+        "index": 36,
+        "file": "IMG_9317.jpeg",
+        "time": "03:55:11",
+        "zone": "jonker-street",
+        "lat": 2.196047,
+        "lng": 102.247606,
+        "dist": 53
+      }
+    ],
+    "osmName": "Famosa White Coffee",
+    "address": {
+      "amenity": "Famosa White Coffee",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Famosa White Coffee, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 22,
+    "zone": "jonker-street",
+    "centerLat": 2.195861,
+    "centerLng": 102.247483,
+    "photos": [
+      {
+        "index": 37,
+        "file": "IMG_9318.jpeg",
+        "time": "03:55:44",
+        "zone": "jonker-street",
+        "lat": 2.195861,
+        "lng": 102.247483,
+        "dist": 58
+      }
+    ],
+    "osmName": "Famosa White Coffee",
+    "address": {
+      "amenity": "Famosa White Coffee",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Famosa White Coffee, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 23,
+    "zone": "jonker-street",
+    "centerLat": 2.195661,
+    "centerLng": 102.247567,
+    "photos": [
+      {
+        "index": 38,
+        "file": "IMG_9319.jpeg",
+        "time": "03:56:28",
+        "zone": "jonker-street",
+        "lat": 2.195661,
+        "lng": 102.247567,
+        "dist": 82
+      },
+      {
+        "index": 39,
+        "file": "IMG_9321.jpeg",
+        "time": "03:56:54",
+        "zone": "jonker-street",
+        "lat": 2.195653,
+        "lng": 102.247619,
+        "dist": 86
+      },
+      {
+        "index": 40,
+        "file": "IMG_9322.jpeg",
+        "time": "03:57:09",
+        "zone": "jonker-street",
+        "lat": 2.195658,
+        "lng": 102.247619,
+        "dist": 85
+      }
+    ],
+    "osmName": "Old Shop",
+    "address": {
+      "shop": "Old Shop",
+      "road": "Jalan Hang Kasturi",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Old Shop, Jalan Hang Kasturi, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 24,
+    "zone": "jonker-street",
+    "centerLat": 2.195458,
+    "centerLng": 102.247794,
+    "photos": [
+      {
+        "index": 41,
+        "file": "IMG_9323.jpeg",
+        "time": "03:57:53",
+        "zone": "jonker-street",
+        "lat": 2.195458,
+        "lng": 102.247794,
+        "dist": 115
+      }
+    ],
+    "osmName": "Famosa Chicken Rice Ball",
+    "address": {
+      "amenity": "Famosa Chicken Rice Ball",
+      "house_number": "21",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Famosa Chicken Rice Ball, 21, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 25,
+    "zone": "jonker-street",
+    "centerLat": 2.195325,
+    "centerLng": 102.248,
+    "photos": [
+      {
+        "index": 42,
+        "file": "IMG_9326.jpeg",
+        "time": "03:59:41",
+        "zone": "jonker-street",
+        "lat": 2.195325,
+        "lng": 102.248,
+        "dist": 140
+      },
+      {
+        "index": 43,
+        "file": "IMG_9327.jpeg",
+        "time": "04:00:02",
+        "zone": "jonker-street",
+        "lat": 2.195328,
+        "lng": 102.248061,
+        "dist": 144
+      }
+    ],
+    "osmName": "Jonker Gallery",
+    "address": {
+      "shop": "Jonker Gallery",
+      "house_number": "11",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jonker Gallery, 11, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 26,
+    "zone": "dutch-square",
+    "centerLat": 2.194958,
+    "centerLng": 102.248283,
+    "photos": [
+      {
+        "index": 44,
+        "file": "IMG_9330.jpeg",
+        "time": "04:01:44",
+        "zone": "dutch-square",
+        "lat": 2.194958,
+        "lng": 102.248283,
+        "dist": 141
+      },
+      {
+        "index": 45,
+        "file": "IMG_9332.jpeg",
+        "time": "04:02:24",
+        "zone": "dutch-square",
+        "lat": 2.195025,
+        "lng": 102.2483,
+        "dist": 144
+      }
+    ],
+    "osmName": "San Shu Gong",
+    "address": {
+      "shop": "San Shu Gong",
+      "house_number": "33",
+      "road": "Jalan Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "San Shu Gong, 33, Jalan Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 27,
+    "zone": "dutch-square",
+    "centerLat": 2.194767,
+    "centerLng": 102.248481,
+    "photos": [
+      {
+        "index": 46,
+        "file": "IMG_9333.jpeg",
+        "time": "04:03:25",
+        "zone": "dutch-square",
+        "lat": 2.194767,
+        "lng": 102.248481,
+        "dist": 111
+      },
+      {
+        "index": 47,
+        "file": "IMG_9336.jpeg",
+        "time": "04:04:31",
+        "zone": "dutch-square",
+        "lat": 2.194836,
+        "lng": 102.248489,
+        "dist": 115
+      },
+      {
+        "index": 48,
+        "file": "IMG_9337.jpeg",
+        "time": "04:04:48",
+        "zone": "dutch-square",
+        "lat": 2.194808,
+        "lng": 102.248506,
+        "dist": 111
+      }
+    ],
+    "osmName": "Jambatan Tan Kim Seng",
+    "address": {
+      "road": "Jambatan Tan Kim Seng",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jambatan Tan Kim Seng, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 28,
+    "zone": "dutch-square",
+    "centerLat": 2.194753,
+    "centerLng": 102.248689,
+    "photos": [
+      {
+        "index": 49,
+        "file": "IMG_9338.jpeg",
+        "time": "04:06:21",
+        "zone": "dutch-square",
+        "lat": 2.194753,
+        "lng": 102.248689,
+        "dist": 92
+      }
+    ],
+    "osmName": "Jambatan Tan Kim Seng",
+    "address": {
+      "road": "Jambatan Tan Kim Seng",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jambatan Tan Kim Seng, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 29,
+    "zone": "dutch-square",
+    "centerLat": 2.194897,
+    "centerLng": 102.2491,
+    "photos": [
+      {
+        "index": 50,
+        "file": "IMG_9339.jpeg",
+        "time": "04:14:02",
+        "zone": "dutch-square",
+        "lat": 2.194897,
+        "lng": 102.2491,
+        "dist": 81
+      },
+      {
+        "index": 51,
+        "file": "IMG_9340.jpeg",
+        "time": "04:14:11",
+        "zone": "dutch-square",
+        "lat": 2.194964,
+        "lng": 102.248992,
+        "dist": 92
+      }
+    ],
+    "osmName": "Cheng Ho",
+    "address": {
+      "amenity": "Cheng Ho",
+      "road": "Lorong Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Cheng Ho, Lorong Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 30,
+    "zone": "dutch-square",
+    "centerLat": 2.1952,
+    "centerLng": 102.248658,
+    "photos": [
+      {
+        "index": 52,
+        "file": "IMG_9342.jpeg",
+        "time": "04:15:11",
+        "zone": "dutch-square",
+        "lat": 2.1952,
+        "lng": 102.248658,
+        "dist": 132
+      },
+      {
+        "index": 53,
+        "file": "IMG_9343.jpeg",
+        "time": "04:15:42",
+        "zone": "dutch-square",
+        "lat": 2.195275,
+        "lng": 102.248719,
+        "dist": 136
+      }
+    ],
+    "osmName": "The Coffee Jar",
+    "address": {
+      "amenity": "The Coffee Jar",
+      "house_number": "38",
+      "road": "Lorong Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "The Coffee Jar, 38, Lorong Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 31,
+    "zone": "dutch-square",
+    "centerLat": 2.195414,
+    "centerLng": 102.248764,
+    "photos": [
+      {
+        "index": 54,
+        "file": "IMG_9344.jpeg",
+        "time": "04:16:02",
+        "zone": "dutch-square",
+        "lat": 2.195414,
+        "lng": 102.248764,
+        "dist": 148
+      },
+      {
+        "index": 55,
+        "file": "IMG_9345.jpeg",
+        "time": "04:16:30",
+        "zone": "dutch-square",
+        "lat": 2.1954,
+        "lng": 102.248878,
+        "dist": 141
+      }
+    ],
+    "osmName": "Pin Pin Hiong",
+    "address": {
+      "amenity": "Pin Pin Hiong",
+      "road": "Jalan Tukang Besi",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Pin Pin Hiong, Jalan Tukang Besi, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 32,
+    "zone": "dutch-square",
+    "centerLat": 2.195189,
+    "centerLng": 102.249022,
+    "photos": [
+      {
+        "index": 56,
+        "file": "IMG_9346.jpeg",
+        "time": "04:17:05",
+        "zone": "dutch-square",
+        "lat": 2.195189,
+        "lng": 102.249022,
+        "dist": 114
+      },
+      {
+        "index": 57,
+        "file": "IMG_9347.jpeg",
+        "time": "04:17:21",
+        "zone": "dutch-square",
+        "lat": 2.195189,
+        "lng": 102.249008,
+        "dist": 115
+      }
+    ],
+    "osmName": "46",
+    "address": {
+      "house_number": "46",
+      "road": "Lorong Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "46, Lorong Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 33,
+    "zone": "dutch-square",
+    "centerLat": 2.195603,
+    "centerLng": 102.249031,
+    "photos": [
+      {
+        "index": 58,
+        "file": "IMG_9348.jpeg",
+        "time": "04:19:07",
+        "zone": "dutch-square",
+        "lat": 2.195603,
+        "lng": 102.249031,
+        "dist": 159
+      }
+    ],
+    "osmName": "71",
+    "address": {
+      "house_number": "71",
+      "road": "Lorong Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "71, Lorong Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 34,
+    "zone": "dutch-square",
+    "centerLat": 2.195772,
+    "centerLng": 102.249175,
+    "photos": [
+      {
+        "index": 59,
+        "file": "IMG_9349.jpeg",
+        "time": "04:19:31",
+        "zone": "dutch-square",
+        "lat": 2.195772,
+        "lng": 102.249175,
+        "dist": 175
+      }
+    ],
+    "osmName": "85",
+    "address": {
+      "house_number": "85",
+      "road": "Lorong Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "85, Lorong Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 35,
+    "zone": "dutch-square",
+    "centerLat": 2.196289,
+    "centerLng": 102.250992,
+    "photos": [
+      {
+        "index": 60,
+        "file": "IMG_9351.jpeg",
+        "time": "04:25:46",
+        "zone": "dutch-square",
+        "lat": 2.196289,
+        "lng": 102.250992,
+        "dist": 299
+      }
+    ],
+    "osmName": "Discovery Cafe & Guesthouse",
+    "address": {
+      "tourism": "Discovery Cafe & Guesthouse",
+      "house_number": "3",
+      "road": "Jalan Bunga Raya",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Durian Daun Dalam",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Discovery Cafe & Guesthouse, 3, Jalan Bunga Raya, Kampung Jawa, Kampung Durian Daun Dalam, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 36,
+    "zone": "dutch-square",
+    "centerLat": 2.196147,
+    "centerLng": 102.250694,
+    "photos": [
+      {
+        "index": 61,
+        "file": "IMG_9361.jpeg",
+        "time": "05:32:17",
+        "zone": "dutch-square",
+        "lat": 2.196147,
+        "lng": 102.250694,
+        "dist": 266
+      },
+      {
+        "index": 62,
+        "file": "IMG_9363.jpeg",
+        "time": "05:33:47",
+        "zone": "dutch-square",
+        "lat": 2.196139,
+        "lng": 102.250686,
+        "dist": 265
+      }
+    ],
+    "osmName": "Jambatan Chan Koon Cheng",
+    "address": {
+      "man_made": "Jambatan Chan Koon Cheng",
+      "road": "Lorong Hang Jebat",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jambatan Chan Koon Cheng, Lorong Hang Jebat, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 37,
+    "zone": "dutch-square",
+    "centerLat": 2.195814,
+    "centerLng": 102.250511,
+    "photos": [
+      {
+        "index": 63,
+        "file": "IMG_9364.jpeg",
+        "time": "05:35:32",
+        "zone": "dutch-square",
+        "lat": 2.195814,
+        "lng": 102.250511,
+        "dist": 224
+      },
+      {
+        "index": 64,
+        "file": "IMG_9365.jpeg",
+        "time": "05:35:59",
+        "zone": "dutch-square",
+        "lat": 2.195853,
+        "lng": 102.250458,
+        "dist": 224
+      }
+    ],
+    "osmName": "Lorong Hang Jebat",
+    "address": {
+      "road": "Lorong Hang Jebat",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Lorong Hang Jebat, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 38,
+    "zone": "dutch-square",
+    "centerLat": 2.195572,
+    "centerLng": 102.250253,
+    "photos": [
+      {
+        "index": 65,
+        "file": "IMG_9366.jpeg",
+        "time": "05:37:17",
+        "zone": "dutch-square",
+        "lat": 2.195572,
+        "lng": 102.250253,
+        "dist": 186
+      }
+    ],
+    "osmName": "Bastion Victoria",
+    "address": {
+      "historic": "Bastion Victoria",
+      "road": "Jalan Laksamana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Bastion Victoria, Jalan Laksamana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 39,
+    "zone": "dutch-square",
+    "centerLat": 2.195019,
+    "centerLng": 102.249633,
+    "photos": [
+      {
+        "index": 66,
+        "file": "IMG_9367.jpeg",
+        "time": "05:40:28",
+        "zone": "dutch-square",
+        "lat": 2.195019,
+        "lng": 102.249633,
+        "dist": 98
+      },
+      {
+        "index": 67,
+        "file": "IMG_9368.jpeg",
+        "time": "05:40:37",
+        "zone": "dutch-square",
+        "lat": 2.195,
+        "lng": 102.249572,
+        "dist": 94
+      }
+    ],
+    "osmName": "7",
+    "address": {
+      "house_number": "7",
+      "road": "Jalan Laksamana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "7, Jalan Laksamana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 40,
+    "zone": "dutch-square",
+    "centerLat": 2.194914,
+    "centerLng": 102.249442,
+    "photos": [
+      {
+        "index": 68,
+        "file": "IMG_9369.jpeg",
+        "time": "05:41:19",
+        "zone": "dutch-square",
+        "lat": 2.194914,
+        "lng": 102.249442,
+        "dist": 81
+      }
+    ],
+    "osmName": "Melaka Folks Art Gallery",
+    "address": {
+      "tourism": "Melaka Folks Art Gallery",
+      "road": "Jalan Laksamana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Melaka Folks Art Gallery, Jalan Laksamana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 41,
+    "zone": "dutch-square",
+    "centerLat": 2.194589,
+    "centerLng": 102.249108,
+    "photos": [
+      {
+        "index": 69,
+        "file": "IMG_9370.jpeg",
+        "time": "05:42:42",
+        "zone": "dutch-square",
+        "lat": 2.194589,
+        "lng": 102.249108,
+        "dist": 48
+      },
+      {
+        "index": 70,
+        "file": "IMG_9371.jpeg",
+        "time": "05:43:27",
+        "zone": "dutch-square",
+        "lat": 2.194458,
+        "lng": 102.249092,
+        "dist": 37
+      }
+    ],
+    "osmName": "Jalan Laksamana",
+    "address": {
+      "road": "Jalan Laksamana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Laksamana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 42,
+    "zone": "dutch-square",
+    "centerLat": 2.194453,
+    "centerLng": 102.2491,
+    "photos": [
+      {
+        "index": 71,
+        "file": "IMG_9372.jpeg",
+        "time": "05:43:46",
+        "zone": "dutch-square",
+        "lat": 2.194453,
+        "lng": 102.2491,
+        "dist": 36
+      },
+      {
+        "index": 72,
+        "file": "IMG_9373.jpeg",
+        "time": "05:44:06",
+        "zone": "dutch-square",
+        "lat": 2.194472,
+        "lng": 102.249039,
+        "dist": 42
+      },
+      {
+        "index": 73,
+        "file": "IMG_9374.jpeg",
+        "time": "05:44:20",
+        "zone": "dutch-square",
+        "lat": 2.194447,
+        "lng": 102.249,
+        "dist": 43
+      }
+    ],
+    "osmName": "Dutch Square (Red Square) Melaka",
+    "address": {
+      "tourism": "Dutch Square (Red Square) Melaka",
+      "road": "Jalan Laksamana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Dutch Square (Red Square) Melaka, Jalan Laksamana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 43,
+    "zone": "dutch-square",
+    "centerLat": 2.194361,
+    "centerLng": 102.248864,
+    "photos": [
+      {
+        "index": 74,
+        "file": "IMG_9376.jpeg",
+        "time": "05:45:00",
+        "zone": "dutch-square",
+        "lat": 2.194361,
+        "lng": 102.248864,
+        "dist": 52
+      },
+      {
+        "index": 75,
+        "file": "IMG_9378.jpeg",
+        "time": "05:45:35",
+        "zone": "dutch-square",
+        "lat": 2.194317,
+        "lng": 102.248842,
+        "dist": 53
+      },
+      {
+        "index": 76,
+        "file": "IMG_9379.jpeg",
+        "time": "05:45:51",
+        "zone": "dutch-square",
+        "lat": 2.194303,
+        "lng": 102.248825,
+        "dist": 54
+      }
+    ],
+    "osmName": "Welcome To Melaka Sign",
+    "address": {
+      "tourism": "Welcome To Melaka Sign",
+      "road": "Jalan Laksamana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Welcome To Melaka Sign, Jalan Laksamana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 44,
+    "zone": "dutch-square",
+    "centerLat": 2.194311,
+    "centerLng": 102.248725,
+    "photos": [
+      {
+        "index": 77,
+        "file": "IMG_9381.jpeg",
+        "time": "05:46:41",
+        "zone": "dutch-square",
+        "lat": 2.194311,
+        "lng": 102.248725,
+        "dist": 65
+      }
+    ],
+    "osmName": "Bandar Hilir",
+    "address": {
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 45,
+    "zone": "dutch-square",
+    "centerLat": 2.194417,
+    "centerLng": 102.24845,
+    "photos": [
+      {
+        "index": 78,
+        "file": "IMG_9382.jpeg",
+        "time": "05:47:48",
+        "zone": "dutch-square",
+        "lat": 2.194417,
+        "lng": 102.24845,
+        "dist": 97
+      }
+    ],
+    "osmName": "Boat Cruise Ticket",
+    "address": {
+      "shop": "Boat Cruise Ticket",
+      "road": "Jambatan Tan Kim Seng",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Boat Cruise Ticket, Jambatan Tan Kim Seng, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 46,
+    "zone": "dutch-square",
+    "centerLat": 2.19435,
+    "centerLng": 102.248269,
+    "photos": [
+      {
+        "index": 79,
+        "file": "IMG_9383.jpeg",
+        "time": "05:48:27",
+        "zone": "dutch-square",
+        "lat": 2.19435,
+        "lng": 102.248269,
+        "dist": 116
+      },
+      {
+        "index": 80,
+        "file": "IMG_9384.jpeg",
+        "time": "05:48:48",
+        "zone": "dutch-square",
+        "lat": 2.194356,
+        "lng": 102.248269,
+        "dist": 116
+      }
+    ],
+    "osmName": "Jambatan Tan Kim Seng",
+    "address": {
+      "road": "Jambatan Tan Kim Seng",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jambatan Tan Kim Seng, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 47,
+    "zone": "dutch-square",
+    "centerLat": 2.194203,
+    "centerLng": 102.248275,
+    "photos": [
+      {
+        "index": 81,
+        "file": "IMG_9385.jpeg",
+        "time": "05:49:36",
+        "zone": "dutch-square",
+        "lat": 2.194203,
+        "lng": 102.248275,
+        "dist": 114
+      },
+      {
+        "index": 84,
+        "file": "IMG_9388.jpeg",
+        "time": "05:52:02",
+        "zone": "dutch-square",
+        "lat": 2.194172,
+        "lng": 102.248344,
+        "dist": 106
+      }
+    ],
+    "osmName": "Bastion Middleburg",
+    "address": {
+      "historic": "Bastion Middleburg",
+      "road": "Jalan Tun Khalil Yaakob",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Bastion Middleburg, Jalan Tun Khalil Yaakob, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 48,
+    "zone": "dutch-square",
+    "centerLat": 2.194161,
+    "centerLng": 102.248069,
+    "photos": [
+      {
+        "index": 82,
+        "file": "IMG_9386.jpeg",
+        "time": "05:50:49",
+        "zone": "dutch-square",
+        "lat": 2.194161,
+        "lng": 102.248069,
+        "dist": 137
+      },
+      {
+        "index": 83,
+        "file": "IMG_9387.jpeg",
+        "time": "05:51:27",
+        "zone": "dutch-square",
+        "lat": 2.194108,
+        "lng": 102.248169,
+        "dist": 126
+      }
+    ],
+    "osmName": "Bastion Middleburg",
+    "address": {
+      "tourism": "Bastion Middleburg",
+      "road": "Jalan Tun Khalil Yaakob",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Bastion Middleburg, Jalan Tun Khalil Yaakob, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 49,
+    "zone": "dutch-square",
+    "centerLat": 2.193739,
+    "centerLng": 102.248244,
+    "photos": [
+      {
+        "index": 85,
+        "file": "IMG_9389.jpeg",
+        "time": "05:53:51",
+        "zone": "dutch-square",
+        "lat": 2.193739,
+        "lng": 102.248244,
+        "dist": 128
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 50,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.193253,
+    "centerLng": 102.248436,
+    "photos": [
+      {
+        "index": 86,
+        "file": "IMG_9390.jpeg",
+        "time": "05:55:16",
+        "zone": "st-pauls-hill",
+        "lat": 2.193253,
+        "lng": 102.248436,
+        "dist": 118
+      },
+      {
+        "index": 87,
+        "file": "IMG_9391.jpeg",
+        "time": "05:55:30",
+        "zone": "st-pauls-hill",
+        "lat": 2.193256,
+        "lng": 102.248444,
+        "dist": 118
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 51,
+    "zone": "dutch-square",
+    "centerLat": 2.193769,
+    "centerLng": 102.248811,
+    "photos": [
+      {
+        "index": 88,
+        "file": "IMG_9392.jpeg",
+        "time": "05:57:28",
+        "zone": "dutch-square",
+        "lat": 2.193769,
+        "lng": 102.248811,
+        "dist": 72
+      },
+      {
+        "index": 89,
+        "file": "IMG_9393.jpeg",
+        "time": "05:57:53",
+        "zone": "dutch-square",
+        "lat": 2.193767,
+        "lng": 102.248825,
+        "dist": 71
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 52,
+    "zone": "dutch-square",
+    "centerLat": 2.193608,
+    "centerLng": 102.248939,
+    "photos": [
+      {
+        "index": 90,
+        "file": "IMG_9394.jpeg",
+        "time": "05:58:41",
+        "zone": "dutch-square",
+        "lat": 2.193608,
+        "lng": 102.248939,
+        "dist": 77
+      }
+    ],
+    "osmName": "Kereta Bomba Lama",
+    "address": {
+      "historic": "Kereta Bomba Lama",
+      "road": "Jalan Gereja",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Kereta Bomba Lama, Jalan Gereja, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 53,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.193444,
+    "centerLng": 102.248986,
+    "photos": [
+      {
+        "index": 91,
+        "file": "IMG_9395.jpeg",
+        "time": "05:59:51",
+        "zone": "st-pauls-hill",
+        "lat": 2.193444,
+        "lng": 102.248986,
+        "dist": 85
+      }
+    ],
+    "osmName": "Dutch Square",
+    "address": {
+      "tourism": "Dutch Square",
+      "road": "Jalan Laksamana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Dutch Square, Jalan Laksamana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 54,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192886,
+    "centerLng": 102.248811,
+    "photos": [
+      {
+        "index": 92,
+        "file": "IMG_9396.jpeg",
+        "time": "06:01:27",
+        "zone": "st-pauls-hill",
+        "lat": 2.192886,
+        "lng": 102.248811,
+        "dist": 66
+      }
+    ],
+    "osmName": "Kota A Famosa",
+    "address": {
+      "historic": "Kota A Famosa",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Kota A Famosa, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 55,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192742,
+    "centerLng": 102.249131,
+    "photos": [
+      {
+        "index": 93,
+        "file": "FullSizeRender.jpeg",
+        "time": "06:03:06",
+        "zone": "st-pauls-hill",
+        "lat": 2.192742,
+        "lng": 102.249131,
+        "dist": 31
+      }
+    ],
+    "osmName": "Fotografi Panorama",
+    "address": {
+      "tourism": "Fotografi Panorama",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Fotografi Panorama, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 56,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192792,
+    "centerLng": 102.249375,
+    "photos": [
+      {
+        "index": 94,
+        "file": "IMG_9398.jpeg",
+        "time": "06:04:25",
+        "zone": "st-pauls-hill",
+        "lat": 2.192792,
+        "lng": 102.249375,
+        "dist": 3
+      }
+    ],
+    "osmName": "St. Paul",
+    "address": {
+      "tourism": "St. Paul",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "St. Paul, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 57,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192658,
+    "centerLng": 102.249497,
+    "photos": [
+      {
+        "index": 95,
+        "file": "IMG_9399.jpeg",
+        "time": "06:05:26",
+        "zone": "st-pauls-hill",
+        "lat": 2.192658,
+        "lng": 102.249497,
+        "dist": 19
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 58,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192517,
+    "centerLng": 102.249528,
+    "photos": [
+      {
+        "index": 96,
+        "file": "IMG_9400.jpeg",
+        "time": "06:05:50",
+        "zone": "st-pauls-hill",
+        "lat": 2.192517,
+        "lng": 102.249528,
+        "dist": 35
+      },
+      {
+        "index": 97,
+        "file": "IMG_9401.jpeg",
+        "time": "06:06:05",
+        "zone": "st-pauls-hill",
+        "lat": 2.192508,
+        "lng": 102.249564,
+        "dist": 37
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 59,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192617,
+    "centerLng": 102.249878,
+    "photos": [
+      {
+        "index": 98,
+        "file": "IMG_9402.jpeg",
+        "time": "06:08:32",
+        "zone": "st-pauls-hill",
+        "lat": 2.192617,
+        "lng": 102.249878,
+        "dist": 57
+      },
+      {
+        "index": 99,
+        "file": "IMG_9403.jpeg",
+        "time": "06:08:50",
+        "zone": "st-pauls-hill",
+        "lat": 2.192575,
+        "lng": 102.249894,
+        "dist": 60
+      }
+    ],
+    "osmName": "Kubur Belanda",
+    "address": {
+      "landuse": "Kubur Belanda",
+      "road": "Jalan Istana",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Kubur Belanda, Jalan Istana, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 60,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192414,
+    "centerLng": 102.249786,
+    "photos": [
+      {
+        "index": 100,
+        "file": "IMG_9405.jpeg",
+        "time": "06:09:54",
+        "zone": "st-pauls-hill",
+        "lat": 2.192414,
+        "lng": 102.249786,
+        "dist": 61
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 61,
+    "zone": "a-famosa",
+    "centerLat": 2.192017,
+    "centerLng": 102.250197,
+    "photos": [
+      {
+        "index": 101,
+        "file": "IMG_9406.jpeg",
+        "time": "06:12:05",
+        "zone": "a-famosa",
+        "lat": 2.192017,
+        "lng": 102.250197,
+        "dist": 41
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 62,
+    "zone": "a-famosa",
+    "centerLat": 2.191936,
+    "centerLng": 102.250458,
+    "photos": [
+      {
+        "index": 102,
+        "file": "IMG_9407.jpeg",
+        "time": "06:13:26",
+        "zone": "a-famosa",
+        "lat": 2.191936,
+        "lng": 102.250458,
+        "dist": 16
+      }
+    ],
+    "osmName": "Kota A Famosa",
+    "address": {
+      "historic": "Kota A Famosa",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Kota A Famosa, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 63,
+    "zone": "a-famosa",
+    "centerLat": 2.191425,
+    "centerLng": 102.2501,
+    "photos": [
+      {
+        "index": 103,
+        "file": "IMG_9409.jpeg",
+        "time": "06:15:20",
+        "zone": "a-famosa",
+        "lat": 2.191425,
+        "lng": 102.2501,
+        "dist": 61
+      }
+    ],
+    "osmName": "Malaya Independence Memorial",
+    "address": {
+      "historic": "Malaya Independence Memorial",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Malaya Independence Memorial, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 64,
+    "zone": "a-famosa",
+    "centerLat": 2.191383,
+    "centerLng": 102.249956,
+    "photos": [
+      {
+        "index": 104,
+        "file": "IMG_9410.jpeg",
+        "time": "06:16:58",
+        "zone": "a-famosa",
+        "lat": 2.191383,
+        "lng": 102.249956,
+        "dist": 76
+      }
+    ],
+    "osmName": "Santiago Bastion Ruins",
+    "address": {
+      "tourism": "Santiago Bastion Ruins",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Santiago Bastion Ruins, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 65,
+    "zone": "a-famosa",
+    "centerLat": 2.191367,
+    "centerLng": 102.249442,
+    "photos": [
+      {
+        "index": 105,
+        "file": "IMG_9411.jpeg",
+        "time": "06:18:34",
+        "zone": "a-famosa",
+        "lat": 2.191367,
+        "lng": 102.249442,
+        "dist": 127
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 66,
+    "zone": "a-famosa",
+    "centerLat": 2.191433,
+    "centerLng": 102.249231,
+    "photos": [
+      {
+        "index": 106,
+        "file": "IMG_9412.jpeg",
+        "time": "06:19:09",
+        "zone": "a-famosa",
+        "lat": 2.191433,
+        "lng": 102.249231,
+        "dist": 147
+      }
+    ],
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "address": {
+      "building": "Jabatan Muzium Malaysia, Wilayah Selatan",
+      "house_number": "3",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jabatan Muzium Malaysia, Wilayah Selatan, 3, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 67,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.191497,
+    "centerLng": 102.248931,
+    "photos": [
+      {
+        "index": 107,
+        "file": "IMG_9413.jpeg",
+        "time": "06:20:01",
+        "zone": "st-pauls-hill",
+        "lat": 2.191497,
+        "lng": 102.248931,
+        "dist": 154
+      },
+      {
+        "index": 108,
+        "file": "IMG_9414.jpeg",
+        "time": "06:20:11",
+        "zone": "st-pauls-hill",
+        "lat": 2.191497,
+        "lng": 102.2489,
+        "dist": 155
+      }
+    ],
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "address": {
+      "historic": "Jabatan Muzium Malaysia, Wilayah Selatan",
+      "house_number": "3",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jabatan Muzium Malaysia, Wilayah Selatan, 3, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 68,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.191558,
+    "centerLng": 102.248756,
+    "photos": [
+      {
+        "index": 109,
+        "file": "IMG_9415.jpeg",
+        "time": "06:20:46",
+        "zone": "st-pauls-hill",
+        "lat": 2.191558,
+        "lng": 102.248756,
+        "dist": 156
+      }
+    ],
+    "osmName": "Lang Rajawali",
+    "address": {
+      "historic": "Lang Rajawali",
+      "road": "Jalan Taman",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Lang Rajawali, Jalan Taman, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 69,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.191811,
+    "centerLng": 102.248664,
+    "photos": [
+      {
+        "index": 110,
+        "file": "IMG_9416.jpeg",
+        "time": "06:21:31",
+        "zone": "st-pauls-hill",
+        "lat": 2.191811,
+        "lng": 102.248664,
+        "dist": 137
+      }
+    ],
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "address": {
+      "building": "Jabatan Muzium Malaysia, Wilayah Selatan",
+      "house_number": "3",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jabatan Muzium Malaysia, Wilayah Selatan, 3, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 70,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192522,
+    "centerLng": 102.248389,
+    "photos": [
+      {
+        "index": 111,
+        "file": "IMG_9417.jpeg",
+        "time": "06:23:27",
+        "zone": "st-pauls-hill",
+        "lat": 2.192522,
+        "lng": 102.248389,
+        "dist": 117
+      }
+    ],
+    "osmName": "Jabatan Muzium Malaysia, Wilayah Selatan",
+    "address": {
+      "building": "Jabatan Muzium Malaysia, Wilayah Selatan",
+      "house_number": "3",
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75000",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jabatan Muzium Malaysia, Wilayah Selatan, 3, Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75000, Malaysia"
+  },
+  {
+    "id": 71,
+    "zone": "st-pauls-hill",
+    "centerLat": 2.192867,
+    "centerLng": 102.248389,
+    "photos": [
+      {
+        "index": 112,
+        "file": "IMG_9418.jpeg",
+        "time": "06:24:11",
+        "zone": "st-pauls-hill",
+        "lat": 2.192867,
+        "lng": 102.248389,
+        "dist": 113
+      }
+    ],
+    "osmName": "Jalan Kota",
+    "address": {
+      "road": "Jalan Kota",
+      "neighbourhood": "Bandar Hilir",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "Jalan Kota, Bandar Hilir, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 72,
+    "zone": "jonker-street",
+    "centerLat": 2.196058,
+    "centerLng": 102.247894,
+    "photos": [
+      {
+        "index": 113,
+        "file": "IMG_9420.jpeg",
+        "time": "06:55:53",
+        "zone": "jonker-street",
+        "lat": 2.196058,
+        "lng": 102.247894,
+        "dist": 82
+      }
+    ],
+    "osmName": "57",
+    "address": {
+      "house_number": "57",
+      "road": "Jalan Hang Kasturi",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "57, Jalan Hang Kasturi, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 73,
+    "zone": "jonker-street",
+    "centerLat": 2.196356,
+    "centerLng": 102.248436,
+    "photos": [
+      {
+        "index": 114,
+        "file": "IMG_9421.jpeg",
+        "time": "06:56:39",
+        "zone": "jonker-street",
+        "lat": 2.196356,
+        "lng": 102.248436,
+        "dist": 137
+      },
+      {
+        "index": 115,
+        "file": "IMG_9422.jpeg",
+        "time": "06:57:05",
+        "zone": "jonker-street",
+        "lat": 2.196369,
+        "lng": 102.248458,
+        "dist": 140
+      },
+      {
+        "index": 116,
+        "file": "IMG_9423.jpeg",
+        "time": "06:57:11",
+        "zone": "jonker-street",
+        "lat": 2.196369,
+        "lng": 102.248458,
+        "dist": 140
+      },
+      {
+        "index": 117,
+        "file": "IMG_9424.jpeg",
+        "time": "06:57:43",
+        "zone": "jonker-street",
+        "lat": 2.196411,
+        "lng": 102.248511,
+        "dist": 146
+      },
+      {
+        "index": 118,
+        "file": "IMG_9425.jpeg",
+        "time": "06:58:04",
+        "zone": "jonker-street",
+        "lat": 2.196408,
+        "lng": 102.248519,
+        "dist": 147
+      }
+    ],
+    "osmName": "68",
+    "address": {
+      "house_number": "68",
+      "road": "Jalan Hang Kasturi",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "68, Jalan Hang Kasturi, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 74,
+    "zone": "jonker-street",
+    "centerLat": 2.196453,
+    "centerLng": 102.248567,
+    "photos": [
+      {
+        "index": 119,
+        "file": "IMG_9426.jpeg",
+        "time": "06:58:26",
+        "zone": "jonker-street",
+        "lat": 2.196453,
+        "lng": 102.248567,
+        "dist": 153
+      },
+      {
+        "index": 120,
+        "file": "IMG_9427.jpeg",
+        "time": "06:58:54",
+        "zone": "jonker-street",
+        "lat": 2.196494,
+        "lng": 102.248581,
+        "dist": 155
+      }
+    ],
+    "osmName": "33",
+    "address": {
+      "house_number": "33",
+      "road": "Jalan Kampung Kuli",
+      "neighbourhood": "Kampung Jawa",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "33, Jalan Kampung Kuli, Kampung Jawa, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  },
+  {
+    "id": 75,
+    "zone": "jonker-street",
+    "centerLat": 2.197058,
+    "centerLng": 102.248719,
+    "photos": [
+      {
+        "index": 121,
+        "file": "IMG_9428.jpeg",
+        "time": "07:00:45",
+        "zone": "jonker-street",
+        "lat": 2.197058,
+        "lng": 102.248719,
+        "dist": 189
+      }
+    ],
+    "osmName": "91",
+    "address": {
+      "house_number": "91",
+      "road": "Jalan Hang Kasturi",
+      "neighbourhood": "Kampung Jawa",
+      "hamlet": "Kampung Pengkalan Rama Tengah",
+      "city": "Bandaraya Melaka",
+      "district": "Melaka Tengah",
+      "state": "Melaka",
+      "ISO3166-2-lvl4": "MY-04",
+      "postcode": "75100",
+      "country": "Malaysia",
+      "country_code": "my"
+    },
+    "displayName": "91, Jalan Hang Kasturi, Kampung Jawa, Kampung Pengkalan Rama Tengah, Bandaraya Melaka, Melaka Tengah, Melaka, 75100, Malaysia"
+  }
+]

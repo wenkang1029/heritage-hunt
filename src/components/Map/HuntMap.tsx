@@ -2,7 +2,8 @@
  * Melaka Heritage Hunt - Interactive Leaflet Map Component
  * Path: src/components/Map/HuntMap.tsx
  *
- * Renders OpenStreetMap base layer, colored zone polygons, clue pins, and live pulsing team radar markers.
+ * Renders OpenStreetMap base layer, colored zone polygons, clue pins, live pulsing team radar markers,
+ * and provides an interactive visual polygon plotting mode for the Game Master.
  */
 
 import React, { useEffect, useMemo } from 'react';
@@ -10,10 +11,12 @@ import {
   MapContainer,
   TileLayer,
   Polygon,
+  Polyline,
   Marker,
   Popup,
   Circle,
   useMap,
+  useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
 import type {
@@ -23,7 +26,16 @@ import type {
   GeoCoordinate,
 } from '../../types/index.ts';
 import { MELAKA_MAP_CENTER } from '../../data/melakaZones.ts';
-import { MapPin, Navigation, Crosshair } from 'lucide-react';
+import {
+  MapPin,
+  Navigation,
+  Crosshair,
+  Undo2,
+  Trash2,
+  Check,
+  X,
+  MousePointerClick,
+} from 'lucide-react';
 
 // ============================================================================
 // Custom Leaflet DivIcons (No broken image asset URLs)
@@ -109,14 +121,83 @@ function createTeamIcon(teamName: string, teamColor: string, isCurrentTeam: bool
   });
 }
 
-// Map Controller for Recenter buttons
-function MapController({ targetCenter }: { targetCenter: GeoCoordinate | null }) {
+function createVertexIcon(index: number, color: string): L.DivIcon {
+  return L.divIcon({
+    className: 'custom-vertex-marker',
+    html: `
+      <div style="
+        background: ${color};
+        color: #ffffff;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        font-weight: 800;
+        user-select: none;
+      ">
+        ${index + 1}
+      </div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  });
+}
+
+// Map Controller for Recenter & Target Center changes
+function MapController({
+  targetCenter,
+  recenterTrigger,
+}: {
+  targetCenter?: GeoCoordinate | null;
+  recenterTrigger?: GeoCoordinate | null;
+}) {
   const map = useMap();
   useEffect(() => {
-    if (targetCenter) {
-      map.flyTo([targetCenter.latitude, targetCenter.longitude], 17, { duration: 1.2 });
+    const target = recenterTrigger || targetCenter;
+    if (target) {
+      map.flyTo([target.latitude, target.longitude], 17, { duration: 1.2 });
     }
-  }, [targetCenter, map]);
+  }, [targetCenter, recenterTrigger, map]);
+  return null;
+}
+
+// Map Plot Click Event Handler for interactive zone drawing
+function MapPlotClickHandler({
+  enabled,
+  onAddPoint,
+}: {
+  enabled: boolean;
+  onAddPoint?: (point: GeoCoordinate) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      if (!enabled || !onAddPoint) return;
+      onAddPoint({
+        latitude: Number(e.latlng.lat.toFixed(6)),
+        longitude: Number(e.latlng.lng.toFixed(6)),
+      });
+    },
+  });
+  return null;
+}
+
+// Map Cursor Modifier during plotting
+function MapCursorHandler({ isPlotting }: { isPlotting: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    if (isPlotting) {
+      container.style.cursor = 'crosshair';
+    } else {
+      container.style.cursor = '';
+    }
+  }, [map, isPlotting]);
   return null;
 }
 
@@ -133,6 +214,20 @@ export interface HuntMapProps {
   completedClueIds?: string[];
   onSelectClue?: (clue: Clue) => void;
   className?: string;
+
+  // Visual Zone Plotting Mode Props
+  isPlottingZone?: boolean;
+  plottingZoneId?: string | null;
+  plottingZoneName?: string;
+  plottingZoneColor?: string;
+  plottingPoints?: GeoCoordinate[];
+  onPlotPointAdd?: (point: GeoCoordinate) => void;
+  onUndoPoint?: () => void;
+  onClearPoints?: () => void;
+  onSavePlot?: () => void;
+  onCancelPlot?: () => void;
+  isSavingPlot?: boolean;
+  targetCenter?: GeoCoordinate | null;
 }
 
 export const HuntMap: React.FC<HuntMapProps> = ({
@@ -144,6 +239,18 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   completedClueIds = [],
   onSelectClue,
   className = 'h-full w-full',
+  isPlottingZone = false,
+  plottingZoneId = null,
+  plottingZoneName = '',
+  plottingZoneColor = '#DC2626',
+  plottingPoints = [],
+  onPlotPointAdd,
+  onUndoPoint,
+  onClearPoints,
+  onSavePlot,
+  onCancelPlot,
+  isSavingPlot = false,
+  targetCenter = null,
 }) => {
   const [targetRecenter, setTargetRecenter] = React.useState<GeoCoordinate | null>(null);
 
@@ -164,7 +271,9 @@ export const HuntMap: React.FC<HuntMapProps> = ({
           maxZoom={19}
         />
 
-        <MapController targetCenter={targetRecenter} />
+        <MapController targetCenter={targetCenter} recenterTrigger={targetRecenter} />
+        <MapPlotClickHandler enabled={isPlottingZone} onAddPoint={onPlotPointAdd} />
+        <MapCursorHandler isPlotting={isPlottingZone} />
 
         {/* 1. Zone Polygons */}
         {zones.map((zone) => {
@@ -172,10 +281,30 @@ export const HuntMap: React.FC<HuntMapProps> = ({
             p.latitude,
             p.longitude,
           ]);
+
+          // If this zone is being edited in plotting mode, render a faint ghost reference
+          if (isPlottingZone && zone.id === plottingZoneId) {
+            return (
+              <Polygon
+                key={`ghost-${zone.id}`}
+                positions={positions}
+                interactive={false}
+                pathOptions={{
+                  color: '#64748B',
+                  fillColor: '#64748B',
+                  fillOpacity: 0.05,
+                  weight: 1.5,
+                  dashArray: '3, 6',
+                }}
+              />
+            );
+          }
+
           return (
             <Polygon
               key={zone.id}
               positions={positions}
+              interactive={!isPlottingZone}
               pathOptions={{
                 color: zone.borderColor || zone.color,
                 fillColor: zone.fillColor || zone.color,
@@ -184,23 +313,66 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                 dashArray: '4, 4',
               }}
             >
-              <Popup>
-                <div className="p-1">
-                  <h4 className="font-bold text-sm text-slate-100 flex items-center gap-1.5">
-                    <span
-                      className="w-3 h-3 rounded-full inline-block"
-                      style={{ background: zone.color }}
-                    />
-                    {zone.name}
-                  </h4>
-                  <p className="text-xs text-slate-300 mt-1">{zone.description}</p>
-                </div>
-              </Popup>
+              {!isPlottingZone && (
+                <Popup>
+                  <div className="p-1">
+                    <h4 className="font-bold text-sm text-slate-100 flex items-center gap-1.5">
+                      <span
+                        className="w-3 h-3 rounded-full inline-block"
+                        style={{ background: zone.color }}
+                      />
+                      {zone.name}
+                    </h4>
+                    <p className="text-xs text-slate-300 mt-1">{zone.description}</p>
+                  </div>
+                </Popup>
+              )}
             </Polygon>
           );
         })}
 
-        {/* 2. Clue Pins */}
+        {/* 2. Live Active Zone Plotting Preview */}
+        {isPlottingZone && plottingPoints.length > 0 && (
+          <>
+            {/* Dashed line if exactly 2 points */}
+            {plottingPoints.length === 2 && (
+              <Polyline
+                positions={plottingPoints.map((p) => [p.latitude, p.longitude])}
+                pathOptions={{
+                  color: plottingZoneColor || '#DC2626',
+                  weight: 3,
+                  dashArray: '6, 6',
+                }}
+              />
+            )}
+
+            {/* Closed polygon if 3 or more points */}
+            {plottingPoints.length >= 3 && (
+              <Polygon
+                positions={plottingPoints.map((p) => [p.latitude, p.longitude])}
+                pathOptions={{
+                  color: plottingZoneColor || '#DC2626',
+                  fillColor: plottingZoneColor || '#DC2626',
+                  fillOpacity: 0.35,
+                  weight: 3,
+                  dashArray: '6, 6',
+                }}
+              />
+            )}
+
+            {/* Numbered Vertex Markers */}
+            {plottingPoints.map((point, idx) => (
+              <Marker
+                key={`plot-vertex-${idx}-${point.latitude}-${point.longitude}`}
+                position={[point.latitude, point.longitude]}
+                icon={createVertexIcon(idx, plottingZoneColor || '#DC2626')}
+                interactive={false}
+              />
+            ))}
+          </>
+        )}
+
+        {/* 3. Clue Pins */}
         {clues.map((clue) => {
           if (!clue.location) return null;
           const isDone = completedSet.has(clue.id);
@@ -210,51 +382,54 @@ export const HuntMap: React.FC<HuntMapProps> = ({
               key={clue.id}
               position={[clue.location.latitude, clue.location.longitude]}
               icon={createClueIcon(isDone, clue.points)}
+              interactive={!isPlottingZone}
             >
-              <Popup>
-                <div className="w-56 p-1">
-                  {clue.targetPhotoBase64 && (
-                    <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
-                      <img
-                        src={clue.targetPhotoBase64}
-                        alt={clue.title}
-                        className="w-full h-full object-cover"
-                      />
+              {!isPlottingZone && (
+                <Popup>
+                  <div className="w-56 p-1">
+                    {clue.targetPhotoBase64 && (
+                      <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
+                        <img
+                          src={clue.targetPhotoBase64}
+                          alt={clue.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <h4 className="font-bold text-sm text-slate-100 leading-tight">
+                        {clue.title}
+                      </h4>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                        +{clue.points} pts
+                      </span>
                     </div>
-                  )}
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <h4 className="font-bold text-sm text-slate-100 leading-tight">
-                      {clue.title}
-                    </h4>
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                      +{clue.points} pts
-                    </span>
+
+                    <p className="text-xs text-slate-300 mb-2 line-clamp-2">
+                      {clue.hint || clue.description || 'Locate this landmark detail and take a team selfie!'}
+                    </p>
+
+                    {isDone ? (
+                      <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-950/60 py-1.5 rounded-lg border border-emerald-600/40">
+                        ✓ Completed!
+                      </div>
+                    ) : onSelectClue ? (
+                      <button
+                        onClick={() => onSelectClue(clue)}
+                        className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
+                      >
+                        <MapPin className="w-3.5 h-3.5" />
+                        View Clue & Submit Selfie
+                      </button>
+                    ) : null}
                   </div>
-
-                  <p className="text-xs text-slate-300 mb-2 line-clamp-2">
-                    {clue.hint || clue.description || 'Locate this landmark detail and take a team selfie!'}
-                  </p>
-
-                  {isDone ? (
-                    <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-950/60 py-1.5 rounded-lg border border-emerald-600/40">
-                      ✓ Completed!
-                    </div>
-                  ) : onSelectClue ? (
-                    <button
-                      onClick={() => onSelectClue(clue)}
-                      className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
-                    >
-                      <MapPin className="w-3.5 h-3.5" />
-                      View Clue & Submit Selfie
-                    </button>
-                  ) : null}
-                </div>
-              </Popup>
+                </Popup>
+              )}
             </Marker>
           );
         })}
 
-        {/* 3. Live Team Radar Markers */}
+        {/* 4. Live Team Radar Markers */}
         {teams.map((team) => {
           if (!team.currentCoords) return null;
           const isCurrent = team.id === currentTeamId;
@@ -264,27 +439,30 @@ export const HuntMap: React.FC<HuntMapProps> = ({
               key={team.id}
               position={[team.currentCoords.latitude, team.currentCoords.longitude]}
               icon={createTeamIcon(team.name, team.color, isCurrent)}
+              interactive={!isPlottingZone}
             >
-              <Popup>
-                <div className="text-xs text-slate-100 p-1">
-                  <div className="font-bold flex items-center gap-1.5">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ background: team.color }}
-                    />
-                    {team.name}
+              {!isPlottingZone && (
+                <Popup>
+                  <div className="text-xs text-slate-100 p-1">
+                    <div className="font-bold flex items-center gap-1.5">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ background: team.color }}
+                      />
+                      {team.name}
+                    </div>
+                    <div className="text-slate-300 mt-1">Score: <strong className="text-amber-400">{team.score} pts</strong></div>
+                    <div className="text-slate-400 text-[10px]">
+                      Clues Found: {team.completedClueIds?.length || 0}
+                    </div>
                   </div>
-                  <div className="text-slate-300 mt-1">Score: <strong className="text-amber-400">{team.score} pts</strong></div>
-                  <div className="text-slate-400 text-[10px]">
-                    Clues Found: {team.completedClueIds?.length || 0}
-                  </div>
-                </div>
-              </Popup>
+                </Popup>
+              )}
             </Marker>
           );
         })}
 
-        {/* 4. Player Current GPS Beacon */}
+        {/* 5. Player Current GPS Beacon */}
         {playerCoords && (
           <>
             <Circle
@@ -318,6 +496,89 @@ export const HuntMap: React.FC<HuntMapProps> = ({
           </>
         )}
       </MapContainer>
+
+      {/* Floating Zone Plotting HUD Toolbar */}
+      {isPlottingZone && (
+        <div className="absolute top-3 left-3 right-3 sm:left-auto sm:right-3 z-[1000] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-slate-700/90 shadow-2xl">
+          {/* Zone & Live Count Info */}
+          <div className="flex items-center gap-2.5 mr-1">
+            <div className="relative flex items-center justify-center shrink-0">
+              <span
+                className="w-3.5 h-3.5 rounded-full animate-ping opacity-75 absolute"
+                style={{ background: plottingZoneColor || '#DC2626' }}
+              />
+              <span
+                className="w-3.5 h-3.5 rounded-full relative z-10"
+                style={{ background: plottingZoneColor || '#DC2626' }}
+              />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-black text-white">
+                  {plottingZoneName || 'Zone Boundary'}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-amber-300 border border-slate-700 font-mono">
+                  {plottingPoints.length} points plotted
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-400 font-medium flex items-center gap-1 mt-0.5">
+                <MousePointerClick className="w-3 h-3 inline" />
+                Click on map to drop boundary points
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+            <button
+              type="button"
+              onClick={onUndoPoint}
+              disabled={plottingPoints.length === 0}
+              title="Undo last plotted point"
+              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow"
+            >
+              <Undo2 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Undo Last Point</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClearPoints}
+              disabled={plottingPoints.length === 0}
+              title="Clear all plotted points"
+              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-rose-300 hover:text-rose-200 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear All Points</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onSavePlot}
+              disabled={isSavingPlot || plottingPoints.length < 3}
+              title={
+                plottingPoints.length < 3
+                  ? 'At least 3 points required to form a closed polygon'
+                  : 'Save new zone boundary to game'
+              }
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-lg"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>{isSavingPlot ? 'Saving...' : 'Save Zone Boundary'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onCancelPlot}
+              title="Cancel plotting without saving"
+              className="px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Cancel</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Map Recenter Buttons */}
       <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
