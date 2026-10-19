@@ -586,12 +586,12 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         await gameService.addClue(game.id, {
           gameId: game.id,
           title,
-          landmarkName: 'Melaka Historic Landmark',
+          landmarkName: '马六甲历史地标',
           zoneId: game.zones[0]?.id || 'dutch-square',
           points: 100,
           targetPhotoBase64: compressed.base64,
           location,
-          hint: 'Look closely at the shophouse details and walls.',
+          hint: '仔细观察店屋外观与建筑细节。',
         });
         addedCount++;
       }

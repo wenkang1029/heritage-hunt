@@ -38,6 +38,7 @@ import type {
   Zone,
 } from '../types/index.ts';
 import { calculateHaversineDistance } from '../utils/haversine.ts';
+import { normalizeClueZh } from '../data/cluesZh.ts';
 
 export type DataSourceMode = 'firestore' | 'mock';
 
@@ -175,19 +176,19 @@ class UnifiedGameService implements IGameService {
   subscribeToClues(gameId: string, callback: (clues: Clue[]) => void): Unsubscribe {
     const firestore = this.getFirestoreDb();
     if (!firestore) {
-      return mockAdapter.subscribeToClues(gameId, callback);
+      return mockAdapter.subscribeToClues(gameId, (clues) => callback(clues.map(normalizeClueZh)));
     }
 
     const cluesCol = collection(firestore, 'games', gameId, 'clues');
     return onSnapshot(
       cluesCol,
       (snapshot) => {
-        const clues = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Clue));
+        const clues = snapshot.docs.map((d) => normalizeClueZh({ id: d.id, ...d.data() } as Clue));
         callback(clues);
       },
       (err) => {
         console.warn('Firestore clues snapshot error, falling back to mock:', err);
-        mockAdapter.subscribeToClues(gameId, callback);
+        mockAdapter.subscribeToClues(gameId, (clues) => callback(clues.map(normalizeClueZh)));
       }
     );
   }
@@ -633,7 +634,8 @@ class UnifiedGameService implements IGameService {
         if (!srcCluesSnap.empty) {
           for (const clueDoc of srcCluesSnap.docs) {
             const clueRef = doc(firestore, 'games', defaultGame.id, 'clues', clueDoc.id);
-            await setDoc(clueRef, { ...clueDoc.data(), gameId: defaultGame.id });
+            const normalizedData = normalizeClueZh({ id: clueDoc.id, ...clueDoc.data() } as Clue);
+            await setDoc(clueRef, { ...normalizedData, gameId: defaultGame.id });
           }
         }
       } catch (e) {
@@ -782,7 +784,8 @@ class UnifiedGameService implements IGameService {
       if (!srcCluesSnap.empty) {
         for (const clueDoc of srcCluesSnap.docs) {
           const clueRef = doc(firestore, 'games', gameId, 'clues', clueDoc.id);
-          await setDoc(clueRef, { ...clueDoc.data(), gameId });
+          const normalizedData = normalizeClueZh({ id: clueDoc.id, ...clueDoc.data() } as Clue);
+          await setDoc(clueRef, { ...normalizedData, gameId });
         }
       }
     } catch (e) {
