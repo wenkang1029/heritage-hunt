@@ -36,6 +36,7 @@ import {
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
 import { InteractiveTour, type TourStep } from '../Common/InteractiveTour.tsx';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export interface PlayerHuntViewProps {
   game: Game;
@@ -59,6 +60,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   playerId,
 }) => {
   const { showAlert } = useDialog();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'map' | 'clues' | 'leaderboard'>('map');
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState<string>('all');
@@ -101,13 +103,81 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     });
   };
 
-  const playerTourSteps = useMemo<TourStep[]>(
-    () => [
+  // Leaderboard ranking calculations for top bar (e.g. 1/3)
+  const sortedTeams = useMemo(() => {
+    return [...teams].sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return (b.completedClueIds?.length || 0) - (a.completedClueIds?.length || 0);
+    });
+  }, [teams]);
+
+  const teamRank = useMemo(() => {
+    const index = sortedTeams.findIndex((tItem) => tItem.id === currentTeam.id);
+    return index !== -1 ? index + 1 : 1;
+  }, [sortedTeams, currentTeam.id]);
+
+  const playerTourSteps = useMemo<TourStep[]>(() => {
+    if (language === 'zh') {
+      return [
+        {
+          id: 'player-welcome',
+          title: '欢迎参加马六甲寻宝大冒险！',
+          description:
+            '您正在代表小队穿梭于马六甲古迹街头！请查看顶部状态栏，实时查看队伍专属颜色、个人昵称、当前积分、实时排名以及已找到地标数量。',
+          icon: <Trophy className="w-5 h-5 text-amber-400" />,
+          badge: '第1步：你的小队',
+          tips: '您的参赛信息会自动保存在本机。即使刷新或重新打开浏览器，队伍状态依然完整保留。',
+          tabKey: 'map',
+        },
+        {
+          id: 'player-map',
+          title: '1. 寻宝地图与历史区域',
+          description:
+            '漫步马六甲世界文化遗产保护区。彩色多边形区域划定了鸡场街、荷兰红屋、圣地亚哥古城门与圣保罗山等。探索时您的实时 GPS 位置将精准显示在地图上！',
+          icon: <MapPin className="w-5 h-5 text-rose-500" />,
+          badge: '第2步：地图界面',
+          tips: '请保持手机 GPS 定位开启，队伍图钉将实时同步到裁判 GM 的雷达大屏上。',
+          tabKey: 'map',
+        },
+        {
+          id: 'player-clues',
+          title: '2. 寻宝线索与目标地标',
+          description:
+            '切换到【线索】标签页查看历史目标。可按区域筛选或查看全部。每张卡片均标有积分奖励、寻找提示与参考照片。点击任意照片可查看高清无裁切原图！',
+          icon: <List className="w-5 h-5 text-amber-400" />,
+          badge: '第3步：线索清单',
+          tips: '仔细观察殖民地雕花、荷兰红砖砌块与古老巷弄壁画细节。',
+          tabKey: 'clues',
+        },
+        {
+          id: 'player-camera',
+          title: '3. 现场拍摄自拍并赢取积分',
+          description:
+            '到达地标位置后，点击“拍摄地标打卡自拍”！拍摄一张队伍与地标建筑的合影。系统将在数秒内完成极速压缩（<150KB）并提交给 GM 审核。',
+          icon: <Camera className="w-5 h-5 text-emerald-400" />,
+          badge: '第4步：相机打卡审核',
+          tips: '富有创意或有趣的合影姿势可赢取 GM 裁判额外的 +25 创意加分！',
+          tabKey: 'clues',
+        },
+        {
+          id: 'player-leaderboard',
+          title: '4. 实时排行榜与积分总榜',
+          description:
+            '实时追踪队伍的排名与得分。与竞争对手展开角逐，寻找更多地标，登上冠军领奖台！',
+          icon: <Trophy className="w-5 h-5 text-amber-400" />,
+          badge: '第5步：实时排行榜',
+          tips: '随时点击顶部罗盘图标即可重新打开此操作向导。',
+          tabKey: 'leaderboard',
+        },
+      ];
+    }
+
+    return [
       {
         id: 'player-welcome',
         title: 'Welcome, Heritage Explorer!',
         description:
-          'You are on the street representing your team in the Melaka Heritage Photo Hunt! Look at the header bar above to view your squad color, nickname, live score, and completed clues count.',
+          'You are on the street representing your team in the Melaka Heritage Photo Hunt! Look at the header bar above to view your squad color, nickname, live score, leaderboard rank, and completed clues count.',
         icon: <Trophy className="w-5 h-5 text-amber-400" />,
         badge: 'Step 1: Your Squad',
         tips: 'Your session is saved automatically. If you close your browser or refresh, you will remain in your team.',
@@ -153,9 +223,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         tips: 'Tap the compass icon in the top header anytime to reopen this walkthrough.',
         tabKey: 'leaderboard',
       },
-    ],
-    []
-  );
+    ];
+  }, [language]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousCompletedCountRef = useRef<number>(currentTeam.completedClueIds?.length || 0);
@@ -325,39 +394,52 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   return (
     <div className="flex-1 min-h-0 w-full max-w-lg mx-auto bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
       {/* 1. Mobile Header & Scoreboard */}
-      <header className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg z-30">
-        <div className="flex items-center gap-2.5">
+      <header className="px-3 sm:px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg z-30 gap-1.5">
+        <div className="flex items-center gap-2 min-w-0 pr-1">
           <span
-            className="w-4 h-4 rounded-full ring-2 ring-white/40 shadow-sm shrink-0"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ring-2 ring-white/40 shadow-sm shrink-0"
             style={{ background: currentTeam.color }}
           />
-          <div>
-            <h1 className="font-black text-sm text-white tracking-tight flex items-center gap-1.5 leading-none">
+          <div className="min-w-0">
+            <h1 className="font-black text-xs sm:text-sm text-white tracking-tight leading-tight truncate">
               {currentTeam.name}
             </h1>
-            <span className="text-[10px] text-slate-400 font-medium">
-              Player: <strong className="text-slate-200">{nickname}</strong>
+            <span className="text-[10px] text-slate-400 font-medium truncate block leading-tight mt-0.5">
+              {t('player.playerLabel')} <strong className="text-slate-200">{nickname}</strong>
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Points Badge */}
-          <div className="bg-amber-500/15 border border-amber-500/30 px-3 py-1 rounded-xl text-center">
+          <div className="bg-amber-500/15 border border-amber-500/30 px-2 sm:px-3 py-1 rounded-xl text-center shrink-0">
             <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest block leading-none">
-              Score
+              {t('player.score')}
             </span>
-            <span className="text-base font-black text-amber-300 leading-none">
+            <span className="text-sm sm:text-base font-black text-amber-300 leading-none">
               {currentTeam.score}
             </span>
           </div>
 
-          {/* Clues Count Badge */}
-          <div className="bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-xl text-center">
-            <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block leading-none">
-              Found
+          {/* Small Leaderboard Rank Badge (e.g. 1/3) */}
+          <div
+            className="bg-rose-500/15 border border-rose-500/30 px-2 sm:px-2.5 py-1 rounded-xl text-center shrink-0"
+            title={`${t('player.rank')}: ${teamRank}/${teams.length || 1}`}
+          >
+            <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest block leading-none">
+              {t('player.rank')}
             </span>
-            <span className="text-base font-black text-emerald-300 leading-none">
+            <span className="text-sm sm:text-base font-black text-rose-300 leading-none">
+              {teamRank}/{teams.length || 1}
+            </span>
+          </div>
+
+          {/* Clues Count Badge */}
+          <div className="bg-emerald-500/15 border border-emerald-500/30 px-2 sm:px-2.5 py-1 rounded-xl text-center shrink-0">
+            <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest block leading-none">
+              {t('player.found')}
+            </span>
+            <span className="text-sm sm:text-base font-black text-emerald-300 leading-none">
               {completedClueIds.size}/{clues.length}
             </span>
           </div>
@@ -369,8 +451,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               setTourStepIndex(0);
               setShowTour(true);
             }}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 shadow-sm cursor-pointer transition-colors"
-            title="Open Interactive Tour Guide"
+            className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 shadow-sm cursor-pointer transition-colors shrink-0"
+            title={t('player.tourTitle')}
           >
             <Compass className="w-4 h-4" />
           </button>
@@ -404,7 +486,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         )}
 
         {activeTab === 'clues' && (
-          <div className="h-full overflow-y-auto p-4 space-y-4 pb-28">
+          <div className="h-full overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-28">
             {/* Zone Filter Chips */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
               <button
@@ -415,7 +497,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
                 }`}
               >
-                All Zones ({clues.length})
+                {t('player.allZones')} ({clues.length})
               </button>
               {game.zones.map((z) => (
                 <button
@@ -437,7 +519,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             </div>
 
             {/* Clue Cards Grid */}
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
               {filteredClues.map((clue) => {
                 const isDone = completedClueIds.has(clue.id);
                 const isPending = pendingClueIds.has(clue.id);
@@ -463,12 +545,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             url: clue.targetPhotoBase64,
                             title: clue.title,
                             subtitle: clue.landmarkName || clue.zoneId,
-                            badge: 'Target Landmark',
+                            badge: t('common.targetLandmarkBadge'),
                           });
                         }
                       }}
                       className="w-20 h-20 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group"
-                      title="Tap to view full uncropped photo"
+                      title={t('player.modalTapUncropped')}
                     >
                       {clue.targetPhotoBase64 ? (
                         <>
@@ -500,29 +582,29 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           {clue.landmarkName || clue.zoneId}
                         </span>
                         <span className="text-xs font-black text-amber-400 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 shrink-0">
-                          +{clue.points} pts
+                          +{clue.points} {t('player.pointsUnit')}
                         </span>
                       </div>
                       <h3 className="font-bold text-sm text-slate-100 truncate mb-1">
                         {clue.title}
                       </h3>
                       <p className="text-xs text-slate-400 line-clamp-1">
-                        {clue.hint || clue.description || 'Find this spot and take a team selfie!'}
+                        {clue.hint || clue.description || t('player.noHint')}
                       </p>
 
                       {/* Status indicator */}
                       <div className="mt-2 flex items-center gap-2">
                         {isDone ? (
                           <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Found & Verified
+                            <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
                           </span>
                         ) : isPending ? (
                           <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 animate-pulse" /> Pending GM Review
+                            <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
                           </span>
                         ) : (
                           <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
-                            <Camera className="w-3.5 h-3.5" /> Tap to Snap Selfie
+                            <Camera className="w-3.5 h-3.5" /> {t('player.tapToSnap')}
                           </span>
                         )}
                       </div>
@@ -537,26 +619,26 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         )}
 
         {activeTab === 'leaderboard' && (
-          <div className="h-full overflow-y-auto p-4 pb-28">
+          <div className="h-full overflow-y-auto p-3 sm:p-4 pb-28">
             <div className="text-center mb-4">
               <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-1" />
-              <h2 className="text-lg font-black text-white">Live Leaderboard</h2>
+              <h2 className="text-lg font-black text-white">{t('player.leaderboardTitle')}</h2>
               <p className="text-[11px] text-slate-400">
-                Official squad rankings. Tap any team to view its squad members!
+                {t('player.leaderboardSubtitle')}
               </p>
             </div>
 
             <div className="space-y-2.5">
               {[...teams]
                 .sort((a, b) => b.score - a.score)
-                .map((t, idx) => {
-                  const isMe = t.id === currentTeam.id;
-                  const isExpanded = expandedLeaderboardTeams.has(t.id);
-                  const memberCount = t.members?.length || 0;
+                .map((tItem, idx) => {
+                  const isMe = tItem.id === currentTeam.id;
+                  const isExpanded = expandedLeaderboardTeams.has(tItem.id);
+                  const memberCount = tItem.members?.length || 0;
 
                   return (
                     <div
-                      key={t.id}
+                      key={tItem.id}
                       className={`p-3.5 rounded-2xl border transition-all ${
                         isMe
                           ? 'bg-slate-900 border-amber-500/50 shadow-lg shadow-amber-500/5'
@@ -566,7 +648,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                       {/* Team Card Header */}
                       <div
                         className="flex items-center justify-between cursor-pointer select-none"
-                        onClick={() => toggleLeaderboardTeamExpand(t.id)}
+                        onClick={() => toggleLeaderboardTeamExpand(tItem.id)}
                       >
                         <div className="flex items-center gap-3 min-w-0 pr-2">
                           <span
@@ -584,19 +666,19 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           </span>
                           <span
                             className="w-3.5 h-3.5 rounded-full ring-2 ring-white/30 shrink-0"
-                            style={{ background: t.color }}
+                            style={{ background: tItem.color }}
                           />
                           <div className="min-w-0">
                             <div className="font-bold text-sm text-white flex items-center gap-1.5 truncate">
-                              <span className="truncate">{t.name}</span>
+                              <span className="truncate">{tItem.name}</span>
                               {isMe && (
                                 <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold shrink-0">
-                                  You
+                                  {t('player.youBadge')}
                                 </span>
                               )}
                             </div>
                             <span className="text-[11px] text-slate-400 block truncate">
-                              {t.completedClueIds?.length || 0} clues found
+                              {t('player.cluesFoundCount', { count: tItem.completedClueIds?.length || 0 })}
                             </span>
                           </div>
                         </div>
@@ -604,10 +686,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                         <div className="flex items-center gap-2.5 shrink-0">
                           <div className="text-right">
                             <span className="text-base font-black text-amber-400 leading-none">
-                              {t.score}
+                              {tItem.score}
                             </span>
                             <span className="text-[10px] text-slate-500 block leading-none mt-0.5">
-                              points
+                              {t('player.pointsUnit')}
                             </span>
                           </div>
 
@@ -616,7 +698,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleLeaderboardTeamExpand(t.id);
+                              toggleLeaderboardTeamExpand(tItem.id);
                             }}
                             className={`px-2 py-1 rounded-lg border transition-all flex items-center gap-1 text-[11px] font-bold cursor-pointer ${
                               isExpanded
@@ -642,16 +724,16 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           <div className="flex items-center justify-between mb-2 px-0.5">
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                               <Users className="w-3 h-3 text-amber-400" />
-                              <span>Squad Members ({memberCount})</span>
+                              <span>{t('player.squadMembers')} ({memberCount})</span>
                             </span>
                             <span className="text-[10px] text-slate-500">
-                              {t.members?.filter((m) => m.isOnline !== false).length || 0} active
+                              {tItem.members?.filter((m) => m.isOnline !== false).length || 0} {t('player.online')}
                             </span>
                           </div>
 
-                          {t.members && t.members.length > 0 ? (
+                          {tItem.members && tItem.members.length > 0 ? (
                             <div className="space-y-1.5 mt-1">
-                              {t.members.map((m) => {
+                              {tItem.members.map((m) => {
                                 const isOnline = m.isOnline !== false;
                                 const isCurrentPlayer = m.nickname === nickname;
                                 return (
@@ -670,19 +752,19 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                                             ? 'bg-emerald-400 ring-2 ring-emerald-400/30'
                                             : 'bg-slate-600'
                                         }`}
-                                        title={isOnline ? 'Online' : 'Offline'}
+                                        title={isOnline ? t('player.online') : t('player.offline')}
                                       />
                                       <span className="font-medium text-slate-200 truncate">
                                         {m.nickname}
                                       </span>
                                       {isCurrentPlayer && (
                                         <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300">
-                                          You
+                                          {t('player.youBadge')}
                                         </span>
                                       )}
                                       {m.isLeader && (
                                         <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                          Leader
+                                          {t('player.leader')}
                                         </span>
                                       )}
                                     </div>
@@ -691,7 +773,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                                         isOnline ? 'text-emerald-400' : 'text-slate-500'
                                       }`}
                                     >
-                                      {isOnline ? 'Active' : 'Offline'}
+                                      {isOnline ? t('player.online') : t('player.offline')}
                                     </span>
                                   </div>
                                 );
@@ -699,7 +781,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             </div>
                           ) : (
                             <div className="text-center py-2.5 text-[11px] text-slate-500 italic bg-slate-950/40 rounded-xl border border-slate-800/60 mt-1">
-                              No players have joined this squad yet.
+                              {t('player.noMembers')}
                             </div>
                           )}
                         </div>
@@ -723,7 +805,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
           }`}
         >
           <MapPin className="w-5 h-5" />
-          <span className="text-[11px] leading-tight">Hunt Map</span>
+          <span className="text-[11px] leading-tight">{t('player.navMap')}</span>
         </button>
 
         <button
@@ -742,7 +824,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               </span>
             )}
           </div>
-          <span className="text-[11px] leading-tight">Clues</span>
+          <span className="text-[11px] leading-tight">{t('player.navClues')}</span>
         </button>
 
         <button
@@ -754,14 +836,14 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
           }`}
         >
           <Trophy className="w-5 h-5" />
-          <span className="text-[11px] leading-tight">Leaderboard</span>
+          <span className="text-[11px] leading-tight">{t('player.navLeaderboard')}</span>
         </button>
       </nav>
 
       {/* 4. Camera Selfie Capture Modal */}
       {isCapturing && selectedClue && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-md">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl relative max-h-[90dvh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => {
@@ -776,11 +858,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
             <div className="text-center mb-4">
               <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-                Scavenger Challenge
+                {t('player.modalChallenge')}
               </span>
-              <h2 className="text-lg font-black text-white">{selectedClue.title}</h2>
+              <h2 className="text-base sm:text-lg font-black text-white">{selectedClue.title}</h2>
               <span className="text-xs text-emerald-400 font-bold">
-                Reward: +{selectedClue.points} points
+                {t('player.modalReward', { points: selectedClue.points })}
               </span>
             </div>
 
@@ -788,12 +870,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Target Landmark to Find:
+                  {t('player.modalTargetLabel')}
                 </label>
                 {selectedClue.targetPhotoBase64 && (
                   <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-1">
                     <Maximize2 className="w-3 h-3" />
-                    <span>Tap for uncropped view</span>
+                    <span>{t('player.modalTapUncropped')}</span>
                   </span>
                 )}
               </div>
@@ -804,12 +886,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                       url: selectedClue.targetPhotoBase64,
                       title: selectedClue.title,
                       subtitle: selectedClue.landmarkName || selectedClue.zoneId,
-                      badge: 'Target Landmark',
+                      badge: t('common.targetLandmarkBadge'),
                     });
                   }
                 }}
-                className="w-full h-48 rounded-xl overflow-hidden bg-slate-950 border border-slate-700 shadow-inner relative cursor-pointer group flex items-center justify-center"
-                title="Tap to view full uncropped photo"
+                className="w-full h-44 sm:h-48 rounded-xl overflow-hidden bg-slate-950 border border-slate-700 shadow-inner relative cursor-pointer group flex items-center justify-center"
+                title={t('player.modalTapUncropped')}
               >
                 {selectedClue.targetPhotoBase64 ? (
                   <>
@@ -824,14 +906,14 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
-                    No target image available
+                    {t('player.modalNoTargetImg')}
                   </div>
                 )}
               </div>
               {selectedClue.hint && (
                 <p className="text-xs text-amber-300/80 mt-1.5 flex items-center gap-1.5 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
                   <HelpCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                  <span>Hint: {selectedClue.hint}</span>
+                  <span>{t('player.hint')} {selectedClue.hint}</span>
                 </p>
               )}
             </div>
@@ -840,12 +922,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             <div className="mb-5">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  Your Team Selfie:
+                  {t('player.modalSelfieLabel')}
                 </label>
                 {capturedPreview && (
                   <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
                     <Maximize2 className="w-3 h-3" />
-                    <span>Tap for uncropped view</span>
+                    <span>{t('player.modalTapUncropped')}</span>
                   </span>
                 )}
               </div>
@@ -857,11 +939,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                       url: capturedPreview,
                       title: 'Your Team Submission Selfie',
                       subtitle: selectedClue.title,
-                      badge: 'Captured Selfie',
+                      badge: t('common.capturedSelfieBadge'),
                     });
                   }}
-                  className="relative w-full h-52 rounded-xl overflow-hidden bg-slate-950 border-2 border-emerald-500 shadow-md cursor-pointer group flex items-center justify-center"
-                  title="Tap to view full uncropped selfie"
+                  className="relative w-full h-48 sm:h-52 rounded-xl overflow-hidden bg-slate-950 border-2 border-emerald-500 shadow-md cursor-pointer group flex items-center justify-center"
+                  title={t('player.modalTapUncropped')}
                 >
                   <img
                     src={capturedPreview}
@@ -873,7 +955,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   </div>
                   <div className="absolute bottom-2 left-2 right-2 bg-slate-950/80 backdrop-blur-md p-2 rounded-lg text-center">
                     <span className="text-[11px] font-mono text-emerald-400 block font-bold">
-                      ✓ Ready for Submission
+                      {t('player.modalReadySubmit')}
                     </span>
                     {compressionStats && (
                       <span className="text-[10px] text-slate-300 block">
@@ -883,13 +965,13 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center hover:border-rose-500 transition-colors">
+                <div className="border-2 border-dashed border-slate-700 rounded-xl p-5 sm:p-6 text-center hover:border-rose-500 transition-colors">
                   <Camera className="w-10 h-10 text-rose-500 mx-auto mb-2" />
                   <p className="text-xs font-bold text-slate-200">
-                    Take a team selfie in front of the landmark!
+                    {t('player.modalCapturePrompt')}
                   </p>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Direct camera capture is required.
+                    {t('player.modalDirectCamera')}
                   </p>
                 </div>
               )}
@@ -915,7 +997,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   className="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all"
                 >
                   <Camera className="w-5 h-5" />
-                  <span>{isCompressing ? 'Compressing Photo...' : 'Open Camera & Snap Selfie'}</span>
+                  <span>{isCompressing ? 'Compressing Photo...' : t('player.modalOpenCamBtn')}</span>
                 </button>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -926,7 +1008,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                   >
                     <Camera className="w-4 h-4" />
-                    <span>Retake</span>
+                    <span>{t('player.modalRetakeBtn')}</span>
                   </button>
                   <button
                     type="button"
@@ -935,11 +1017,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-3 rounded-xl text-xs shadow-lg flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                   >
                     {isSubmitting ? (
-                      <span>Uploading...</span>
+                      <span>{t('player.modalSubmittingBtn')}</span>
                     ) : (
                       <>
                         <UploadCloud className="w-4 h-4" />
-                        <span>Submit (+{selectedClue.points})</span>
+                        <span>{t('player.modalSubmitBtn')} (+{selectedClue.points})</span>
                       </>
                     )}
                   </button>
@@ -964,7 +1046,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       <InteractiveTour
         isOpen={showTour}
         onClose={() => setShowTour(false)}
-        tourName="Player Scavenger Hunt"
+        tourName={language === 'zh' ? '马六甲寻宝向导' : 'Player Scavenger Hunt'}
         steps={playerTourSteps}
         currentStepIndex={tourStepIndex}
         onStepChange={setTourStepIndex}

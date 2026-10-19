@@ -113,7 +113,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
       aria-modal="true"
     >
       <div
-        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl relative text-left"
+        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl relative text-left max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button in corner */}

@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { DialogProvider } from './context/DialogContext.tsx'
+import { LanguageProvider } from './context/LanguageContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DialogProvider>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
     </DialogProvider>
   </StrictMode>,
 )

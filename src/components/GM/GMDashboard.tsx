@@ -54,6 +54,7 @@ import {
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
 import { InteractiveTour, type TourStep } from '../Common/InteractiveTour.tsx';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export interface GMDashboardProps {
   game: Game;
@@ -73,6 +74,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   onLogout,
 }) => {
   const { showAlert, showConfirm } = useDialog();
+  const { t, language } = useLanguage();
 
   // Session persistence for GM
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -163,8 +165,83 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     });
   };
 
-  const gmTourSteps = useMemo<TourStep[]>(
-    () => [
+  const gmTourSteps = useMemo<TourStep[]>(() => {
+    if (language === 'zh') {
+      return [
+        {
+          id: 'gm-overview',
+          title: '欢迎来到 GM 裁判控制室',
+          description:
+            '这里是活动的核心控制中心。在上方控制条中，可实时查看在线队员数，点击【启动比赛】开启计时，并在需要时【暂停】或【结束比赛】。',
+          icon: <Radio className="w-5 h-5 text-amber-400" />,
+          badge: '顶部管理工具条',
+          tips: '点击“复制参赛链接”或进入队伍标签页展示二维码以邀请队员加入。',
+          tabKey: 'queue',
+        },
+        {
+          id: 'gm-queue',
+          title: '1. 实时自拍审核队列',
+          description:
+            '每当有参赛小队找到地标并上传自拍，都会实时推送至此处。并排对比目标建筑与队员合影，点击【通过】计分、【+25 创意加分】或【驳回】重拍。',
+          icon: <CheckCircle className="w-5 h-5 text-emerald-400" />,
+          badge: '标签页：审核队列',
+          tips: '点击任意地标缩略图或队员自拍，均可放大查看高清无损原图。',
+          tabKey: 'queue',
+        },
+        {
+          id: 'gm-radar',
+          title: '2. 实时街头雷达追踪',
+          description:
+            '在马六甲历史核心区全景地图上监控所有队伍的行进动向。彩色脉冲雷达图钉代表各小队的实时 GPS 经纬度与区域穿梭轨迹。',
+          icon: <Radio className="w-5 h-5 text-rose-500" />,
+          badge: '标签页：实时雷达',
+          tips: '点击地图上的任意队伍标记或文化遗产多边形区域可查看详细信息。',
+          tabKey: 'radar',
+        },
+        {
+          id: 'gm-clues',
+          title: '3. 寻宝线索与地标管理',
+          description:
+            '管理所有文化遗产寻宝线索。卡片完整展示地标细节，点击【批量上传地标照片】即可一键批量导入照片，并自动提取 EXIF GPS 经纬度落点在地图上！',
+          icon: <Sparkles className="w-5 h-5 text-amber-400" />,
+          badge: '标签页：线索与地标',
+          tips: '马六甲核心区121处精选真实历史地标已完成编目与预置。',
+          tabKey: 'clues',
+        },
+        {
+          id: 'gm-teams',
+          title: '4. 队伍阵容与 PIN 码管理',
+          description:
+            '管理各参赛队伍及其身份凭据。查看每支队伍的4位 PIN 码、在线队员状态、成员阵容与累计积分。可随时点击【添加队伍】或修改队色与 PIN 码。',
+          icon: <PlusCircle className="w-5 h-5 text-rose-400" />,
+          badge: '标签页：队伍与PIN码',
+          tips: '队员可直接扫描专属二维码或输入4位数字 PIN 码秒级进入小队。',
+          tabKey: 'teams',
+        },
+        {
+          id: 'gm-zones',
+          title: '5. 可视化多边形区域编辑器',
+          description:
+            '配置文化遗产保护区域（鸡场街、荷兰红屋、圣地亚哥古城门等）。可点击【创建新区域】，或点击【在地图上绘制】直接在 Leaflet 地图上点击多边形顶点进行可视化标定！',
+          icon: <Layers className="w-5 h-5 text-rose-400" />,
+          badge: '标签页：区域划分',
+          tips: '交互式标定顶点时，地图多边形边界将实时闭合重绘。',
+          tabKey: 'zones',
+        },
+        {
+          id: 'gm-leaderboard',
+          title: '6. 官方实时总积分排行榜',
+          description:
+            '实时追踪所有参赛队伍的当前得分、已完成地标数量与官方总排名。比赛结束时，榜首队伍将荣获马六甲文化遗产寻宝冠军奖杯！',
+          icon: <Trophy className="w-5 h-5 text-amber-400" />,
+          badge: '标签页：积分总榜',
+          tips: '随时点击顶部工具条中的“操作向导”按钮即可重新回顾本导览。',
+          tabKey: 'leaderboard',
+        },
+      ];
+    }
+
+    return [
       {
         id: 'gm-overview',
         title: 'Welcome to the GM War Room',
@@ -235,9 +312,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         tips: 'Click the "Tour Guide" button in the header bar anytime to revisit this walkthrough.',
         tabKey: 'leaderboard',
       },
-    ],
-    []
-  );
+    ];
+  }, [language]);
 
   // Calculate shareable Game Link for participants
   const gameLink = useMemo(() => {
@@ -720,14 +796,14 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="h-full w-full bg-slate-950 flex items-center justify-center p-4 overflow-y-auto">
         <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center">
           <div className="inline-flex p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-3">
             <Lock className="w-7 h-7" />
           </div>
-          <h2 className="text-xl font-black text-white">Game Master Portal</h2>
+          <h2 className="text-xl font-black text-white">{t('gm.portalTitle')}</h2>
           <p className="text-xs text-slate-400 mt-1 mb-5">
-            Enter the master passcode to access the event management War Room.
+            {t('gm.portalDesc')}
           </p>
 
           {authError && (
@@ -741,7 +817,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               type="password"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
-              placeholder="Enter GM Passcode"
+              placeholder={t('gm.enterPasscode')}
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400"
               autoFocus
             />
@@ -749,12 +825,12 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               type="submit"
               className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
-              <span>Unlock War Room</span>
+              <span>{t('gm.unlockBtn')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
           <p className="text-[10px] text-slate-500 mt-3 font-mono">
-            Default passcode: melaka2026
+            {t('gm.defaultPasscode')}
           </p>
         </div>
       </div>
@@ -766,34 +842,47 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="h-full w-full flex flex-col min-h-0 bg-slate-950 text-slate-100 overflow-hidden relative">
       {/* 1. Top War Room Control Bar */}
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
-            <Radio className="w-5 h-5 animate-pulse" />
+      <header className="bg-slate-900 border-b border-slate-800 px-3 sm:px-6 py-2.5 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0 shadow-md">
+        <div className="flex items-center justify-between sm:justify-start gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+              <Radio className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-black text-sm sm:text-base text-white flex items-center gap-1.5 truncate">
+                <span className="truncate">{game.name}</span>
+                <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-full border border-slate-700 font-mono shrink-0">
+                  {game.status.toUpperCase()}
+                </span>
+              </h1>
+              <p className="text-[11px] text-slate-400 font-mono truncate">
+                ID: <strong className="text-amber-400">{game.id}</strong>
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-black text-base text-white flex items-center gap-2">
-              {game.name}
-              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-slate-700 font-mono">
-                {game.status.toUpperCase()}
-              </span>
-            </h1>
-            <p className="text-xs text-slate-400">
-              Game ID: <strong className="text-amber-400 font-mono">{game.id}</strong>
-            </p>
+
+          {/* Mobile quick logout */}
+          <div className="flex sm:hidden items-center gap-1.5">
+            <button
+              onClick={handleLogout}
+              title={t('gm.logOutBtn')}
+              className="bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 p-2 rounded-xl border border-slate-700 cursor-pointer transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
         {/* Game State Control Buttons & Create Game Button */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setShowCreateGameModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow-md transition-colors shrink-0"
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            <span>New Game</span>
+            <span>{t('gm.newGameBtn')}</span>
           </button>
 
           {/* Active players online status indicator */}
@@ -817,8 +906,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               />
               <span>
                 {hasActiveOnlinePlayers
-                  ? `${onlinePlayersCount} Player(s) Online`
-                  : '0 Online (Ready to Stop)'}
+                  ? t('gm.playersOnline', { online: onlinePlayersCount, total: totalPlayersJoined })
+                  : t('gm.zeroOnline')}
               </span>
             </span>
           )}
@@ -826,29 +915,29 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           {game.status !== 'active' ? (
             <button
               onClick={() => handleStatusChange('active')}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer shadow-md transition-colors shrink-0"
             >
               <Play className="w-3.5 h-3.5" />
-              <span>Start Game</span>
+              <span>{t('gm.startGameBtn')}</span>
             </button>
           ) : (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <button
                 onClick={() => handleStatusChange('paused')}
-                title="Pause Game"
-                className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
+                title={t('gm.pauseBtn')}
+                className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-md transition-colors cursor-pointer shrink-0"
               >
                 <Pause className="w-3.5 h-3.5" />
-                <span>Pause</span>
+                <span>{t('gm.pauseBtn')}</span>
               </button>
 
               <button
                 onClick={() => handleStatusChange('ended')}
-                title={hasActiveOnlinePlayers ? `Stop Game (${onlinePlayersCount} online)` : 'Stop Game'}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-md transition-colors cursor-pointer"
+                title={hasActiveOnlinePlayers ? `${t('gm.stopGameBtn')} (${onlinePlayersCount})` : t('gm.stopGameBtn')}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-md transition-colors cursor-pointer shrink-0"
               >
                 <Square className="w-3.5 h-3.5" />
-                <span>Stop Game</span>
+                <span>{t('gm.stopGameBtn')}</span>
               </button>
             </div>
           )}
@@ -859,111 +948,113 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               setTourStepIndex(0);
               setShowTour(true);
             }}
-            className="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700 text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
-            title="Open Interactive Tour Guide"
+            className="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold px-2.5 py-1.5 rounded-xl border border-slate-700 text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors shrink-0"
+            title={t('gm.tourGuideBtn')}
           >
             <Compass className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Tour Guide</span>
+            <span className="hidden sm:inline">{t('gm.tourGuideBtn')}</span>
           </button>
 
           <button
             onClick={handleLogout}
-            title="Log out Game Master"
-            className="bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors"
+            title={t('gm.logOutBtn')}
+            className="hidden sm:flex bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 p-1.5 rounded-xl border border-slate-700 cursor-pointer transition-colors shrink-0"
           >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <nav className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button
-            onClick={() => setActiveTab('queue')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'queue'
-                ? 'bg-rose-600 text-white shadow-md'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <span>Review Queue</span>
-            {pendingSubmissions.length > 0 && (
-              <span className="bg-white text-rose-600 px-1.5 py-0.2 rounded-full text-[10px] font-black">
-                {pendingSubmissions.length}
-              </span>
-            )}
-          </button>
+        {/* Tab Navigation (Horizontally scrollable on mobile) */}
+        <div className="w-full sm:w-auto overflow-x-auto scrollbar-none pb-0.5">
+          <nav className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 w-max shrink-0">
+            <button
+              onClick={() => setActiveTab('queue')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                activeTab === 'queue'
+                  ? 'bg-rose-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>{t('gm.tabs.queue')}</span>
+              {pendingSubmissions.length > 0 && (
+                <span className="bg-white text-rose-600 px-1.5 py-0.2 rounded-full text-[10px] font-black">
+                  {pendingSubmissions.length}
+                </span>
+              )}
+            </button>
 
-          <button
-            onClick={() => setActiveTab('radar')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'radar' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Live Radar Map
-          </button>
+            <button
+              onClick={() => setActiveTab('radar')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                activeTab === 'radar' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {t('gm.tabs.radar')}
+            </button>
 
-          <button
-            onClick={() => setActiveTab('clues')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'clues' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Clues ({clues.length})
-          </button>
+            <button
+              onClick={() => setActiveTab('clues')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                activeTab === 'clues' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {t('gm.tabs.clues', { count: clues.length })}
+            </button>
 
-          <button
-            onClick={() => setActiveTab('teams')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'teams' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Teams & PINs ({teams.length})
-          </button>
+            <button
+              onClick={() => setActiveTab('teams')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                activeTab === 'teams' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {t('gm.tabs.teams', { count: teams.length })}
+            </button>
 
-          <button
-            onClick={() => setActiveTab('zones')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              activeTab === 'zones' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Zones ({game.zones.length})</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('zones')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap shrink-0 ${
+                activeTab === 'zones' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{t('gm.tabs.zones', { count: game.zones.length })}</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('leaderboard')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'leaderboard' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Leaderboard
-          </button>
-        </nav>
+            <button
+              onClick={() => setActiveTab('leaderboard')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                activeTab === 'leaderboard' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {t('gm.tabs.leaderboard')}
+            </button>
+          </nav>
+        </div>
       </header>
 
       {/* 2. Shareable Participant Game Link Banner */}
-      <div className="bg-slate-900/60 border-b border-slate-800/80 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
+      <div className="bg-slate-900/60 border-b border-slate-800/80 px-3 sm:px-6 py-2 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-3 text-xs shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
           <Share2 className="w-4 h-4 text-amber-400 shrink-0" />
-          <span className="font-bold text-slate-300">Participant Game Link:</span>
-          <code className="bg-slate-950 px-2.5 py-1 rounded-md border border-slate-800 text-amber-300 font-mono">
+          <span className="font-bold text-slate-300 shrink-0">{t('gm.gameLink')}</span>
+          <code className="bg-slate-950 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md border border-slate-800 text-amber-300 font-mono text-[11px] truncate max-w-[200px] sm:max-w-md">
             {gameLink}
           </code>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleCopyGameLink}
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 sm:px-3 py-1 rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
           >
             {isCopied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400">Copied!</span>
+                <span className="text-emerald-400">{t('gm.copied')}</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                <span>Copy Participant Link</span>
+                <span>{t('gm.copyLink')}</span>
               </>
             )}
           </button>
@@ -971,39 +1062,39 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             href={gameLink}
             target="_blank"
             rel="noreferrer"
-            className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
+            className="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors text-xs"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>Open Link</span>
+            <span>{t('gm.openLink')}</span>
           </a>
         </div>
       </div>
 
-      {/* 3. Main War Room Body */}
-      <main className="flex-1 p-6 overflow-y-auto">
+      {/* 3. Main War Room Body (Scrollable with min-h-0 and ample phone bottom padding) */}
+      <main className="flex-1 min-h-0 p-3 sm:p-6 overflow-y-auto pb-32 sm:pb-16">
         {/* ========================================================================= */}
         {/* TAB 1: Verification Queue */}
         {/* ========================================================================= */}
         {activeTab === 'queue' && (
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div>
-                <h2 className="text-lg font-black text-white">Live Verification Queue</h2>
+                <h2 className="text-base sm:text-lg font-black text-white">{t('gm.queueTitle')}</h2>
                 <p className="text-xs text-slate-400">
-                  Review incoming player selfies in real time with 1-click approvals.
+                  {t('gm.queueDesc')}
                 </p>
               </div>
               <span className="text-xs font-mono text-slate-400">
-                {pendingSubmissions.length} pending submissions
+                {t('gm.queuePending', { count: pendingSubmissions.length })}
               </span>
             </div>
 
             {pendingSubmissions.length === 0 ? (
-              <div className="text-center py-16 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/40">
+              <div className="text-center py-12 sm:py-16 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-900/40 px-4">
                 <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-2 opacity-60" />
-                <h3 className="font-bold text-slate-200 text-sm">Verification Queue is Empty</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  When teams submit landmark selfies, they will instantly appear here for 1-click approval.
+                <h3 className="font-bold text-slate-200 text-sm">{t('gm.queueEmptyTitle')}</h3>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                  {t('gm.queueEmptyDesc')}
                 </p>
               </div>
             ) : (
@@ -1018,17 +1109,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                     >
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             <span
-                              className="w-3 h-3 rounded-full"
+                              className="w-3 h-3 rounded-full shrink-0"
                               style={{ background: sub.teamColor }}
                             />
-                            <span className="font-bold text-xs text-white">
+                            <span className="font-bold text-xs text-white truncate">
                               {sub.teamName}
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-400">
-                            by {sub.submittedBy}
+                          <span className="text-[10px] text-slate-400 shrink-0">
+                            {t('gm.byPlayer', { name: sub.submittedBy })}
                           </span>
                         </div>
 
@@ -1041,12 +1132,12 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[10px] font-bold text-slate-400">
-                                Target Landmark:
+                                {t('gm.targetLandmark')}
                               </span>
                               {targetClue?.targetPhotoBase64 && (
                                 <span className="text-[9px] text-amber-400 flex items-center gap-0.5 font-semibold">
                                   <Maximize2 className="w-2.5 h-2.5" />
-                                  <span>View full</span>
+                                  <span>{t('gm.viewFull')}</span>
                                 </span>
                               )}
                             </div>
@@ -1057,12 +1148,12 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                                     url: targetClue.targetPhotoBase64,
                                     title: targetClue.title,
                                     subtitle: targetClue.landmarkName || targetClue.zoneId,
-                                    badge: 'Target Landmark',
+                                    badge: t('common.targetLandmarkBadge'),
                                   });
                                 }
                               }}
                               className="w-full h-36 rounded-xl overflow-hidden bg-slate-950 border border-slate-700 relative cursor-pointer group flex items-center justify-center"
-                              title="Tap to view full uncropped photo"
+                              title={t('common.viewFullUncropped')}
                             >
                               {targetClue?.targetPhotoBase64 ? (
                                 <>
@@ -1077,7 +1168,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                                 </>
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[10px] text-slate-600">
-                                  No Target
+                                  {t('gm.noImage')}
                                 </div>
                               )}
                             </div>
@@ -1086,11 +1177,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[10px] font-bold text-emerald-400">
-                                Team Selfie:
+                                {t('gm.teamSelfie')}
                               </span>
                               <span className="text-[9px] text-emerald-400 flex items-center gap-0.5 font-semibold">
                                 <Maximize2 className="w-2.5 h-2.5" />
-                                <span>View full</span>
+                                <span>{t('gm.viewFull')}</span>
                               </span>
                             </div>
                             <div
@@ -1099,11 +1190,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                                   url: sub.selfieBase64,
                                   title: `${sub.teamName} Submission Selfie`,
                                   subtitle: sub.clueTitle,
-                                  badge: 'Team Selfie',
+                                  badge: t('common.teamSelfieBadge'),
                                 });
                               }}
                               className="w-full h-36 rounded-xl overflow-hidden bg-slate-950 border-2 border-emerald-500/50 relative cursor-pointer group flex items-center justify-center"
-                              title="Tap to view full uncropped selfie"
+                              title={t('common.viewFullUncropped')}
                             >
                               <img
                                 src={sub.selfieBase64}
@@ -1119,19 +1210,19 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
                         {sub.distanceFromClueMeters !== null && sub.distanceFromClueMeters !== undefined && (
                           <div className="text-[10px] text-slate-400 mb-3 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 inline-block">
-                            Distance from landmark: <strong className="text-slate-200">{Math.round(sub.distanceFromClueMeters)}m</strong>
+                            {t('gm.distFromLandmark')} <strong className="text-slate-200">{Math.round(sub.distanceFromClueMeters)}m</strong>
                           </div>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800">
+                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-2 border-t border-slate-800">
                         <button
                           onClick={() => handleReviewAction(sub, 'approve')}
                           disabled={isProcessingAction}
                           className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-md"
                         >
                           <CheckCircle className="w-3.5 h-3.5" />
-                          <span>Approve</span>
+                          <span>{t('gm.approveBtn')}</span>
                         </button>
                         <button
                           onClick={() => handleReviewAction(sub, 'bonus')}
@@ -1139,7 +1230,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           className="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-md"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>+25 Bonus</span>
+                          <span>{t('gm.bonusBtn')}</span>
                         </button>
                         <button
                           onClick={() => handleReviewAction(sub, 'reject')}
@@ -1147,7 +1238,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           className="bg-rose-900/60 hover:bg-rose-800 text-rose-200 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors border border-rose-800"
                         >
                           <XCircle className="w-3.5 h-3.5" />
-                          <span>Reject</span>
+                          <span>{t('gm.rejectBtn')}</span>
                         </button>
                       </div>
                     </div>
@@ -1162,7 +1253,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         {/* TAB 2: Live Radar Map */}
         {/* ========================================================================= */}
         {activeTab === 'radar' && (
-          <div className="h-[75vh]">
+          <div className="h-[55dvh] sm:h-[70vh] min-h-[380px] rounded-2xl overflow-hidden border border-slate-800 shadow-xl">
             <HuntMap
               zones={game.zones}
               clues={clues}
@@ -1177,17 +1268,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         {/* ========================================================================= */}
         {activeTab === 'clues' && (
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mb-6">
               <div>
-                <h2 className="text-lg font-black text-white">Clues & Landmark Manager</h2>
+                <h2 className="text-base sm:text-lg font-black text-white">{t('gm.cluesTitle')}</h2>
                 <p className="text-xs text-slate-400">
-                  Bulk upload photos from your machine. EXIF GPS coordinates will auto-drop map pins!
+                  {t('gm.cluesDesc')}
                 </p>
               </div>
 
-              <label className="bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-lg transition-all">
+              <label className="bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-2 px-3.5 sm:py-2.5 sm:px-4 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-lg transition-all shrink-0">
                 <Upload className="w-4 h-4" />
-                <span>{isUploadingClues ? 'Processing Photos...' : 'Bulk Upload Clue Photos'}</span>
+                <span>{isUploadingClues ? t('gm.processingPhotos') : t('gm.bulkUploadBtn')}</span>
                 <input
                   type="file"
                   multiple
@@ -1218,12 +1309,12 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           url: clue.targetPhotoBase64,
                           title: clue.title,
                           subtitle: clue.landmarkName || clue.zoneId,
-                          badge: 'Target Landmark',
+                          badge: t('common.targetLandmarkBadge'),
                         });
                       }
                     }}
                     className="w-full h-44 sm:h-48 bg-slate-950 overflow-hidden relative cursor-pointer group flex items-center justify-center border-b border-slate-800"
-                    title="Tap to view full uncropped photo"
+                    title={t('common.viewFullUncropped')}
                   >
                     {clue.targetPhotoBase64 ? (
                       <>
@@ -1235,7 +1326,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                           <span className="bg-slate-900/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-700 shadow-lg flex items-center gap-1.5">
                             <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-                            <span>View Full Image</span>
+                            <span>{t('gm.viewFullImage')}</span>
                           </span>
                         </div>
                         <div className="absolute top-2 right-2 bg-slate-900/80 p-1.5 rounded-lg text-slate-300 shadow">
@@ -1244,7 +1335,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xs text-slate-600">
-                        No Image
+                        {t('gm.noImage')}
                       </div>
                     )}
                   </div>
@@ -1255,14 +1346,14 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           {clue.zoneId}
                         </span>
                         <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                          {clue.points} pts
+                          {clue.points} {t('gm.gmPointsUnit')}
                         </span>
                       </div>
                       <h4 className="font-bold text-sm text-slate-100 truncate mb-1">
                         {clue.title}
                       </h4>
                       <p className="text-xs text-slate-400 line-clamp-2">
-                        {clue.hint || 'No hint specified'}
+                        {clue.hint || t('gm.noHintSpecified')}
                       </p>
                     </div>
 
@@ -1283,25 +1374,25 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           <div>
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div>
-                <h2 className="text-lg font-black text-white">Teams & QR Join Codes</h2>
+                <h2 className="text-base sm:text-lg font-black text-white">{t('gm.teamsTitle')}</h2>
                 <p className="text-xs text-slate-400">
-                  Players can scan these QR codes or enter the 4-digit PIN to join.
+                  {t('gm.teamsDesc')}
                 </p>
               </div>
 
-              {/* Create Team Inline Form */}
-              <form onSubmit={handleCreateTeam} className="flex items-center gap-2">
+              {/* Create Team Inline Form (Responsive wrapping on phone) */}
+              <form onSubmit={handleCreateTeam} className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto">
                 <input
                   type="text"
-                  placeholder="Team Name"
+                  placeholder={t('gm.teamNamePlaceholder')}
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white"
+                  className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white flex-1 sm:w-36"
                   required
                 />
                 <input
                   type="text"
-                  placeholder="4-digit PIN"
+                  placeholder={t('gm.pinPlaceholder')}
                   value={newTeamPin}
                   onChange={(e) => setNewTeamPin(e.target.value)}
                   maxLength={6}
@@ -1312,51 +1403,51 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                   type="color"
                   value={newTeamColor}
                   onChange={(e) => setNewTeamColor(e.target.value)}
-                  className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0"
+                  className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0 shrink-0"
                   title="Choose Team Color"
                 />
                 <button
                   type="submit"
-                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer"
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 cursor-pointer shrink-0"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
-                  <span>Add Team</span>
+                  <span>{t('gm.addTeamBtn')}</span>
                 </button>
               </form>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {teams.map((t) => {
-                const teamJoinUrl = `${gameLink}&pin=${t.pin}`;
-                const hasPlayers = t.members && t.members.length > 0;
+              {teams.map((tItem) => {
+                const teamJoinUrl = `${gameLink}&pin=${tItem.pin}`;
+                const hasPlayers = tItem.members && tItem.members.length > 0;
 
                 return (
                   <div
-                    key={t.id}
+                    key={tItem.id}
                     className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col items-center text-center relative overflow-hidden"
                   >
                     <div
                       className="absolute top-0 left-0 right-0 h-2"
-                      style={{ background: t.color }}
+                      style={{ background: tItem.color }}
                     />
 
                     <div className="flex items-center justify-between w-full mb-2">
                       <span
                         className="w-4 h-4 rounded-full"
-                        style={{ background: t.color }}
+                        style={{ background: tItem.color }}
                       />
                       <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => handleOpenEditTeam(t)}
-                          title="Edit Team Name and PIN"
+                          onClick={() => handleOpenEditTeam(tItem)}
+                          title={t('gm.editTeamTitle')}
                           className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => handleDeleteTeam(t)}
+                          onClick={() => handleDeleteTeam(tItem)}
                           disabled={hasPlayers}
-                          title={hasPlayers ? `Cannot delete: ${t.members.length} player(s) joined` : 'Delete Team'}
+                          title={hasPlayers ? `Cannot delete: ${tItem.members.length} player(s) joined` : 'Delete Team'}
                           className={`p-1 rounded-lg transition-colors cursor-pointer ${
                             hasPlayers
                               ? 'bg-slate-800/40 text-slate-600 cursor-not-allowed'
@@ -1368,11 +1459,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       </div>
                     </div>
 
-                    <h3 className="font-black text-base text-white">{t.name}</h3>
+                    <h3 className="font-black text-base text-white">{tItem.name}</h3>
                     <div className="mt-1 mb-3 flex items-center gap-1.5">
-                      <span className="text-xs text-slate-400">Team PIN:</span>
+                      <span className="text-xs text-slate-400">{t('gm.teamPin')}</span>
                       <span className="text-base font-black font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                        {t.pin}
+                        {tItem.pin}
                       </span>
                     </div>
 
@@ -1384,11 +1475,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       {hasPlayers ? (
                         <div className="space-y-1.5">
                           <span className="text-emerald-400 font-bold block">
-                            ● {t.members.length} player(s) joined
+                            {t('gm.playersJoinedCount', { count: tItem.members.length })}
                           </span>
                           <div className="flex flex-wrap items-center justify-center gap-1">
-                            {t.members.map((m) => {
-                              const online = isMemberOnline(m, t);
+                            {tItem.members.map((m) => {
+                              const online = isMemberOnline(m, tItem);
                               return (
                                 <span
                                   key={m.id || m.nickname}
@@ -1411,7 +1502,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           </div>
                         </div>
                       ) : (
-                        <span className="text-slate-500">No players yet (Can be deleted)</span>
+                        <span className="text-slate-500">{t('gm.noPlayersYet')}</span>
                       )}
                     </div>
                   </div>
@@ -1426,22 +1517,22 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         {/* ========================================================================= */}
         {activeTab === 'zones' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
               <div>
-                <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
                   <Layers className="w-5 h-5 text-rose-500" />
-                  <span>Zone Map & Boundary Editor</span>
+                  <span>{t('gm.zonesTitle')}</span>
                 </h2>
                 <p className="text-xs text-slate-400">
-                  Click <strong className="text-amber-400">"Plot on Map"</strong> on any zone below to draw and adjust its polygon boundary directly on the map.
+                  {t('gm.zonesDesc')}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 {activePlotZone && (
                   <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 animate-pulse">
                     <MousePointerClick className="w-4 h-4 text-amber-400" />
-                    <span>Plotting: {activePlotZone.name} ({plotVertices.length} pts)</span>
+                    <span>{t('gm.plottingBadge', { name: activePlotZone.name, count: plotVertices.length })}</span>
                   </span>
                 )}
                 <button
@@ -1450,7 +1541,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                   className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg cursor-pointer transition-all shrink-0"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>Create New Zone</span>
+                  <span>{t('gm.createZoneBtn')}</span>
                 </button>
               </div>
             </div>
@@ -1461,7 +1552,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 zones={game.zones}
                 clues={clues}
                 teams={teams}
-                className="h-[480px] w-full"
+                className="h-[45dvh] sm:h-[480px] min-h-[340px] w-full"
                 isPlottingZone={!!activePlotZone}
                 plottingZoneId={activePlotZone?.id}
                 plottingZoneName={activePlotZone?.name}
@@ -1510,19 +1601,19 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                             setNewZoneDescription(zone.description || '');
                           }}
                           className="text-xs text-slate-400 hover:text-white font-semibold flex items-center gap-1 cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-800 transition-colors"
-                          title="Edit Zone Details"
+                          title={t('gm.zoneDetailsBtn')}
                         >
                           <Edit2 className="w-3 h-3" />
-                          <span>Details</span>
+                          <span>{t('gm.zoneDetailsBtn')}</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteZone(zone)}
                           className="text-xs text-rose-400 hover:text-rose-300 font-semibold flex items-center gap-1 cursor-pointer px-1.5 py-0.5 rounded hover:bg-rose-500/10 transition-colors"
-                          title="Delete Zone"
+                          title={t('gm.zoneDeleteBtn')}
                         >
                           <Trash2 className="w-3 h-3" />
-                          <span>Delete</span>
+                          <span>{t('gm.zoneDeleteBtn')}</span>
                         </button>
                       </div>
                     </div>
@@ -1540,7 +1631,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
                   <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
                     <span className="text-[11px] font-mono text-slate-400">
-                      {zone.polygon.length} boundary points
+                      {t('gm.pointsCount', { count: zone.polygon.length })}
                     </span>
                     <button
                       onClick={() => handleStartPlotting(zone)}
@@ -1551,7 +1642,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       }`}
                     >
                       <MousePointerClick className="w-3.5 h-3.5" />
-                      <span>{activePlotZone?.id === zone.id ? 'Plotting...' : 'Plot on Map'}</span>
+                      <span>{activePlotZone?.id === zone.id ? t('gm.plottingBtn') : t('gm.plotOnMapBtn')}</span>
                     </button>
                   </div>
                 </div>
@@ -1567,28 +1658,28 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-6">
               <Trophy className="w-10 h-10 text-amber-400 mx-auto mb-2" />
-              <h2 className="text-xl font-black text-white">Event Leaderboard</h2>
+              <h2 className="text-xl font-black text-white">{t('gm.gmLeaderboardTitle')}</h2>
               <p className="text-xs text-slate-400">
-                Official real-time rankings and scores for all participating teams. Click on any squad to view its members.
+                {t('gm.gmLeaderboardDesc')}
               </p>
             </div>
 
             <div className="space-y-3">
               {[...teams]
                 .sort((a, b) => b.score - a.score)
-                .map((t, idx) => {
-                  const isExpanded = expandedLeaderboardTeams.has(t.id);
-                  const memberCount = t.members?.length || 0;
+                .map((tItem, idx) => {
+                  const isExpanded = expandedLeaderboardTeams.has(tItem.id);
+                  const memberCount = tItem.members?.length || 0;
 
                   return (
                     <div
-                      key={t.id}
+                      key={tItem.id}
                       className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 shadow-lg transition-all"
                     >
                       {/* Team Card Header */}
                       <div
                         className="flex items-center justify-between cursor-pointer select-none"
-                        onClick={() => toggleLeaderboardTeamExpand(t.id)}
+                        onClick={() => toggleLeaderboardTeamExpand(tItem.id)}
                       >
                         <div className="flex items-center gap-3 min-w-0 pr-2">
                           <span
@@ -1606,20 +1697,20 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           </span>
                           <span
                             className="w-4 h-4 rounded-full ring-2 ring-white/30 shrink-0"
-                            style={{ background: t.color }}
+                            style={{ background: tItem.color }}
                           />
                           <div className="min-w-0">
-                            <h4 className="font-bold text-sm text-white truncate">{t.name}</h4>
+                            <h4 className="font-bold text-sm text-white truncate">{tItem.name}</h4>
                             <span className="text-xs text-slate-400 block truncate">
-                              PIN: #{t.pin} • {t.completedClueIds?.length || 0} clues completed
+                              PIN: #{tItem.pin} • {t('gm.gmCluesCompleted', { count: tItem.completedClueIds?.length || 0 })}
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 shrink-0">
                           <div className="text-right">
-                            <span className="text-xl font-black text-amber-400">{t.score}</span>
-                            <span className="text-[10px] text-slate-500 block leading-none">points</span>
+                            <span className="text-xl font-black text-amber-400">{tItem.score}</span>
+                            <span className="text-[10px] text-slate-500 block leading-none">{t('gm.gmPointsUnit')}</span>
                           </div>
 
                           {/* Dropdown Toggle Button */}
@@ -1627,7 +1718,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleLeaderboardTeamExpand(t.id);
+                              toggleLeaderboardTeamExpand(tItem.id);
                             }}
                             className={`px-2.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
                               isExpanded
@@ -1656,13 +1747,13 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                               <span>Squad Members ({memberCount})</span>
                             </span>
                             <span className="text-[10px] text-slate-500">
-                              {t.members?.filter((m) => m.isOnline !== false).length || 0} active
+                              {tItem.members?.filter((m) => m.isOnline !== false).length || 0} active
                             </span>
                           </div>
 
-                          {t.members && t.members.length > 0 ? (
+                          {tItem.members && tItem.members.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
-                              {t.members.map((m) => {
+                              {tItem.members.map((m) => {
                                 const isOnline = m.isOnline !== false;
                                 return (
                                   <div
@@ -1716,18 +1807,21 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* ========================================================================= */}
       {/* MODAL: Create New Game */}
       {/* ========================================================================= */}
+      {/* ========================================================================= */}
+      {/* MODAL: Create New Game */}
+      {/* ========================================================================= */}
       {showCreateGameModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-            <h3 className="text-lg font-black text-white mb-1">Create New Hunt Game</h3>
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
+            <h3 className="text-lg font-black text-white mb-1">{t('gm.createGameTitle')}</h3>
             <p className="text-xs text-slate-400 mb-4">
-              Set up a new event room with automatically generated teams.
+              {t('gm.createGameDesc')}
             </p>
 
             <form onSubmit={handleCreateGame} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Game Event Name
+                  {t('gm.eventNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -1740,7 +1834,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Number of Teams (2 to 10)
+                  {t('gm.numTeamsLabel')}
                 </label>
                 <input
                   type="number"
@@ -1755,7 +1849,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Duration (Minutes)
+                  {t('gm.durationLabel')}
                 </label>
                 <input
                   type="number"
@@ -1772,16 +1866,16 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowCreateGameModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
                 >
-                  Cancel
+                  {t('gm.cancelBtn')}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingGame}
-                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg"
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-lg cursor-pointer transition-colors"
                 >
-                  {isCreatingGame ? 'Creating Game...' : 'Create & Launch Game'}
+                  {isCreatingGame ? t('gm.creatingGameBtn') : t('gm.createLaunchBtn')}
                 </button>
               </div>
             </form>
@@ -1794,10 +1888,10 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* ========================================================================= */}
       {editingTeam && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-            <h3 className="text-base font-black text-white mb-1">Edit Team Details</h3>
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
+            <h3 className="text-base font-black text-white mb-1">{t('gm.editTeamTitle')}</h3>
             <p className="text-xs text-slate-400 mb-4">
-              Update team name or 4-digit PIN code.
+              {t('gm.editTeamDesc')}
             </p>
 
             {editTeamError && (
@@ -1809,7 +1903,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             <form onSubmit={handleSaveEditTeam} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Team Name
+                  {t('gm.teamNamePlaceholder')}
                 </label>
                 <input
                   type="text"
@@ -1822,7 +1916,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  4-Digit Numeric PIN
+                  {t('gm.pinPlaceholder')}
                 </label>
                 <input
                   type="text"
@@ -1837,7 +1931,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Team Color
+                  {t('gm.zoneColorLabel')}
                 </label>
                 <input
                   type="color"
@@ -1851,15 +1945,15 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setEditingTeam(null)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
                 >
-                  Cancel
+                  {t('gm.cancelBtn')}
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md cursor-pointer transition-colors"
                 >
-                  Save Changes
+                  {t('gm.saveChangesBtn')}
                 </button>
               </div>
             </form>
@@ -1872,16 +1966,16 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* ========================================================================= */}
       {editingZone && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-            <h3 className="text-base font-black text-white mb-1">Edit Zone</h3>
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
+            <h3 className="text-base font-black text-white mb-1">{t('gm.editZoneTitle')}</h3>
             <p className="text-xs text-slate-400 mb-4">
-              Update zone title, color, or description.
+              {t('gm.zonesDesc')}
             </p>
 
             <form onSubmit={handleSaveZone} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Zone Name
+                  {t('gm.zoneNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -1894,7 +1988,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Zone Color
+                  {t('gm.zoneColorLabel')}
                 </label>
                 <input
                   type="color"
@@ -1906,7 +2000,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Description
+                  {t('gm.zoneDescLabel')}
                 </label>
                 <textarea
                   rows={3}
@@ -1920,15 +2014,15 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setEditingZone(null)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
                 >
-                  Cancel
+                  {t('gm.cancelBtn')}
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md cursor-pointer transition-colors"
                 >
-                  Save Zone
+                  {t('gm.saveZoneBtn')}
                 </button>
               </div>
             </form>
@@ -1939,11 +2033,11 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* Create New Zone Modal */}
       {showCreateZoneModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl animate-fade-in">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl animate-fade-in max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-black text-white flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-rose-500" />
-                <span>Create New Zone</span>
+                <span>{t('gm.createZoneTitle')}</span>
               </h3>
               <button
                 type="button"
@@ -1957,7 +2051,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             <form onSubmit={handleCreateZone} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Zone Name *
+                  {t('gm.zoneNameLabel')} *
                 </label>
                 <input
                   type="text"
@@ -1971,7 +2065,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Local / Subtitle Name (Optional)
+                  {t('gm.zoneLocalNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -1984,7 +2078,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Map Highlight Color
+                  {t('gm.zoneColorLabel')}
                 </label>
                 <div className="flex items-center gap-3">
                   <input
@@ -2013,7 +2107,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-1">
-                  Description
+                  {t('gm.zoneDescLabel')}
                 </label>
                 <textarea
                   rows={3}
@@ -2034,13 +2128,13 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                   onClick={() => setShowCreateZoneModal(false)}
                   className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
                 >
-                  Cancel
+                  {t('gm.cancelBtn')}
                 </button>
                 <button
                   type="submit"
-                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md cursor-pointer"
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md cursor-pointer transition-colors"
                 >
-                  Create Zone
+                  {t('gm.createZoneConfirmBtn')}
                 </button>
               </div>
             </form>
@@ -2051,22 +2145,22 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* Force Stop Game Confirmation Modal */}
       {showForceStopModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-black text-white">Active Players Detected</h3>
+                <h3 className="text-base font-black text-white">{t('gm.forceStopTitle')}</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Some participants still have their game tab open.
+                  {t('gm.forceStopSubtitle')}
                 </p>
               </div>
             </div>
 
             <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4">
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-                Currently Connected ({onlinePlayersCount}):
+                {t('gm.connectedCount', { count: onlinePlayersCount })}
               </div>
               <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
                 {activeOnlinePlayers.map(({ member, team }) => (
@@ -2086,7 +2180,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             </div>
 
             <p className="text-xs text-slate-300 mb-5">
-              Stopping the game will end the hunt for everyone. Are you sure you want to stop the game now?
+              {t('gm.forceStopWarn')}
             </p>
 
             <div className="flex items-center gap-2.5">
@@ -2098,14 +2192,14 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 }}
                 className="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs cursor-pointer transition-colors"
               >
-                Keep Game Running
+                {t('gm.keepRunningBtn')}
               </button>
               <button
                 type="button"
                 onClick={() => handleStatusChange(pendingStatus || 'ended', true)}
                 className="w-1/2 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg cursor-pointer transition-colors"
               >
-                Force Stop Game
+                {t('gm.forceStopConfirmBtn')}
               </button>
             </div>
           </div>

@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Team } from '../../types/index.ts';
 import { Users, Shield, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export interface JoinTeamModalProps {
   teams: Team[];
@@ -23,6 +24,7 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
   isLoading,
   error,
 }) => {
+  const { t } = useLanguage();
   const [digits, setDigits] = useState<string[]>(['', '', '', '']);
   const [nickname, setNickname] = useState('');
 
@@ -174,8 +176,8 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden max-h-[92dvh] overflow-y-auto">
         {/* Melaka Heritage Header Pattern */}
         <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600" />
 
@@ -183,11 +185,11 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
           <div className="inline-flex p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 mb-3">
             <Users className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-black text-white tracking-tight">
-            Melaka Heritage Hunt
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            {t('join.title')}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Join your squad and compete in the outdoor landmark hunt!
+            {t('join.subtitle')}
           </p>
         </div>
 
@@ -203,15 +205,15 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                4-Digit Team PIN
+                {t('join.pinLabel')}
               </label>
               <span className="text-[11px] text-slate-400">
-                OTP Digits ({digits.filter(Boolean).length}/4)
+                {t('join.otpProgress')} ({digits.filter(Boolean).length}/4)
               </span>
             </div>
 
             <div
-              className="grid grid-cols-4 gap-2.5 sm:gap-3"
+              className="grid grid-cols-4 gap-2 sm:gap-3"
               onPaste={handlePaste}
             >
               {digits.map((digit, idx) => (
@@ -225,7 +227,7 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
                   value={digit}
                   onChange={(e) => handleDigitChange(idx, e)}
                   onKeyDown={(e) => handleKeyDown(idx, e)}
-                  className={`w-full h-14 sm:h-16 text-center text-2xl sm:text-3xl font-black font-mono rounded-2xl border-2 transition-all focus:outline-none ${
+                  className={`w-full h-12 sm:h-16 text-center text-xl sm:text-3xl font-black font-mono rounded-2xl border-2 transition-all focus:outline-none ${
                     digit
                       ? 'border-amber-400/80 bg-amber-500/10 text-amber-300 shadow-lg shadow-amber-500/10 ring-1 ring-amber-400/30'
                       : 'border-slate-800 bg-slate-950 text-white hover:border-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30'
@@ -239,23 +241,23 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
             {/* Live Team Matched Status */}
             {matchedTeam ? (
               <div className="mt-2.5 p-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs animate-in fade-in">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
                     className="w-3.5 h-3.5 rounded-full ring-2 ring-white/30 shrink-0"
                     style={{ background: matchedTeam.color }}
                   />
-                  <span className="font-bold text-white">
-                    Team: {matchedTeam.name}
+                  <span className="font-bold text-white truncate">
+                    {matchedTeam.name}
                   </span>
                 </div>
-                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 flex items-center gap-1">
+                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 flex items-center gap-1 shrink-0">
                   <CheckCircle2 className="w-3 h-3" />
-                  <span>PIN Matched</span>
+                  <span>{t('join.pinMatched')}</span>
                 </span>
               </div>
             ) : fullPin.length === 4 ? (
               <div className="mt-2.5 p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs text-center font-medium">
-                No active team matches PIN #{fullPin}
+                {t('join.pinMismatch', { pin: fullPin })}
               </div>
             ) : null}
           </div>
@@ -263,35 +265,35 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
           {/* Nickname Input Field */}
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-              Your Nickname / Player Name
+              {t('join.nicknameLabel')}
             </label>
             <input
               ref={nicknameInputRef}
               type="text"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              placeholder="e.g. Wei Kang, Sarah"
+              placeholder={t('join.nicknamePlaceholder')}
               required
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all font-medium text-sm"
+              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 sm:py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 transition-all font-medium text-sm"
             />
             <span className="text-[10px] text-slate-500 mt-1 block">
-              Enter your name to appear on your squad's live leaderboard.
+              {t('join.nicknameHelp')}
             </span>
           </div>
 
           <button
             type="submit"
             disabled={isLoading || fullPin.length !== 4 || !nickname.trim()}
-            className="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-rose-900/30 flex items-center justify-center gap-2 transition-all cursor-pointer text-sm"
+            className="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 sm:py-3.5 px-4 rounded-xl shadow-lg shadow-rose-900/30 flex items-center justify-center gap-2 transition-all cursor-pointer text-sm"
           >
             {isLoading ? (
               <span className="flex items-center gap-2">
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Joining Team...
+                {t('join.joiningBtn')}
               </span>
             ) : (
               <>
-                <span>Enter Scavenger Hunt</span>
+                <span>{t('join.enterBtn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -303,29 +305,29 @@ export const JoinTeamModal: React.FC<JoinTeamModalProps> = ({
           <div className="mt-5 pt-4 border-t border-slate-800">
             <p className="text-[11px] font-bold text-slate-400 mb-2 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Or click your team to auto-fill PIN & jump to name:</span>
+              <span>{t('join.quickSelectHeader')}</span>
             </p>
             <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto">
-              {teams.map((t) => (
+              {teams.map((tItem) => (
                 <button
-                  key={t.id}
+                  key={tItem.id}
                   type="button"
-                  onClick={() => handleQuickSelectTeam(t)}
+                  onClick={() => handleQuickSelectTeam(tItem)}
                   className={`flex items-center gap-2 p-2 rounded-xl text-left text-xs transition-all cursor-pointer border ${
-                    fullPin === t.pin
+                    fullPin === tItem.pin
                       ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
                       : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
                   }`}
                 >
                   <span
                     className="w-3 h-3 rounded-full shrink-0"
-                    style={{ background: t.color }}
+                    style={{ background: tItem.color }}
                   />
                   <span className="truncate font-semibold text-slate-200">
-                    {t.name}
+                    {tItem.name}
                   </span>
-                  <span className="ml-auto font-mono text-[10px] text-amber-400 font-bold">
-                    #{t.pin}
+                  <span className="ml-auto font-mono text-[10px] text-amber-400 font-bold shrink-0">
+                    #{tItem.pin}
                   </span>
                 </button>
               ))}

@@ -22,9 +22,11 @@ import {
   Clock,
   Compass,
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export const UserGuideSection: React.FC = () => {
   const [guideTab, setGuideTab] = useState<'player' | 'gm'>('player');
+  const { t, language } = useLanguage();
 
   return (
     <section className="w-full mt-10 max-w-2xl mx-auto text-left">
@@ -35,11 +37,11 @@ export const UserGuideSection: React.FC = () => {
             <HelpCircle className="w-5 h-5" />
           </div>
           <h2 className="text-xl font-black text-white tracking-tight">
-            Scavenger Hunt Quick Guide
+            {t('guide.title')}
           </h2>
         </div>
         <p className="text-xs text-slate-400 max-w-md">
-          Simple step-by-step walkthrough for participants and game organizers.
+          {t('guide.subtitle')}
         </p>
 
         {/* Filter Tabs - Centered Toggle between Player and GM */}
@@ -47,26 +49,26 @@ export const UserGuideSection: React.FC = () => {
           <button
             type="button"
             onClick={() => setGuideTab('player')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               guideTab === 'player'
                 ? 'bg-rose-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Smartphone className="w-4 h-4" />
-            <span>Player Guide</span>
+            <span>{t('guide.playerTab')}</span>
           </button>
           <button
             type="button"
             onClick={() => setGuideTab('gm')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               guideTab === 'gm'
                 ? 'bg-amber-500 text-slate-950 shadow-md font-black'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Shield className="w-4 h-4" />
-            <span>Game Master Guide</span>
+            <span>{t('guide.gmTab')}</span>
           </button>
         </div>
       </div>
@@ -77,7 +79,7 @@ export const UserGuideSection: React.FC = () => {
         {/* PLAYER GUIDE */}
         {/* ========================================================================= */}
         {guideTab === 'player' && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col justify-between">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between">
             <div>
               {/* Header Badge */}
               <div className="flex items-center justify-between mb-4">
@@ -86,67 +88,67 @@ export const UserGuideSection: React.FC = () => {
                     <Smartphone className="w-5 h-5" />
                   </span>
                   <div>
-                    <h3 className="text-base font-black text-white">Player & Team Guide</h3>
+                    <h3 className="text-base font-black text-white">{t('guide.playerTab')}</h3>
                     <span className="text-[11px] text-rose-400 font-bold uppercase tracking-wider">
-                      For Participants On The Street
+                      {t('guide.playerBadge')}
                     </span>
                   </div>
                 </div>
                 <span className="text-xs bg-rose-500/10 text-rose-300 border border-rose-500/20 px-2.5 py-1 rounded-full font-bold">
-                  4 Easy Steps
+                  {t('guide.playerStepsCount')}
                 </span>
               </div>
 
               {/* Steps List */}
               <div className="space-y-3.5 my-4">
                 {/* Step 1 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-rose-600/20 text-rose-400 font-black text-xs flex items-center justify-center shrink-0 border border-rose-500/30">
                     <QrCode className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">1. Join Your Team</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.step1Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Tap <strong className="text-rose-400">Enter Player Hunt</strong> or scan your team's QR code. Enter your team's <strong className="text-amber-300 font-mono">4-digit PIN</strong> and your nickname. Your session is saved automatically so refreshing won't log you out!
+                      {t('guide.step1Desc')}
                     </p>
                   </div>
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-rose-600/20 text-rose-400 font-black text-xs flex items-center justify-center shrink-0 border border-rose-500/30">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">2. Explore Map & Landmarks</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.step2Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Use the permanently locked bottom bar to switch between <strong className="text-white">Hunt Map</strong> and <strong className="text-white">Clues</strong>. Tap on any clue card or landmark pin to view points, hints, and tap the image for a full uncropped view.
+                      {t('guide.step2Desc')}
                     </p>
                   </div>
                 </div>
 
                 {/* Step 3 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-rose-600/20 text-rose-400 font-black text-xs flex items-center justify-center shrink-0 border border-rose-500/30">
                     <Camera className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">3. Snap & Submit Team Selfie</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.step3Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Walk to the historic site. Tap <strong className="text-rose-400">Tap to Snap Selfie</strong> to open your camera. Take a group selfie in front of the landmark and submit it for instant GM verification.
+                      {t('guide.step3Desc')}
                     </p>
                   </div>
                 </div>
 
                 {/* Step 4 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-rose-600/20 text-rose-400 font-black text-xs flex items-center justify-center shrink-0 border border-rose-500/30">
                     <Trophy className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">4. Score Points & Climb Leaderboard</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.step4Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Verified submissions award full clue points (+bonus points for great poses!). Track your rank and progress on the live <strong className="text-white">Leaderboard</strong> tab.
+                      {t('guide.step4Desc')}
                     </p>
                   </div>
                 </div>
@@ -157,7 +159,7 @@ export const UserGuideSection: React.FC = () => {
             <div className="mt-2 p-3.5 bg-rose-950/40 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2.5">
               <Compass className="w-4 h-4 shrink-0 text-rose-400" />
               <span>
-                <strong>Player Tip:</strong> Keep GPS enabled on your phone so your team's live position appears on the historic map!
+                <strong>{t('guide.playerTips')}:</strong> {t('guide.tip1')}
               </span>
             </div>
           </div>
@@ -167,7 +169,7 @@ export const UserGuideSection: React.FC = () => {
         {/* GAME MASTER (GM) GUIDE */}
         {/* ========================================================================= */}
         {guideTab === 'gm' && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col justify-between">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between">
             <div>
               {/* Header Badge */}
               <div className="flex items-center justify-between mb-4">
@@ -176,67 +178,67 @@ export const UserGuideSection: React.FC = () => {
                     <Shield className="w-5 h-5" />
                   </span>
                   <div>
-                    <h3 className="text-base font-black text-white">Game Master Guide</h3>
+                    <h3 className="text-base font-black text-white">{t('guide.gmTab')}</h3>
                     <span className="text-[11px] text-amber-400 font-bold uppercase tracking-wider">
-                      For Event Organizers
+                      {t('guide.gmBadge')}
                     </span>
                   </div>
                 </div>
                 <span className="text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2.5 py-1 rounded-full font-bold">
-                  GM War Room
+                  {t('guide.gmStepsCount')}
                 </span>
               </div>
 
               {/* Steps List */}
               <div className="space-y-3.5 my-4">
                 {/* Step 1 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">1. Log In & Start Hunt</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.gmStep1Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Click <strong className="text-amber-400">Game Master Login</strong> using passcode <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-300 font-mono">melaka2026</code>. Create a new game with 2 to 10 teams or use the active game, then click <strong className="text-emerald-400">Start Game</strong>.
+                      {t('guide.gmStep1Desc')}
                     </p>
                   </div>
                 </div>
 
                 {/* Step 2 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
                     <Layers className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">2. Share Team Links & QR Codes</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.gmStep2Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Head to the <strong className="text-white">Teams</strong> tab. Copy the universal game link or have teams scan their custom QR codes with assigned 4-digit PINs. Live presence indicators show who is online vs offline in real-time.
+                      {t('guide.gmStep2Desc')}
                     </p>
                   </div>
                 </div>
 
                 {/* Step 3 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
                     <Radio className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">3. Live Radar & Visual Zone Plotting</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.gmStep3Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Monitor all team positions on the <strong className="text-white">Live Radar</strong>. In the <strong className="text-white">Zones</strong> tab, you can add new zones, delete zones, or click <strong className="text-white">Plot on Map</strong> to click points directly on the Leaflet map to visually draw boundaries.
+                      {t('guide.gmStep3Desc')}
                     </p>
                   </div>
                 </div>
 
                 {/* Step 4 */}
-                <div className="flex items-start gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+                <div className="flex items-start gap-3 bg-slate-950/70 p-3 sm:p-3.5 rounded-xl border border-slate-800">
                   <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 border border-amber-500/30">
                     <Eye className="w-4 h-4" />
                   </div>
                   <div className="text-xs">
-                    <h4 className="font-bold text-white text-sm mb-0.5">4. 1-Click Verification & Game Controls</h4>
+                    <h4 className="font-bold text-white text-sm mb-0.5">{t('guide.gmStep4Title')}</h4>
                     <p className="text-slate-400 leading-relaxed">
-                      Review incoming selfies in real time with <strong className="text-emerald-400">Approve</strong>, <strong className="text-amber-400">+Bonus</strong>, or <strong className="text-rose-400">Reject</strong>, track team scores on the live leaderboard, and stop the game once players finish.
+                      {t('guide.gmStep4Desc')}
                     </p>
                   </div>
                 </div>
@@ -247,7 +249,7 @@ export const UserGuideSection: React.FC = () => {
             <div className="mt-2 p-3.5 bg-amber-950/40 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex items-center gap-2.5">
               <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />
               <span>
-                <strong>GM Tip:</strong> If participants close their browser tabs, the system automatically detects them as offline so you can safely stop the game.
+                <strong>GM Tip:</strong> {language === 'zh' ? '参赛队员关闭浏览器后，系统会自动检测其为离线，以便您可以安全无阻地结束游戏。' : 'If participants close their browser tabs, the system automatically detects them as offline so you can safely stop the game.'}
               </span>
             </div>
           </div>
@@ -261,9 +263,9 @@ export const UserGuideSection: React.FC = () => {
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           </span>
           <div>
-            <p className="text-slate-200 font-bold">Heritage Zone Etiquette & Safety</p>
+            <p className="text-slate-200 font-bold">{language === 'zh' ? '古迹保护与户外安全倡议' : 'Heritage Zone Etiquette & Safety'}</p>
             <p className="text-[11px] text-slate-400">
-              Please respect historic buildings, watch out for street traffic, and stay hydrated while exploring UNESCO Melaka.
+              {language === 'zh' ? '请爱护世界文化遗产历史建筑，过马路注意道路交通，并在马六甲炎热天气中及时补充水分。' : 'Please respect historic buildings, watch out for street traffic, and stay hydrated while exploring UNESCO Melaka.'}
             </p>
           </div>
         </div>

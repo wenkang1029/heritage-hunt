@@ -14,7 +14,8 @@ import { PlayerHuntView } from './components/Player/PlayerHuntView.tsx';
 import { JoinTeamModal } from './components/Player/JoinTeamModal.tsx';
 import { GMDashboard } from './components/GM/GMDashboard.tsx';
 import { UserGuideSection } from './components/Home/UserGuideSection.tsx';
-import { Shield, Smartphone, ArrowRight, Lock, MapPin } from 'lucide-react';
+import { Shield, Smartphone, ArrowRight, Lock, MapPin, Globe } from 'lucide-react';
+import { useLanguage } from './context/LanguageContext.tsx';
 
 const LS_GM_AUTH = 'HERITAGE_GM_AUTH';
 const LS_ACTIVE_GAME_ID = 'HERITAGE_ACTIVE_GAME_ID';
@@ -48,6 +49,7 @@ export const App: React.FC = () => {
   const [gmPasscode, setGmPasscode] = useState<string>('');
   const [gmPasscodeError, setGmPasscodeError] = useState<string | null>(null);
 
+  const { t, language, openSwitchModal } = useLanguage();
   const dataSourceMode = getDataSourceMode();
 
   // Helper to sync URL without triggering page reloads
@@ -241,18 +243,18 @@ export const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
         <div className="w-10 h-10 border-4 border-rose-500/30 border-t-rose-500 rounded-full animate-spin mb-4" />
-        <h2 className="text-lg font-bold text-white">Connecting to Melaka Heritage Hunt...</h2>
-        <p className="text-xs text-slate-400 mt-1">Initializing real-time Firestore synchronization</p>
+        <h2 className="text-lg font-bold text-white">{t('home.connecting')}</h2>
+        <p className="text-xs text-slate-400 mt-1">{t('home.initializing')}</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] bg-slate-950 flex flex-col overflow-hidden text-slate-100 font-sans antialiased selection:bg-rose-500 selection:text-white">
+    <div className="h-[100dvh] max-h-[100dvh] w-full bg-slate-950 flex flex-col overflow-hidden text-slate-100 font-sans antialiased selection:bg-rose-500 selection:text-white">
       {/* Universal Status & Perspective Bar */}
-      <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-1.5 flex items-center justify-between text-xs shrink-0 z-50">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 relative">
+      <div className="bg-slate-900/90 border-b border-slate-800 px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs shrink-0 z-50 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="flex h-2 w-2 relative shrink-0">
             <span
               className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
                 dataSourceMode === 'firestore' ? 'bg-emerald-400' : 'bg-amber-400'
@@ -264,44 +266,58 @@ export const App: React.FC = () => {
               }`}
             />
           </span>
-          <span className="text-[11px] font-mono text-slate-400">
-            {dataSourceMode === 'firestore' ? 'Firestore Live Connected' : 'Local Mock Mode'}
+          <span className="text-[11px] font-mono text-slate-400 truncate hidden xs:inline">
+            {dataSourceMode === 'firestore' ? t('topBar.firestoreConnected') : t('topBar.localMockMode')}
           </span>
-          <span className="text-[10px] text-slate-500 hidden sm:inline">
-            • Room: <strong className="text-amber-400 font-mono">{game.id}</strong>
+          <span className="text-[10px] text-slate-500 hidden md:inline">
+            • {t('topBar.room')} <strong className="text-amber-400 font-mono">{game.id}</strong>
           </span>
         </div>
 
-        {/* Perspective Quick Switcher */}
-        <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+        {/* Controls: Language Switcher & Perspective Quick Switcher */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Safe Language Switcher Button (Guarded to prevent accidental taps) */}
           <button
-            onClick={() => {
-              setRole('player');
-              updateUrlParams({ game: game.id });
-            }}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              role === 'player'
-                ? 'bg-rose-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
+            type="button"
+            onClick={openSwitchModal}
+            className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold bg-slate-950 hover:bg-slate-800 text-amber-300 border border-slate-700/80 transition-colors cursor-pointer shrink-0 shadow-sm"
+            title={t('topBar.switchLanguage')}
           >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span>Player Mode</span>
+            <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="text-[10px] tracking-wide font-black">{language === 'zh' ? '中文' : 'EN'}</span>
           </button>
-          <button
-            onClick={() => {
-              setRole('gm');
-              updateUrlParams({ game: game.id, mode: 'gm' });
-            }}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              role === 'gm'
-                ? 'bg-amber-500 text-slate-950 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Shield className="w-3.5 h-3.5" />
-            <span>GM War Room</span>
-          </button>
+
+          {/* Perspective Quick Switcher */}
+          <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+            <button
+              onClick={() => {
+                setRole('player');
+                updateUrlParams({ game: game.id });
+              }}
+              className={`px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                role === 'player'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5 shrink-0" />
+              <span>{t('topBar.playerMode')}</span>
+            </button>
+            <button
+              onClick={() => {
+                setRole('gm');
+                updateUrlParams({ game: game.id, mode: 'gm' });
+              }}
+              className={`px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                role === 'gm'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 shrink-0" />
+              <span>{t('topBar.gmWarRoom')}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -314,24 +330,24 @@ export const App: React.FC = () => {
             <MapPin className="w-12 h-12" />
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-2">
-            Melaka Heritage Photo Hunt
+          <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-2">
+            {t('home.title')}
           </h1>
-          <p className="text-sm text-slate-400 max-w-md mb-8">
-            An interactive outdoor photo scavenger hunt across Jonker Street, Dutch Square, A Famosa, Jalan Tokong, and St. Paul's Hill.
+          <p className="text-xs sm:text-sm text-slate-400 max-w-md mb-8">
+            {t('home.subtitle')}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl text-left">
             {/* Player Entry Card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2 text-rose-400">
                   <Smartphone className="w-5 h-5" />
-                  <span className="font-bold text-xs uppercase tracking-wider">Participants</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">{t('home.participantsTitle')}</span>
                 </div>
-                <h3 className="font-black text-lg text-white mb-1">Join Photo Hunt</h3>
+                <h3 className="font-black text-lg text-white mb-1">{t('home.participantsHeading')}</h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Enter your team PIN or open your Game Link to start hunting landmarks and earning points.
+                  {t('home.participantsDesc')}
                 </p>
               </div>
 
@@ -342,21 +358,21 @@ export const App: React.FC = () => {
                 }}
                 className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
               >
-                <span>Enter Player Hunt</span>
+                <span>{t('home.enterPlayerBtn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
 
             {/* GM Entry Card */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2 text-amber-400">
                   <Shield className="w-5 h-5" />
-                  <span className="font-bold text-xs uppercase tracking-wider">Organizers</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">{t('home.organizersTitle')}</span>
                 </div>
-                <h3 className="font-black text-lg text-white mb-1">Game Master Portal</h3>
+                <h3 className="font-black text-lg text-white mb-1">{t('home.organizersHeading')}</h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Log in to create games, configure teams & zones, monitor live radar, and approve team selfies.
+                  {t('home.organizersDesc')}
                 </p>
               </div>
 
@@ -365,7 +381,7 @@ export const App: React.FC = () => {
                 className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
-                <span>Game Master Login</span>
+                <span>{t('home.gmLoginBtn')}</span>
               </button>
             </div>
           </div>
@@ -379,7 +395,7 @@ export const App: React.FC = () => {
       {/* 2. GM WAR ROOM */}
       {/* ========================================================================= */}
       {role === 'gm' && (
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 w-full h-full overflow-hidden flex flex-col">
           <GMDashboard
             game={game}
             teams={teams}
@@ -419,13 +435,13 @@ export const App: React.FC = () => {
       {/* GM Home Login Modal */}
       {showGmLoginModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center">
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl text-center max-h-[90dvh] overflow-y-auto">
             <div className="inline-flex p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-3">
               <Lock className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-white">Organizer Login</h3>
+            <h3 className="text-lg font-black text-white">{t('home.gmModalTitle')}</h3>
             <p className="text-xs text-slate-400 mt-1 mb-4">
-              Enter your master passcode to access the War Room.
+              {t('home.gmModalDesc')}
             </p>
 
             {gmPasscodeError && (
@@ -439,8 +455,8 @@ export const App: React.FC = () => {
                 type="password"
                 value={gmPasscode}
                 onChange={(e) => setGmPasscode(e.target.value)}
-                placeholder="Enter GM Passcode"
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                placeholder={t('home.gmModalPlaceholder')}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 text-sm"
                 autoFocus
                 required
               />
@@ -450,16 +466,19 @@ export const App: React.FC = () => {
                   onClick={() => setShowGmLoginModal(false)}
                   className="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs cursor-pointer"
                 >
-                  Cancel
+                  {t('home.gmModalCancel')}
                 </button>
                 <button
                   type="submit"
                   className="w-1/2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs shadow-lg cursor-pointer"
                 >
-                  Enter War Room
+                  {t('home.gmModalSubmit')}
                 </button>
               </div>
             </form>
+            <p className="text-[10px] text-slate-500 mt-3 font-mono">
+              {t('home.gmDefaultPasscode')}
+            </p>
           </div>
         </div>
       )}

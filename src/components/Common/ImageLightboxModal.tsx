@@ -8,6 +8,7 @@
 
 import React, { useEffect } from 'react';
 import { X, ZoomIn } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export interface ImageLightboxModalProps {
   isOpen: boolean;
@@ -26,6 +27,8 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
   subtitle,
   badge,
 }) => {
+  const { t } = useLanguage();
+
   // Close on Escape key press
   useEffect(() => {
     if (!isOpen) return;
@@ -89,7 +92,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
         {/* Footer Hint */}
         <div className="mt-2 text-center text-[11px] text-slate-400 flex items-center gap-1.5">
           <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
-          <span>Full Uncropped Original Photo — Tap anywhere outside or press Esc to close</span>
+          <span>{t('common.viewFullUncropped')}</span>
         </div>
       </div>
     </div>

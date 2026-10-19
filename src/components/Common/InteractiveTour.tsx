@@ -16,6 +16,7 @@ import {
   Check,
   Sparkles,
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export interface TourStep {
   id: string;
@@ -48,6 +49,8 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
   onTabChange,
   storageKey,
 }) => {
+  const { t } = useLanguage();
+
   // Automatically switch tab when current step changes
   useEffect(() => {
     if (!isOpen) return;
@@ -130,7 +133,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
       aria-modal="false"
       aria-label={`${tourName} Tour`}
     >
-      <div className="bg-slate-900/95 border-2 border-amber-500/50 rounded-2xl p-5 shadow-2xl backdrop-blur-xl ring-4 ring-amber-500/10 text-left">
+      <div className="bg-slate-900/95 border-2 border-amber-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl backdrop-blur-xl ring-4 ring-amber-500/10 text-left max-h-[85dvh] overflow-y-auto">
         {/* Top Header Bar */}
         <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-800">
           <div className="flex items-center gap-2">
@@ -141,7 +144,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
               {tourName}
             </span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-              {currentStepIndex + 1} of {steps.length}
+              {t('common.tourStepOf', { current: currentStepIndex + 1, total: steps.length })}
             </span>
           </div>
 
@@ -149,9 +152,9 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
             type="button"
             onClick={handleSkip}
             className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer font-bold flex items-center gap-1"
-            title="Skip Interactive Tour"
+            title={t('common.tourSkip')}
           >
-            <span>Skip</span>
+            <span>{t('common.tourSkip')}</span>
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -183,7 +186,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
           <div className="mt-2.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-start gap-1.5">
             <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
             <span>
-              <strong>Tip:</strong> {currentStep.tips}
+              <strong>{t('common.tourTip')}</strong> {currentStep.tips}
             </span>
           </div>
         )}
@@ -221,7 +224,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                 className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
-                <span>Back</span>
+                <span>{t('common.tourBack')}</span>
               </button>
             )}
 
@@ -234,7 +237,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
                   : 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black'
               }`}
             >
-              <span>{isLastStep ? 'Got It, Let’s Hunt!' : 'Next'}</span>
+              <span>{isLastStep ? t('common.tourFinish') : t('common.tourNext')}</span>
               {isLastStep ? (
                 <Check className="w-3.5 h-3.5" />
               ) : (
