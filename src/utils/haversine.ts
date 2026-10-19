@@ -56,6 +56,58 @@ export function calculateHaversineDistance(
 }
 
 /**
+ * Calculates the forward initial bearing from coord1 to coord2 in degrees (0..360, where 0 is North, 90 is East).
+ */
+export function calculateBearing(coord1: GeoPointInput, coord2: GeoPointInput): number {
+  const p1 = normalizeCoordinates(coord1);
+  const p2 = normalizeCoordinates(coord2);
+
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const toDeg = (rad: number) => (rad * 180) / Math.PI;
+
+  const lat1 = toRad(p1.lat);
+  const lat2 = toRad(p2.lat);
+  const dLon = toRad(p2.lng - p1.lng);
+
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+
+  const brng = toDeg(Math.atan2(y, x));
+  return (brng + 360) % 360;
+}
+
+export interface CompassHeading {
+  code: string;
+  label: string;
+  arrow: string;
+  bearingDeg: number;
+}
+
+export function getCompassDirection(bearingDeg: number, lang: 'en' | 'zh' = 'zh'): CompassHeading {
+  const directionsEn = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const directionsZh = ['正北', '东北', '正东', '东南', '正南', '西南', '正西', '西北'];
+  const arrows = ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'];
+
+  const normalized = (bearingDeg % 360 + 360) % 360;
+  const index = Math.round(normalized / 45) % 8;
+  return {
+    code: directionsEn[index],
+    label: lang === 'zh' ? directionsZh[index] : directionsEn[index],
+    arrow: arrows[index],
+    bearingDeg: Math.round(normalized),
+  };
+}
+
+export type RadarStage = 'target' | 'near' | 'medium' | 'far';
+
+export function getRadarProximityStage(distanceMeters: number): RadarStage {
+  if (distanceMeters <= 20) return 'target';
+  if (distanceMeters <= 50) return 'near';
+  if (distanceMeters <= 100) return 'medium';
+  return 'far';
+}
+
+/**
  * Formats distance in meters into friendly daylight-readable text.
  */
 export function formatDistance(meters: number): string {

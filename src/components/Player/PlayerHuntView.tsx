@@ -32,7 +32,16 @@ import {
   Compass,
   ChevronDown,
   Users,
+  Crosshair,
+  Flame,
+  Radio,
 } from 'lucide-react';
+import {
+  calculateHaversineDistance,
+  calculateBearing,
+  getCompassDirection,
+  getRadarProximityStage,
+} from '../../utils/haversine.ts';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
 import { InteractiveTour, type TourStep } from '../Common/InteractiveTour.tsx';
@@ -131,21 +140,21 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         },
         {
           id: 'player-map',
-          title: '1. 寻宝地图与历史区域',
+          title: '1. 寻宝地图与探险家雷达',
           description:
-            '漫步马六甲世界文化遗产保护区。彩色多边形区域划定了鸡场街、荷兰红屋、圣地亚哥古城门与圣保罗山等。探索时您的实时 GPS 位置将精准显示在地图上！',
+            '彩色多边形区域划定了鸡场街、荷兰红屋等各大历史区。为保障真实寻宝乐趣，地图已开启探险家模式（隐藏所有大头针）。请锁定目标线索，跟随雷达方向与距离探索；进入 20 米搜寻圈将触发雷达高能提醒！',
           icon: <MapPin className="w-5 h-5 text-rose-500" />,
-          badge: '第2步：地图界面',
-          tips: '请保持手机 GPS 定位开启，队伍图钉将实时同步到裁判 GM 的雷达大屏上。',
+          badge: '第2步：探险家地图',
+          tips: '保持手机 GPS 定位开启。当步入目标 20 米内，手机将震动并提示您对照照片用双眼寻找建筑细节。',
           tabKey: 'map',
         },
         {
           id: 'player-clues',
-          title: '2. 寻宝线索与目标地标',
+          title: '2. 寻宝线索与目标锁定',
           description:
-            '切换到【线索】标签页查看历史目标。可按区域筛选或查看全部。每张卡片均标有积分奖励、寻找提示与参考照片。点击任意照片可查看高清无裁切原图！',
+            '切换到【线索】标签页查看历史目标。点击【🎯 锁定追踪】可将目标固定到顶部雷达。每张卡片均标有积分奖励、寻找提示与参考照片。点击任意照片可查看高清无裁切大图！',
           icon: <List className="w-5 h-5 text-amber-400" />,
-          badge: '第3步：线索清单',
+          badge: '第3步：线索锁定',
           tips: '仔细观察殖民地雕花、荷兰红砖砌块与古老巷弄壁画细节。',
           tabKey: 'clues',
         },
@@ -185,21 +194,21 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       },
       {
         id: 'player-map',
-        title: '1. Hunt Map & Heritage Zones',
+        title: '1. Hunt Map & Explorer Radar',
         description:
-          'Navigate through Melaka’s historic core. Color-coded polygon zones outline Jonker Street, Dutch Square, A Famosa, and St. Paul’s Hill. Your real-time GPS position appears right on the map as you explore!',
+          'Color-coded polygon zones outline Melaka’s historic districts. To preserve real exploration, Explorer Mode hides exact pins! Lock a target clue to activate your proximity radar with bearing direction & distance. Enter within 20m to trigger the pulse alert!',
         icon: <MapPin className="w-5 h-5 text-rose-500" />,
-        badge: 'Step 2: Map Tab',
-        tips: 'Keep GPS enabled on your phone so your team marker updates live for the Game Master radar.',
+        badge: 'Step 2: Explorer Map',
+        tips: 'Keep GPS enabled. When within 20m of your target, your phone pulses and prompts you to match the photo with your eyes.',
         tabKey: 'map',
       },
       {
         id: 'player-clues',
-        title: '2. Clues & Target Landmarks',
+        title: '2. Clues & Target Tracking',
         description:
-          'Switch to the Clues tab to browse historic targets. Filter by heritage zone or view all. Each card shows the points reward, landmark hint, and a photo. Tap any photo to view the full uncropped image in high resolution!',
+          'Browse historic targets in the Clues tab. Tap [🎯 Lock & Track Clue] to engage the radar. Each card shows points, exploration hints, and a reference photo. Tap any photo to view in full resolution!',
         icon: <List className="w-5 h-5 text-amber-400" />,
-        badge: 'Step 3: Clues Tab',
+        badge: 'Step 3: Clue Tracking',
         tips: 'Scout out distinctive colonial carvings, Dutch brickwork, and alleyway details.',
         tabKey: 'clues',
       },
@@ -310,6 +319,85 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     if (selectedZoneFilter === 'all') return clues;
     return clues.filter((c) => c.zoneId === selectedZoneFilter);
   }, [clues, selectedZoneFilter]);
+
+  // Tracked Clue & Scavenger Radar State
+  const [trackedClueId, setTrackedClueId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('melaka_hunt_tracked_clue_id');
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (trackedClueId) {
+        localStorage.setItem('melaka_hunt_tracked_clue_id', trackedClueId);
+      } else {
+        localStorage.removeItem('melaka_hunt_tracked_clue_id');
+      }
+    } catch {
+      // ignore
+    }
+  }, [trackedClueId]);
+
+  const trackedClue = useMemo(() => {
+    if (!trackedClueId) return null;
+    return clues.find((c) => c.id === trackedClueId) || null;
+  }, [clues, trackedClueId]);
+
+  // Radar Proximity for Tracked Clue
+  const trackedDistance = useMemo(() => {
+    if (!playerCoords || !trackedClue?.location) return null;
+    return calculateHaversineDistance(playerCoords, trackedClue.location);
+  }, [playerCoords, trackedClue]);
+
+  const trackedBearing = useMemo(() => {
+    if (!playerCoords || !trackedClue?.location) return null;
+    return calculateBearing(playerCoords, trackedClue.location);
+  }, [playerCoords, trackedClue]);
+
+  const compassHeading = useMemo(() => {
+    if (trackedBearing === null) return null;
+    return getCompassDirection(trackedBearing, language as 'en' | 'zh');
+  }, [trackedBearing, language]);
+
+  const radarStage = useMemo(() => {
+    if (trackedDistance === null) return 'far';
+    return getRadarProximityStage(trackedDistance);
+  }, [trackedDistance]);
+
+  // Haptic feedback vibration when entering target range (<20m)
+  const hasVibratedForClue = useRef<string | null>(null);
+  useEffect(() => {
+    if (radarStage === 'target' && trackedClueId && hasVibratedForClue.current !== trackedClueId) {
+      hasVibratedForClue.current = trackedClueId;
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([200, 100, 200]);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [radarStage, trackedClueId]);
+
+  // Passive Proximity Radar: Detect closest untracked uncompleted clue within <= 20m
+  const nearbyPassiveClue = useMemo(() => {
+    if (!playerCoords) return null;
+    let closest: { clue: Clue; distance: number } | null = null;
+
+    for (const c of clues) {
+      if (completedClueIds.has(c.id) || c.id === trackedClueId || !c.location) continue;
+      const d = calculateHaversineDistance(playerCoords, c.location);
+      if (d <= 20) {
+        if (!closest || d < closest.distance) {
+          closest = { clue: c, distance: d };
+        }
+      }
+    }
+    return closest;
+  }, [playerCoords, clues, completedClueIds, trackedClueId]);
 
   // Trigger Native Camera Input
   const handleOpenNativeCamera = (clue: Clue) => {
@@ -480,7 +568,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               completedClueIds={Array.from(completedClueIds)}
               onSelectClue={handleOpenNativeCamera}
               className="h-full w-full rounded-none border-none"
-              bottomOffsetClass="bottom-20"
+              bottomOffsetClass={trackedClue ? 'bottom-40' : 'bottom-20'}
+              hideCluePins={true}
+              trackedClue={trackedClue}
             />
           </div>
         )}
@@ -592,20 +682,47 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                         {clue.hint || clue.description || t('player.noHint')}
                       </p>
 
-                      {/* Status indicator */}
-                      <div className="mt-2 flex items-center gap-2">
-                        {isDone ? (
-                          <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
-                          </span>
-                        ) : isPending ? (
-                          <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
-                            <Camera className="w-3.5 h-3.5" /> {t('player.tapToSnap')}
-                          </span>
+                      {/* Status indicator & Track Button */}
+                      <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          {isDone ? (
+                            <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
+                            </span>
+                          ) : isPending ? (
+                            <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
+                              <Camera className="w-3.5 h-3.5" /> {t('player.tapToSnap')}
+                            </span>
+                          )}
+                        </div>
+
+                        {!isDone && (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {playerCoords && clue.location && (
+                              <span className="text-[10px] font-semibold text-slate-400">
+                                约 {calculateHaversineDistance(playerCoords, clue.location)}m
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTrackedClueId((prev) => (prev === clue.id ? null : clue.id));
+                              }}
+                              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                                trackedClueId === clue.id
+                                  ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400'
+                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                              }`}
+                            >
+                              <Crosshair className="w-3 h-3" />
+                              <span>{trackedClueId === clue.id ? t('player.trackingBadge') : t('player.trackClueBtn')}</span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -794,6 +911,205 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         )}
       </main>
 
+      {/* Passive Radar Ping (Surprise uncompleted clue <= 20m nearby) */}
+      {nearbyPassiveClue && (
+        <div className="fixed top-18 left-3 right-3 max-w-lg mx-auto z-40 animate-bounce">
+          <div className="p-2.5 rounded-2xl bg-amber-500 text-slate-950 backdrop-blur-xl border border-amber-300 shadow-2xl flex items-center justify-between gap-2.5">
+            <div className="min-w-0 flex items-center gap-2">
+              <span className="text-xl shrink-0">💡</span>
+              <div className="min-w-0">
+                <span className="text-[10px] font-black uppercase tracking-wider block leading-none text-amber-950">
+                  {t('player.passivePingTitle')}
+                </span>
+                <span className="text-xs font-bold truncate block leading-tight mt-0.5">
+                  {t('player.passivePingDesc', {
+                    meters: nearbyPassiveClue.distance,
+                    title: nearbyPassiveClue.clue.title,
+                  })}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setTrackedClueId(nearbyPassiveClue.clue.id);
+                handleOpenNativeCamera(nearbyPassiveClue.clue);
+              }}
+              className="bg-slate-950 hover:bg-slate-900 text-amber-300 font-black px-3 py-1.5 rounded-xl text-xs shrink-0 cursor-pointer transition-all shadow"
+            >
+              {t('player.passivePingAction')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Scavenger Radar HUD */}
+      {trackedClue && (
+        <div className="fixed bottom-18 left-0 right-0 max-w-lg mx-auto px-3 z-40 pointer-events-none">
+          <div
+            className={`pointer-events-auto p-3 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all ${
+              radarStage === 'target'
+                ? 'bg-emerald-950/95 border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/50 animate-pulse'
+                : radarStage === 'near'
+                ? 'bg-slate-900/95 border-orange-500/80 shadow-orange-500/20'
+                : radarStage === 'medium'
+                ? 'bg-slate-900/95 border-amber-500/80 shadow-amber-500/20'
+                : 'bg-slate-900/95 border-slate-700/80'
+            }`}
+          >
+            {/* Header: Stage Badge + Compass Needle + Close Button */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                    radarStage === 'target'
+                      ? 'bg-emerald-400 animate-ping'
+                      : radarStage === 'near'
+                      ? 'bg-orange-400 animate-pulse'
+                      : radarStage === 'medium'
+                      ? 'bg-amber-400'
+                      : 'bg-blue-400'
+                  }`}
+                />
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 truncate">
+                  {t('player.radarTitle')}
+                </span>
+                {radarStage === 'target' && (
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                    &lt; 20m
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setTrackedClueId(null)}
+                  className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer transition-colors"
+                  title={t('player.stopTrackingBtn')}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Target Info & Proximity Status */}
+            <div className="flex items-center gap-3">
+              {/* Clue Thumbnail */}
+              <div
+                onClick={() => {
+                  if (trackedClue.targetPhotoBase64) {
+                    setLightboxImage({
+                      url: trackedClue.targetPhotoBase64,
+                      title: trackedClue.title,
+                      subtitle: trackedClue.landmarkName || trackedClue.zoneId,
+                      badge: t('common.targetLandmarkBadge'),
+                    });
+                  }
+                }}
+                className="w-13 h-13 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer"
+                title={t('player.modalTapUncropped')}
+              >
+                {trackedClue.targetPhotoBase64 ? (
+                  <img
+                    src={trackedClue.targetPhotoBase64}
+                    alt={trackedClue.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-500">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                )}
+              </div>
+
+              {/* Title & Guidance Distance */}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-xs sm:text-sm text-white truncate leading-tight">
+                  {trackedClue.title}
+                </h4>
+
+                {/* Distance and Signal readout */}
+                <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                  {trackedDistance !== null && compassHeading ? (
+                    <>
+                      {radarStage === 'target' ? (
+                        <span className="text-xs font-black text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>{t('player.radarSignalTarget')}</span>
+                        </span>
+                      ) : radarStage === 'near' ? (
+                        <span className="text-xs font-bold text-orange-400 flex items-center gap-1">
+                          <Flame className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {t('player.radarSignalNear', {
+                              meters: trackedDistance,
+                            })}
+                          </span>
+                        </span>
+                      ) : radarStage === 'medium' ? (
+                        <span className="text-xs font-bold text-amber-400 flex items-center gap-1">
+                          <Radio className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {t('player.radarSignalMedium', {
+                              meters: trackedDistance,
+                            })}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-slate-300 flex items-center gap-1">
+                          <span>
+                            {t('player.radarSignalFar', {
+                              arrow: compassHeading.arrow,
+                              direction: compassHeading.label,
+                              meters: trackedDistance,
+                            })}
+                          </span>
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 animate-spin" />
+                      <span>正在获取 GPS 定位...</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="shrink-0">
+                {radarStage === 'target' ? (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenNativeCamera(trackedClue)}
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 cursor-pointer transition-all animate-bounce"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>{t('player.snapNowBtn')}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenNativeCamera(trackedClue)}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-2.5 py-2 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors border border-slate-700"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-amber-400" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Prompt for Target Stage */}
+            {radarStage === 'target' && (
+              <p className="text-[11px] text-emerald-300/90 font-medium mt-2 pt-2 border-t border-emerald-800/40 leading-snug">
+                {t('player.radarLookAroundNotice')}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 3. Bottom Navigation Bar - Fixed & Locked to Screen Bottom */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto z-40 h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex items-center justify-around px-3 shadow-[0_-4px_25px_rgba(0,0,0,0.6)]">
         <button
@@ -917,6 +1233,28 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 </p>
               )}
             </div>
+
+            {/* Clue Tracking Quick Action Button inside Modal */}
+            {!completedClueIds.has(selectedClue.id) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setTrackedClueId((prev) => (prev === selectedClue.id ? null : selectedClue.id));
+                }}
+                className={`w-full mb-4 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  trackedClueId === selectedClue.id
+                    ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400 font-black'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
+                }`}
+              >
+                <Crosshair className="w-4 h-4 text-amber-400" />
+                <span>
+                  {trackedClueId === selectedClue.id
+                    ? `${t('player.trackingBadge')} (${t('player.stopTrackingBtn')})`
+                    : t('player.trackClueBtn')}
+                </span>
+              </button>
+            )}
 
             {/* Captured Selfie Preview or Shutter Trigger */}
             <div className="mb-5">

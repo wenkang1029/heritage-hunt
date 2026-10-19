@@ -26,6 +26,7 @@ import type {
   GeoCoordinate,
 } from '../../types/index.ts';
 import { MELAKA_MAP_CENTER } from '../../data/melakaZones.ts';
+import { calculateHaversineDistance, calculateBearing } from '../../utils/haversine.ts';
 import {
   MapPin,
   Navigation,
@@ -254,6 +255,10 @@ export interface HuntMapProps {
   isSavingPlot?: boolean;
   targetCenter?: GeoCoordinate | null;
   bottomOffsetClass?: string;
+
+  // Explorer Mode & Tracking Props
+  hideCluePins?: boolean;
+  trackedClue?: Clue | null;
 }
 
 export const HuntMap: React.FC<HuntMapProps> = ({
@@ -278,10 +283,49 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   isSavingPlot = false,
   targetCenter = null,
   bottomOffsetClass = 'bottom-4',
+  hideCluePins = false,
+  trackedClue = null,
 }) => {
   const [targetRecenter, setTargetRecenter] = React.useState<GeoCoordinate | null>(null);
 
   const completedSet = useMemo(() => new Set(completedClueIds), [completedClueIds]);
+
+  // Direction ray calculation from player towards tracked clue (when not yet in 20m range)
+  const trackedRay = useMemo(() => {
+    if (!trackedClue?.location || !playerCoords) return null;
+    const distance = calculateHaversineDistance(playerCoords, trackedClue.location);
+    const bearing = calculateBearing(playerCoords, trackedClue.location);
+
+    if (distance <= 20) {
+      return { distance, bearing, isWithinRange: true, rayEnd: null };
+    }
+
+    // Directional ray (35m forward vector)
+    const rayDistanceMeters = 35;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const toDeg = (r: number) => (r * 180) / Math.PI;
+    const dRad = rayDistanceMeters / 6371000;
+    const lat1 = toRad(playerCoords.latitude);
+    const lng1 = toRad(playerCoords.longitude);
+    const brngRad = toRad(bearing);
+
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(dRad) + Math.cos(lat1) * Math.sin(dRad) * Math.cos(brngRad)
+    );
+    const lng2 =
+      lng1 +
+      Math.atan2(
+        Math.sin(brngRad) * Math.sin(dRad) * Math.cos(lat1),
+        Math.cos(dRad) - Math.sin(lat1) * Math.sin(lat2)
+      );
+
+    return {
+      distance,
+      bearing,
+      isWithinRange: false,
+      rayEnd: [toDeg(lat2), toDeg(lng2)] as [number, number],
+    };
+  }, [trackedClue, playerCoords]);
 
   return (
     <div className={`relative ${className} overflow-hidden bg-slate-950`}>
@@ -400,62 +444,132 @@ export const HuntMap: React.FC<HuntMapProps> = ({
           </>
         )}
 
-        {/* 3. Clue Pins */}
-        {clues.map((clue) => {
-          if (!clue.location) return null;
-          const isDone = completedSet.has(clue.id);
+        {/* 3. Clue Pins / Radar Guidance */}
+        {!hideCluePins &&
+          clues.map((clue) => {
+            if (!clue.location) return null;
+            const isDone = completedSet.has(clue.id);
 
-          return (
+            return (
+              <Marker
+                key={clue.id}
+                position={[clue.location.latitude, clue.location.longitude]}
+                icon={createClueIcon(isDone, clue.points)}
+                interactive={!isPlottingZone}
+              >
+                {!isPlottingZone && (
+                  <Popup>
+                    <div className="w-56 p-1">
+                      {clue.targetPhotoBase64 && (
+                        <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
+                          <img
+                            src={clue.targetPhotoBase64}
+                            alt={clue.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <h4 className="font-bold text-sm text-slate-100 leading-tight">
+                          {clue.title}
+                        </h4>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                          +{clue.points} pts
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-300 mb-2 line-clamp-2">
+                        {clue.hint || clue.description || 'Locate this landmark detail and take a team selfie!'}
+                      </p>
+
+                      {isDone ? (
+                        <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-950/60 py-1.5 rounded-lg border border-emerald-600/40">
+                          ✓ Completed!
+                        </div>
+                      ) : onSelectClue ? (
+                        <button
+                          onClick={() => onSelectClue(clue)}
+                          className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
+                        >
+                          <MapPin className="w-3.5 h-3.5" />
+                          View Clue & Submit Selfie
+                        </button>
+                      ) : null}
+                    </div>
+                  </Popup>
+                )}
+              </Marker>
+            );
+          })}
+
+        {/* Explorer Mode: Only show target search zone circle & marker when within 20m */}
+        {hideCluePins && trackedClue?.location && trackedRay?.isWithinRange && (
+          <>
+            <Circle
+              center={[trackedClue.location.latitude, trackedClue.location.longitude]}
+              radius={20}
+              pathOptions={{
+                color: '#10B981',
+                fillColor: '#34D399',
+                fillOpacity: 0.25,
+                weight: 2,
+                dashArray: '4, 4',
+              }}
+            />
             <Marker
-              key={clue.id}
-              position={[clue.location.latitude, clue.location.longitude]}
-              icon={createClueIcon(isDone, clue.points)}
+              position={[trackedClue.location.latitude, trackedClue.location.longitude]}
+              icon={createClueIcon(completedSet.has(trackedClue.id), trackedClue.points)}
               interactive={!isPlottingZone}
             >
               {!isPlottingZone && (
                 <Popup>
                   <div className="w-56 p-1">
-                    {clue.targetPhotoBase64 && (
+                    {trackedClue.targetPhotoBase64 && (
                       <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
                         <img
-                          src={clue.targetPhotoBase64}
-                          alt={clue.title}
+                          src={trackedClue.targetPhotoBase64}
+                          alt={trackedClue.title}
                           className="w-full h-full object-cover"
                         />
                       </div>
                     )}
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <h4 className="font-bold text-sm text-slate-100 leading-tight">
-                        {clue.title}
-                      </h4>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                        +{clue.points} pts
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-300 mb-2 line-clamp-2">
-                      {clue.hint || clue.description || 'Locate this landmark detail and take a team selfie!'}
+                    <h4 className="font-bold text-sm text-slate-100 leading-tight mb-1">
+                      {trackedClue.title}
+                    </h4>
+                    <p className="text-xs text-emerald-400 font-bold mb-2">
+                      🎯 已到达搜索范围（&lt;20米）！
                     </p>
-
-                    {isDone ? (
-                      <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-950/60 py-1.5 rounded-lg border border-emerald-600/40">
-                        ✓ Completed!
-                      </div>
-                    ) : onSelectClue ? (
+                    {onSelectClue && (
                       <button
-                        onClick={() => onSelectClue(clue)}
-                        className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
+                        onClick={() => onSelectClue(trackedClue)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
                       >
                         <MapPin className="w-3.5 h-3.5" />
-                        View Clue & Submit Selfie
+                        拍照打卡
                       </button>
-                    ) : null}
+                    )}
                   </div>
                 </Popup>
               )}
             </Marker>
-          );
-        })}
+          </>
+        )}
+
+        {/* Explorer Mode: Directional Ray from player towards tracked target when > 20m */}
+        {hideCluePins && playerCoords && trackedRay && !trackedRay.isWithinRange && trackedRay.rayEnd && (
+          <Polyline
+            positions={[
+              [playerCoords.latitude, playerCoords.longitude],
+              trackedRay.rayEnd,
+            ]}
+            pathOptions={{
+              color: '#F59E0B',
+              weight: 4,
+              opacity: 0.85,
+              dashArray: '6, 6',
+            }}
+          />
+        )}
 
         {/* 4. Live Team Radar Markers */}
         {teams.map((team) => {
@@ -524,6 +638,14 @@ export const HuntMap: React.FC<HuntMapProps> = ({
           </>
         )}
       </MapContainer>
+
+      {/* Explorer Mode Badge */}
+      {hideCluePins && !isPlottingZone && (
+        <div className="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-xl text-[11px] font-bold text-slate-200 flex items-center gap-1.5 pointer-events-none">
+          <Crosshair className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+          <span>探险家模式：图钉已隐藏 · 跟随雷达探索</span>
+        </div>
+      )}
 
       {/* Floating Zone Plotting HUD Toolbar */}
       {isPlottingZone && (
