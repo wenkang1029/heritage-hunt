@@ -181,7 +181,8 @@ export const App: React.FC = () => {
     gameId: game?.id,
     teamId: currentTeam?.id,
     enabled: role === 'player' && !!currentTeam,
-    throttleMs: 15000,
+    throttleMs: 30000,
+    minDisplacementMeters: 15,
   });
 
   // Handle Join Team

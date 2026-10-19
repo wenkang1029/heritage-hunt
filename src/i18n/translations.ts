@@ -167,6 +167,18 @@ export const translations = {
       passivePingTitle: '💡 Landmark Nearby!',
       passivePingDesc: 'An undiscovered clue is just {meters}m away: "{title}"',
       passivePingAction: 'Track Clue',
+      // New Nearby & Sorting & Clustering
+      nearbySectionTitle: '📍 Right Beside You (<100m)',
+      nearbySectionSubtitle: 'You are very close to these targets, look around!',
+      sortByDistance: 'Sort by Nearest',
+      sortByZone: 'Filter by Zone',
+      distancePillVeryClose: 'Very Close',
+      autoRadarActive: 'Smart Auto-Radar',
+      nextNearbyClue: 'Next Nearby Target',
+      prevNearbyClue: 'Previous Target',
+      clusterTargets: '{count} Targets',
+      clusterAreaTitle: 'Clue Hotspot Area',
+      clusterAreaDesc: 'This zone conceals {count} photo clues. Walk closer to explore!',
     },
 
     // GM War Room Dashboard
@@ -459,6 +471,18 @@ export const translations = {
       passivePingTitle: '💡 附近有新发现！',
       passivePingDesc: '距你仅 {meters} 米处有未解锁线索：“{title}”',
       passivePingAction: '立即追踪',
+      // New Nearby & Sorting & Clustering
+      nearbySectionTitle: '📍 就在身边 (<100m)',
+      nearbySectionSubtitle: '你距离这些目标很近，快抬头比对建筑与街景！',
+      sortByDistance: '按距离从近到远',
+      sortByZone: '按区域筛选',
+      distancePillVeryClose: '极近',
+      autoRadarActive: '全自动环境感知雷达',
+      nextNearbyClue: '切换下一个就近目标',
+      prevNearbyClue: '上一个目标',
+      clusterTargets: '{count} 个目标',
+      clusterAreaTitle: '线索聚集热区',
+      clusterAreaDesc: '这片区域隐藏了 {count} 个寻宝线索，请走进该区域探索！',
     },
 
     // GM War Room Dashboard

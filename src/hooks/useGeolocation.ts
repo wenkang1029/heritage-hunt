@@ -8,11 +8,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { GeoCoordinate } from '../types/index.ts';
 import { gameService } from '../services/gameService.ts';
+import { calculateHaversineDistance } from '../utils/haversine.ts';
 
 export interface UseGeolocationOptions {
   gameId?: string;
   teamId?: string;
-  throttleMs?: number; // Default: 15000ms (15 seconds)
+  throttleMs?: number; // Default: 30000ms (30 seconds)
+  minDisplacementMeters?: number; // Default: 15 meters
   enabled?: boolean;
 }
 
@@ -27,7 +29,8 @@ export interface UseGeolocationResult {
 export function useGeolocation({
   gameId,
   teamId,
-  throttleMs = 15000,
+  throttleMs = 30000,
+  minDisplacementMeters = 15,
   enabled = true,
 }: UseGeolocationOptions = {}): UseGeolocationResult {
   const [currentCoords, setCurrentCoords] = useState<GeoCoordinate | null>(null);
@@ -36,6 +39,7 @@ export function useGeolocation({
   const [accuracy, setAccuracy] = useState<number | null>(null);
 
   const lastBroadcastTimeRef = useRef<number>(0);
+  const lastBroadcastCoordsRef = useRef<GeoCoordinate | null>(null);
   const watchIdRef = useRef<number | null>(null);
 
   const broadcastCoords = useCallback(
@@ -43,16 +47,28 @@ export function useGeolocation({
       if (!gameId || !teamId) return;
 
       const now = Date.now();
-      if (now - lastBroadcastTimeRef.current >= throttleMs) {
-        lastBroadcastTimeRef.current = now;
-        try {
-          await gameService.updateTeamGps(gameId, teamId, coords);
-        } catch (err) {
-          console.warn('[useGeolocation] Failed to broadcast GPS:', err);
+      const elapsed = now - lastBroadcastTimeRef.current;
+
+      // Only broadcast if throttle period passed
+      if (elapsed < throttleMs) return;
+
+      // Check displacement distance (or heartbeat every 60s)
+      if (lastBroadcastCoordsRef.current && elapsed < 60000) {
+        const dist = calculateHaversineDistance(lastBroadcastCoordsRef.current, coords);
+        if (dist < minDisplacementMeters) {
+          return; // Player hasn't moved significantly, skip Firestore write
         }
       }
+
+      lastBroadcastTimeRef.current = now;
+      lastBroadcastCoordsRef.current = coords;
+      try {
+        await gameService.updateTeamGps(gameId, teamId, coords);
+      } catch (err) {
+        console.warn('[useGeolocation] Failed to broadcast GPS:', err);
+      }
     },
-    [gameId, teamId, throttleMs]
+    [gameId, teamId, throttleMs, minDisplacementMeters]
   );
 
   const handlePositionSuccess = useCallback(

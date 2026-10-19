@@ -314,11 +314,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     [teamSubmissions]
   );
 
-  // Filtered clues list
-  const filteredClues = useMemo(() => {
-    if (selectedZoneFilter === 'all') return clues;
-    return clues.filter((c) => c.zoneId === selectedZoneFilter);
-  }, [clues, selectedZoneFilter]);
+  // Sort State for Clues
+  const [sortBy, setSortBy] = useState<'distance' | 'default'>('distance');
 
   // Tracked Clue & Scavenger Radar State
   const [trackedClueId, setTrackedClueId] = useState<string | null>(() => {
@@ -328,6 +325,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       return null;
     }
   });
+
+  const [autoRadarIndex, setAutoRadarIndex] = useState<number>(0);
 
   useEffect(() => {
     try {
@@ -341,10 +340,58 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     }
   }, [trackedClueId]);
 
+  // Uncompleted clues with coordinates sorted by distance to player
+  const nearestUncompletedClues = useMemo(() => {
+    if (!playerCoords) return [];
+    return clues
+      .filter((c) => !completedClueIds.has(c.id) && c.location)
+      .map((c) => ({
+        clue: c,
+        distance: calculateHaversineDistance(playerCoords, c.location!),
+      }))
+      .sort((a, b) => a.distance - b.distance);
+  }, [clues, completedClueIds, playerCoords]);
+
+  // Clues within <= 100m for the highlight banner on the Clues tab
+  const nearbyCluesUnder100m = useMemo(() => {
+    if (!playerCoords) return [];
+    return nearestUncompletedClues
+      .filter((item) => item.distance <= 100)
+      .map((item) => item.clue);
+  }, [nearestUncompletedClues, playerCoords]);
+
+  // Active Tracked Clue: manually locked OR auto-tracked from top nearest
+  const isAutoTracking = !trackedClueId;
   const trackedClue = useMemo(() => {
-    if (!trackedClueId) return null;
-    return clues.find((c) => c.id === trackedClueId) || null;
-  }, [clues, trackedClueId]);
+    if (trackedClueId) {
+      return clues.find((c) => c.id === trackedClueId) || null;
+    }
+    if (nearestUncompletedClues.length === 0) return null;
+    const safeIdx = autoRadarIndex % Math.min(nearestUncompletedClues.length, 5);
+    return nearestUncompletedClues[safeIdx]?.clue || null;
+  }, [trackedClueId, clues, nearestUncompletedClues, autoRadarIndex]);
+
+  // Filtered and Sorted clues for the Clues Tab
+  const filteredClues = useMemo(() => {
+    let list =
+      selectedZoneFilter === 'all'
+        ? [...clues]
+        : clues.filter((c) => c.zoneId === selectedZoneFilter);
+
+    if (sortBy === 'distance' && playerCoords) {
+      list.sort((a, b) => {
+        const aDone = completedClueIds.has(a.id);
+        const bDone = completedClueIds.has(b.id);
+        if (aDone && !bDone) return 1;
+        if (!aDone && bDone) return -1;
+
+        const distA = a.location ? calculateHaversineDistance(playerCoords, a.location) : 999999;
+        const distB = b.location ? calculateHaversineDistance(playerCoords, b.location) : 999999;
+        return distA - distB;
+      });
+    }
+    return list;
+  }, [clues, selectedZoneFilter, sortBy, playerCoords, completedClueIds]);
 
   // Radar Proximity for Tracked Clue
   const trackedDistance = useMemo(() => {
@@ -370,8 +417,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   // Haptic feedback vibration when entering target range (<20m)
   const hasVibratedForClue = useRef<string | null>(null);
   useEffect(() => {
-    if (radarStage === 'target' && trackedClueId && hasVibratedForClue.current !== trackedClueId) {
-      hasVibratedForClue.current = trackedClueId;
+    if (radarStage === 'target' && trackedClue?.id && hasVibratedForClue.current !== trackedClue.id) {
+      hasVibratedForClue.current = trackedClue.id;
       try {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
           navigator.vibrate([200, 100, 200]);
@@ -380,7 +427,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         // ignore
       }
     }
-  }, [radarStage, trackedClueId]);
+  }, [radarStage, trackedClue?.id]);
 
   // Passive Proximity Radar: Detect closest untracked uncompleted clue within <= 20m
   const nearbyPassiveClue = useMemo(() => {
@@ -388,7 +435,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     let closest: { clue: Clue; distance: number } | null = null;
 
     for (const c of clues) {
-      if (completedClueIds.has(c.id) || c.id === trackedClueId || !c.location) continue;
+      if (completedClueIds.has(c.id) || c.id === trackedClue?.id || !c.location) continue;
       const d = calculateHaversineDistance(playerCoords, c.location);
       if (d <= 20) {
         if (!closest || d < closest.distance) {
@@ -397,7 +444,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       }
     }
     return closest;
-  }, [playerCoords, clues, completedClueIds, trackedClueId]);
+  }, [playerCoords, clues, completedClueIds, trackedClue?.id]);
 
   // Trigger Native Camera Input
   const handleOpenNativeCamera = (clue: Clue) => {
@@ -577,35 +624,121 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
         {activeTab === 'clues' && (
           <div className="h-full overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-28">
-            {/* Zone Filter Chips */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <button
-                onClick={() => setSelectedZoneFilter('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  selectedZoneFilter === 'all'
-                    ? 'bg-rose-600 text-white shadow-md'
-                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                }`}
-              >
-                {t('player.allZones')} ({clues.length})
-              </button>
-              {game.zones.map((z) => (
+            {/* 📍 Right Beside You (<100m) Highlight Section */}
+            {playerCoords && nearbyCluesUnder100m.length > 0 && (
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-slate-900 border border-amber-500/40 shadow-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0" />
+                    <h3 className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                      {t('player.nearbySectionTitle')}
+                    </h3>
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      {nearbyCluesUnder100m.length}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 truncate max-w-[150px] text-right">
+                    {t('player.nearbySectionSubtitle')}
+                  </span>
+                </div>
+
+                {/* Horizontal Scroll Carousel */}
+                <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+                  {nearbyCluesUnder100m.map((c) => {
+                    const dist = calculateHaversineDistance(playerCoords, c.location!);
+                    return (
+                      <div
+                        key={`nearby-${c.id}`}
+                        onClick={() => handleOpenNativeCamera(c)}
+                        className="w-44 shrink-0 p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/30 hover:border-amber-400 cursor-pointer transition-all shadow-md group flex flex-col justify-between"
+                      >
+                        <div className="w-full h-24 rounded-lg overflow-hidden bg-slate-800 mb-2 relative">
+                          {c.targetPhotoBase64 ? (
+                            <img
+                              src={c.targetPhotoBase64}
+                              alt={c.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-500">
+                              <Camera className="w-6 h-6" />
+                            </div>
+                          )}
+                          <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-sm border border-slate-700 text-[10px] font-black text-amber-400">
+                            +{c.points}
+                          </div>
+                          <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md bg-emerald-950/90 backdrop-blur-sm border border-emerald-600/50 text-[10px] font-bold text-emerald-300 flex items-center gap-1 shadow">
+                            <span>📍</span>
+                            <span>{dist}m {dist <= 25 ? `· ${t('player.distancePillVeryClose')}` : ''}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-xs text-white truncate mb-0.5">{c.title}</h4>
+                          <p className="text-[10px] text-slate-400 truncate mb-2">
+                            {c.landmarkName || c.zoneId}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="w-full py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center justify-center gap-1 shadow cursor-pointer transition-colors"
+                        >
+                          <Camera className="w-3 h-3" />
+                          <span>{t('player.snapNowBtn')}</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Zone Filter & Distance Sort Bar */}
+            <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
-                  key={z.id}
-                  onClick={() => setSelectedZoneFilter(z.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                    selectedZoneFilter === z.id
+                  onClick={() => setSelectedZoneFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    selectedZoneFilter === 'all'
                       ? 'bg-rose-600 text-white shadow-md'
                       : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
                   }`}
                 >
-                  <span
-                    className="w-2 h-2 rounded-full inline-block"
-                    style={{ background: z.color }}
-                  />
-                  {z.name}
+                  {t('player.allZones')} ({clues.length})
                 </button>
-              ))}
+                {game.zones.map((z) => (
+                  <button
+                    key={z.id}
+                    onClick={() => setSelectedZoneFilter(z.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                      selectedZoneFilter === z.id
+                        ? 'bg-rose-600 text-white shadow-md'
+                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full inline-block"
+                      style={{ background: z.color }}
+                    />
+                    {z.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Distance Sort Toggle */}
+              {playerCoords && (
+                <button
+                  onClick={() => setSortBy((prev) => (prev === 'distance' ? 'default' : 'distance'))}
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                    sortBy === 'distance'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                      : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  }`}
+                  title={sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}
+                >
+                  <span>📍</span>
+                  <span className="text-[11px]">{sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}</span>
+                </button>
+              )}
             </div>
 
             {/* Clue Cards Grid */}
@@ -703,8 +836,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                         {!isDone && (
                           <div className="flex items-center gap-1.5 shrink-0">
                             {playerCoords && clue.location && (
-                              <span className="text-[10px] font-semibold text-slate-400">
-                                约 {calculateHaversineDistance(playerCoords, clue.location)}m
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                                📍 {calculateHaversineDistance(playerCoords, clue.location)}m
                               </span>
                             )}
                             <button
@@ -716,11 +849,19 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                               className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
                                 trackedClueId === clue.id
                                   ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400'
+                                  : isAutoTracking && trackedClue?.id === clue.id
+                                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
                                   : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
                               }`}
                             >
                               <Crosshair className="w-3 h-3" />
-                              <span>{trackedClueId === clue.id ? t('player.trackingBadge') : t('player.trackClueBtn')}</span>
+                              <span>
+                                {trackedClueId === clue.id
+                                  ? t('player.trackingBadge')
+                                  : isAutoTracking && trackedClue?.id === clue.id
+                                  ? '📍 自动感知中'
+                                  : t('player.trackClueBtn')}
+                              </span>
                             </button>
                           </div>
                         )}
@@ -957,7 +1098,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 : 'bg-slate-900/95 border-slate-700/80'
             }`}
           >
-            {/* Header: Stage Badge + Compass Needle + Close Button */}
+            {/* Header: Stage Badge + Auto/Locked Badge + Target Switcher / Reset Button */}
             <div className="flex items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
@@ -974,22 +1115,43 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 truncate">
                   {t('player.radarTitle')}
                 </span>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                  isAutoTracking
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                }`}>
+                  {isAutoTracking ? t('player.autoRadarActive') : t('player.trackingBadge')}
+                </span>
                 {radarStage === 'target' && (
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 animate-bounce">
                     &lt; 20m
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setTrackedClueId(null)}
-                  className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer transition-colors"
-                  title={t('player.stopTrackingBtn')}
-                >
-                  <X className="w-4 h-4" />
-                </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {isAutoTracking && nearestUncompletedClues.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setAutoRadarIndex((prev) => prev + 1)}
+                    className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
+                    title={t('player.nextNearbyClue')}
+                  >
+                    <span>{autoRadarIndex % Math.min(nearestUncompletedClues.length, 5) + 1}/{Math.min(nearestUncompletedClues.length, 5)}</span>
+                    <span className="text-[9px]">切换 ➔</span>
+                  </button>
+                )}
+                {!isAutoTracking && (
+                  <button
+                    type="button"
+                    onClick={() => setTrackedClueId(null)}
+                    className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
+                    title="恢复自动感知"
+                  >
+                    <X className="w-3 h-3 text-slate-400" />
+                    <span>恢复自动</span>
+                  </button>
+                )}
               </div>
             </div>
 

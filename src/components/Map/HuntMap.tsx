@@ -37,6 +37,7 @@ import {
   X,
   MousePointerClick,
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 // ============================================================================
 // Custom Leaflet DivIcons (No broken image asset URLs)
@@ -147,6 +148,39 @@ function createVertexIcon(index: number, color: string): L.DivIcon {
     `,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
+  });
+}
+
+function createClusterIcon(count: number): L.DivIcon {
+  return L.divIcon({
+    className: 'custom-cluster-marker',
+    html: `
+      <div style="
+        background: linear-gradient(135deg, #f59e0b, #ea580c);
+        color: #ffffff;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        border-radius: 9999px;
+        border: 2px solid rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 14px rgba(245, 158, 11, 0.65), 0 3px 8px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+        user-select: none;
+      ">
+        <span style="font-size: 10px;">🔥</span>
+        <span>${count}</span>
+      </div>
+    `,
+    iconSize: [38, 32],
+    iconAnchor: [19, 16],
+    popupAnchor: [0, -18],
   });
 }
 
@@ -327,6 +361,53 @@ export const HuntMap: React.FC<HuntMapProps> = ({
     };
   }, [trackedClue, playerCoords]);
 
+  const { t } = useLanguage();
+
+  const uncompletedClues = useMemo(() => {
+    return clues.filter((c) => !completedSet.has(c.id) && c.location);
+  }, [clues, completedSet]);
+
+  // Spatial clustering of uncompleted clues for Explorer Mode (Fuzzy Hotspot Bubbles)
+  const fuzzyClusters = useMemo(() => {
+    if (!hideCluePins) return [];
+    const clusters: { id: string; center: [number, number]; clues: Clue[]; count: number }[] = [];
+    const visited = new Set<string>();
+
+    for (const clue of uncompletedClues) {
+      if (!clue.location || visited.has(clue.id)) continue;
+      const group: Clue[] = [clue];
+      visited.add(clue.id);
+
+      for (const other of uncompletedClues) {
+        if (!other.location || visited.has(other.id)) continue;
+        const d = calculateHaversineDistance(clue.location, other.location);
+        if (d <= 45) {
+          group.push(other);
+          visited.add(other.id);
+        }
+      }
+
+      const avgLat = group.reduce((sum, c) => sum + c.location!.latitude, 0) / group.length;
+      const avgLng = group.reduce((sum, c) => sum + c.location!.longitude, 0) / group.length;
+
+      clusters.push({
+        id: `cluster-${clue.id}`,
+        center: [avgLat, avgLng],
+        clues: group,
+        count: group.length,
+      });
+    }
+    return clusters;
+  }, [uncompletedClues, hideCluePins]);
+
+  // Active clues within <= 20m of player reveal their exact pin & circle dynamically
+  const nearbyInHotzoneClues = useMemo(() => {
+    if (!hideCluePins || !playerCoords) return [];
+    return uncompletedClues.filter(
+      (c) => c.location && calculateHaversineDistance(playerCoords, c.location) <= 20
+    );
+  }, [hideCluePins, playerCoords, uncompletedClues]);
+
   return (
     <div className={`relative ${className} overflow-hidden bg-slate-950`}>
       <MapContainer
@@ -502,58 +583,102 @@ export const HuntMap: React.FC<HuntMapProps> = ({
             );
           })}
 
-        {/* Explorer Mode: Only show target search zone circle & marker when within 20m */}
-        {hideCluePins && trackedClue?.location && trackedRay?.isWithinRange && (
-          <>
-            <Circle
-              center={[trackedClue.location.latitude, trackedClue.location.longitude]}
-              radius={20}
-              pathOptions={{
-                color: '#10B981',
-                fillColor: '#34D399',
-                fillOpacity: 0.25,
-                weight: 2,
-                dashArray: '4, 4',
-              }}
-            />
-            <Marker
-              position={[trackedClue.location.latitude, trackedClue.location.longitude]}
-              icon={createClueIcon(completedSet.has(trackedClue.id), trackedClue.points)}
-              interactive={!isPlottingZone}
-            >
-              {!isPlottingZone && (
+        {/* Explorer Mode: Render Fuzzy Hotspot Clusters */}
+        {hideCluePins &&
+          fuzzyClusters.map((cluster) => (
+            <React.Fragment key={cluster.id}>
+              <Circle
+                center={cluster.center}
+                radius={38}
+                pathOptions={{
+                  color: '#F59E0B',
+                  fillColor: '#F59E0B',
+                  fillOpacity: 0.12,
+                  weight: 1.5,
+                  dashArray: '5, 5',
+                }}
+              />
+              <Marker position={cluster.center} icon={createClusterIcon(cluster.count)}>
                 <Popup>
-                  <div className="w-56 p-1">
-                    {trackedClue.targetPhotoBase64 && (
-                      <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
-                        <img
-                          src={trackedClue.targetPhotoBase64}
-                          alt={trackedClue.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <h4 className="font-bold text-sm text-slate-100 leading-tight mb-1">
-                      {trackedClue.title}
+                  <div className="w-56 p-1 text-slate-100">
+                    <h4 className="font-bold text-sm text-amber-400 flex items-center gap-1.5 mb-1">
+                      <span>🔥</span>
+                      <span>{t('player.clusterAreaTitle')} ({cluster.count})</span>
                     </h4>
-                    <p className="text-xs text-emerald-400 font-bold mb-2">
-                      🎯 已到达搜索范围（&lt;20米）！
+                    <p className="text-[11px] text-slate-300 mb-2 leading-relaxed">
+                      {t('player.clusterAreaDesc', { count: cluster.count })}
                     </p>
-                    {onSelectClue && (
-                      <button
-                        onClick={() => onSelectClue(trackedClue)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
-                      >
-                        <MapPin className="w-3.5 h-3.5" />
-                        拍照打卡
-                      </button>
-                    )}
+                    <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
+                      {cluster.clues.map((c) => (
+                        <div
+                          key={c.id}
+                          onClick={() => onSelectClue?.(c)}
+                          className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs flex items-center justify-between gap-1 cursor-pointer transition-colors"
+                        >
+                          <span className="font-medium text-slate-200 truncate">{c.title}</span>
+                          <span className="text-[10px] font-bold text-amber-400 shrink-0">+{c.points}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </Popup>
-              )}
-            </Marker>
-          </>
-        )}
+              </Marker>
+            </React.Fragment>
+          ))}
+
+        {/* Explorer Mode: Dynamically reveal pins when within <= 20m core search range */}
+        {hideCluePins &&
+          nearbyInHotzoneClues.map((clue) => {
+            if (!clue.location) return null;
+            return (
+              <React.Fragment key={`hotzone-pin-${clue.id}`}>
+                <Circle
+                  center={[clue.location.latitude, clue.location.longitude]}
+                  radius={20}
+                  pathOptions={{
+                    color: '#10B981',
+                    fillColor: '#34D399',
+                    fillOpacity: 0.25,
+                    weight: 2,
+                    dashArray: '4, 4',
+                  }}
+                />
+                <Marker
+                  position={[clue.location.latitude, clue.location.longitude]}
+                  icon={createClueIcon(false, clue.points)}
+                >
+                  <Popup>
+                    <div className="w-56 p-1">
+                      {clue.targetPhotoBase64 && (
+                        <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
+                          <img
+                            src={clue.targetPhotoBase64}
+                            alt={clue.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <h4 className="font-bold text-sm text-slate-100 leading-tight mb-1">
+                        {clue.title}
+                      </h4>
+                      <p className="text-xs text-emerald-400 font-bold mb-2">
+                        🎯 已到达搜索范围（&lt;20米）！
+                      </p>
+                      {onSelectClue && (
+                        <button
+                          onClick={() => onSelectClue(clue)}
+                          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
+                        >
+                          <MapPin className="w-3.5 h-3.5" />
+                          {t('player.snapNowBtn')}
+                        </button>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              </React.Fragment>
+            );
+          })}
 
         {/* Explorer Mode: Directional Ray from player towards tracked target when > 20m */}
         {hideCluePins && playerCoords && trackedRay && !trackedRay.isWithinRange && trackedRay.rayEnd && (
