@@ -8,13 +8,20 @@
  *   npm run stress                    # all scenarios
  *   npm run stress -- --only=s1,s4    # some scenarios
  *   npm run stress -- --scale=2       # 2x the worker processes / players
+ *
+ * Load mode — fixed request rate per operation instead of the scenarios:
+ *   npm run stress -- --load=heartbeat:25 --duration=30
+ *   npm run stress -- --load=heartbeat:20,gps:5,submit:2 --procs=4 --teams=3
+ *   options: --duration=<s> (30)  --procs=<worker processes> (4)  --teams=<1-10> (1)
+ *            --players=<per team> (10)  --photo-kb=<KB> (140)
+ *            --max-error-rate=<0-1> (0)  --p95=<ms> (no limit)
  */
 
 import { fork } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Task, WorkerResult, PlayerSpec } from './types.ts';
+import { LOAD_OPS, type Task, type WorkerResult, type PlayerSpec, type LoadOp, type LoadOpName, type LoadOpResult } from './types.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ID = 'demo-heritage-hunt'; // demo-* = emulator only, can never touch a real project
@@ -44,6 +51,18 @@ const argv = Object.fromEntries(
 const ONLY = argv.only ? String(argv.only).toLowerCase().split(',') : null;
 const SCALE = Math.max(1, Number(argv.scale || 1));
 const n = (base: number) => Math.round(base * SCALE);
+
+function parseLoad(spec: string): { op: LoadOpName; qps: number }[] {
+  return spec.split(',').map((part) => {
+    const [op, qps] = part.split(':');
+    if (!(LOAD_OPS as readonly string[]).includes(op) || !(Number(qps) > 0)) {
+      console.error(`❌ bad --load entry "${part}". Use op:qps, op one of: ${LOAD_OPS.join(', ')}`);
+      process.exit(2);
+    }
+    return { op: op as LoadOpName, qps: Number(qps) };
+  });
+}
+const LOAD = argv.load ? parseLoad(String(argv.load)) : null;
 
 // ---------------------------------------------------------------------------
 // Emulator + app setup
@@ -141,12 +160,13 @@ async function runWorkers(tasks: Task[], timeoutMs: number): Promise<WorkerResul
 }
 
 function stats(values: number[]) {
-  if (values.length === 0) return { n: 0, p50: 0, p95: 0, max: 0 };
+  if (values.length === 0) return { n: 0, p50: 0, p95: 0, p99: 0, max: 0 };
   const s = [...values].sort((a, b) => a - b);
   const at = (q: number) => Math.round(s[Math.min(s.length - 1, Math.floor(q * s.length))]);
-  return { n: s.length, p50: at(0.5), p95: at(0.95), max: Math.round(s[s.length - 1]) };
+  return { n: s.length, p50: at(0.5), p95: at(0.95), p99: at(0.99), max: Math.round(s[s.length - 1]) };
 }
 const fmt = (st: ReturnType<typeof stats>) => `n=${st.n} p50=${st.p50}ms p95=${st.p95}ms max=${st.max}ms`;
+const fmtLoad = (st: ReturnType<typeof stats>) => `p50=${st.p50}ms p95=${st.p95}ms p99=${st.p99}ms max=${st.max}ms`;
 
 async function readTeam(gameId: string, teamId: string) {
   const snap = await getDoc(doc(db!, 'games', gameId, 'teams', teamId));
@@ -548,11 +568,148 @@ async function s6(): Promise<ScenarioResult> {
 }
 
 // ---------------------------------------------------------------------------
+// Load mode (--load=op:qps,...)
+// ---------------------------------------------------------------------------
+
+/** Run `fn` over `items` with at most `limit` in flight (setup only). */
+async function inBatches<T, R>(items: T[], limit: number, fn: (item: T, i: number) => Promise<R>): Promise<R[]> {
+  const out: R[] = [];
+  for (let i = 0; i < items.length; i += limit) {
+    out.push(...(await Promise.all(items.slice(i, i + limit).map((item, j) => fn(item, i + j)))));
+  }
+  return out;
+}
+
+async function loadTest(spec: { op: LoadOpName; qps: number }[]): Promise<ScenarioResult> {
+  const durationS = Number(argv.duration || 30);
+  const procs = Math.max(1, Number(argv.procs || 4));
+  const teamCount = Math.min(10, Math.max(1, Number(argv.teams || 1)));
+  const playersPerTeam = Math.max(1, Number(argv.players || 10));
+  const photoKB = Number(argv['photo-kb'] || 140);
+  const maxErrorRate = Number(argv['max-error-rate'] || 0);
+  const p95Limit = argv.p95 ? Number(argv.p95) : null;
+
+  // createGameWithTeams makes 2..10 teams; the load uses the first `teamCount` of them.
+  const { game } = await newGame('stress-load', Math.max(2, teamCount));
+  const teamIds = Array.from({ length: teamCount }, (_, i) => `team_${i + 1}`);
+  const pins: string[] = [];
+  for (const id of teamIds) pins.push((await readTeam(game.id, id)).pin);
+
+  // submit / approve need one fresh clue (or pending submission) per request.
+  const needed = (qps: number) => Math.ceil(qps * durationS) + procs;
+  const items: Partial<Record<LoadOpName, string[]>> = {};
+  const makeClues = (count: number) =>
+    inBatches(Array.from({ length: count }), 25, (_, i) =>
+      gameService.createClue(game.id, {
+        gameId: game.id,
+        title: `Load clue ${i + 1}`,
+        description: 'load',
+        points: 100,
+        location: { latitude: 2.1944, longitude: 102.2491 },
+      } as any)
+    );
+  for (const { op, qps } of spec) {
+    if (op === 'submit') {
+      process.stdout.write(`\n  setup: ${needed(qps)} clues for submit ... `);
+      items.submit = (await makeClues(needed(qps))).map((c) => c.id);
+    }
+    if (op === 'approve') {
+      process.stdout.write(`\n  setup: ${needed(qps)} pending submissions for approve ... `);
+      const clues = await makeClues(needed(qps));
+      items.approve = await inBatches(clues, 25, async (c, i) => (await submitAll(game.id, teamIds[i % teamCount], [c.id]))[0]);
+    }
+  }
+
+  const tasks: Task[] = Array.from({ length: procs }, (_, w) => ({
+    role: 'load',
+    label: `load-${w}`,
+    gameId: game.id,
+    durationMs: durationS * 1000,
+    ops: spec.map(({ op, qps }, opIndex): LoadOp => ({
+      op,
+      qps: qps / procs,
+      // Request k of worker w is request w + k·procs overall, so the workers together hit
+      // exactly round(qps × duration) requests, evenly spaced.
+      count: Math.floor((Math.round(qps * durationS) + procs - 1 - w) / procs),
+      // Different ops get different phases, so they don't all fire in the same tick.
+      offsetMs: ((w + opIndex / spec.length) * 1000) / qps,
+      teamIds,
+      pins,
+      playersPerTeam,
+      photoKB,
+      items: items[op]?.filter((_, idx) => idx % procs === w),
+    })),
+  }));
+
+  process.stdout.write(`\n  running ${durationS}s with ${procs} worker processes ... `);
+  const results = await runWorkers(tasks, (durationS + 120) * 1000);
+  const common = commonChecks(results);
+  // Swallowed heartbeat failures are already counted per request in load mode.
+  const checks = common.checks.filter((c) => !c.name.startsWith('no swallowed'));
+  const metrics: Record<string, string> = {};
+
+  for (const { op, qps } of spec) {
+    const parts: LoadOpResult[] = results.flatMap((r) => (r.data?.ops || []).filter((o: LoadOpResult) => o.op === op));
+    const sum = (k: 'scheduled' | 'issued' | 'ok' | 'err' | 'maxInFlight' | 'ranOutOfItems') => parts.reduce((a, p) => a + p[k], 0);
+    const lat = stats(parts.flatMap((p) => p.latencies));
+    const wall = Math.max(0, ...parts.map((p) => p.wallSeconds));
+    const issued = sum('issued');
+    const errorRate = issued ? sum('err') / issued : 1;
+    const errors: Record<string, number> = {};
+    for (const p of parts) for (const [k, v] of Object.entries(p.errors)) errors[k] = (errors[k] || 0) + v;
+    const topError = Object.entries(errors).sort((a, b) => b[1] - a[1])[0];
+
+    const late = stats(parts.flatMap((p) => p.lateMs));
+    checks.push({
+      name: `${op}: sent at ${qps} qps (generator on schedule)`,
+      pass: issued === Math.round(qps * durationS) && late.p95 <= 50,
+      detail:
+        `${(issued / durationS).toFixed(1)} qps (${issued} requests), send lateness p95=${late.p95}ms max=${late.max}ms` +
+        (sum('ranOutOfItems') ? `, ran out of items ${sum('ranOutOfItems')}×` : ''),
+    });
+    checks.push({
+      name: `${op}: error rate ≤ ${(maxErrorRate * 100).toFixed(1)}%`,
+      pass: errorRate <= maxErrorRate,
+      detail: `${(errorRate * 100).toFixed(2)}% (${sum('err')}/${issued})${topError ? `, top: ${topError[1]}× ${topError[0]}` : ''}`,
+    });
+    if (p95Limit !== null) {
+      checks.push({ name: `${op}: p95 ≤ ${p95Limit}ms`, pass: lat.p95 <= p95Limit, detail: `${lat.p95}ms` });
+    }
+    metrics[`${op} latency`] = fmtLoad(lat);
+    metrics[`${op} throughput`] = `${(sum('ok') / Math.max(wall, 0.001)).toFixed(1)} ok/s, peak in-flight ≤ ${sum('maxInFlight')}`;
+  }
+
+  // State checks: no duplicated members; approved points all landed on the scores.
+  const teamDocs = await Promise.all(teamIds.map((id) => readTeam(game.id, id)));
+  const memberIds = teamDocs.flatMap((t) => (t.members || []).map((m: any) => `${t.id}/${m.id}`));
+  checks.push({
+    name: 'no duplicate members',
+    pass: new Set(memberIds).size === memberIds.length,
+    detail: `${memberIds.length} entries, ${new Set(memberIds).size} unique`,
+  });
+  if (items.approve) {
+    const approvedOk = results.flatMap((r) => r.data?.ops || []).filter((o: LoadOpResult) => o.op === 'approve').reduce((a: number, o: LoadOpResult) => a + o.ok, 0);
+    const totalScore = teamDocs.reduce((a, t) => a + (t.score || 0), 0);
+    checks.push({ name: 'score = 100 × successful approvals', pass: totalScore === approvedOk * 100, detail: `${totalScore} vs ${approvedOk * 100}` });
+  }
+
+  return {
+    id: 'load',
+    title: `Load — ${spec.map((s) => `${s.op} ${s.qps} qps`).join(', ')} for ${durationS}s · ${procs} procs · ${teamCount} team(s) × ${playersPerTeam} players`,
+    checks,
+    metrics,
+    workerErrors: common.workerErrors,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-const SCENARIOS: Record<string, () => Promise<ScenarioResult>> = { s1, s2, s3, s4, s5, s6 };
-const selected = Object.keys(SCENARIOS).filter((id) => !ONLY || ONLY.includes(id));
+const SCENARIOS: Record<string, () => Promise<ScenarioResult>> = LOAD
+  ? { load: () => loadTest(LOAD) }
+  : { s1, s2, s3, s4, s5, s6 };
+const selected = Object.keys(SCENARIOS).filter((id) => LOAD || !ONLY || ONLY.includes(id));
 
 console.log(`Heritage Hunt stress test — emulator ${HOST}, project ${PROJECT_ID}, scale ×${SCALE}`);
 await resetEmulator();

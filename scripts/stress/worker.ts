@@ -7,9 +7,13 @@
  * so all workers hit Firestore at the same moment) -> runs its role -> sends {type:'result'}.
  */
 
-import type { Task, WorkerResult } from './types.ts';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import type { Task, WorkerResult, LoadOp, LoadOpResult } from './types.ts';
 
 const task: Task = JSON.parse(process.env.STRESS_TASK || '{}');
+
+// Load mode: lets a swallowed console.warn be traced back to the request that caused it.
+const callContext = new AsyncLocalStorage<{ swallowed?: string }>();
 
 // gameService swallows some errors with console.warn (heartbeat failures, the silent
 // fallback to mock data). Count them: under stress they are failures, not noise.
@@ -17,8 +21,12 @@ const warnings = { mockFallback: 0, swallowed: 0, samples: [] as string[] };
 const origWarn = console.warn;
 console.warn = (...args: unknown[]) => {
   const msg = args.map((a) => (a instanceof Error ? a.message : String(a))).join(' ');
+  const ctx = callContext.getStore();
   if (/fall(ing|back) (back )?to mock|fallback to mock/i.test(msg)) warnings.mockFallback++;
-  else if (/^Failed to /.test(msg)) warnings.swallowed++;
+  else if (/^Failed to /.test(msg)) {
+    warnings.swallowed++;
+    if (ctx) ctx.swallowed = msg;
+  }
   if (warnings.samples.length < 5) warnings.samples.push(msg.slice(0, 300));
   if (process.env.STRESS_VERBOSE) origWarn(...args);
 };
@@ -36,6 +44,100 @@ async function timed<T>(latencies: number[], fn: () => Promise<T>): Promise<T> {
   } finally {
     latencies.push(performance.now() - t0);
   }
+}
+
+/** One request of a load op, or null when the op has run out of pre-created items. */
+function loadCall(op: LoadOp, gameId: string, i: number, photo: string): (() => Promise<unknown>) | null {
+  const teamId = op.teamIds[i % op.teamIds.length];
+  const player = `load-${teamId}-p${Math.floor(i / op.teamIds.length) % op.playersPerTeam}`;
+  switch (op.op) {
+    case 'heartbeat':
+      return () => gameService.updatePlayerHeartbeat(gameId, teamId, player, player);
+    case 'offline':
+      return () => gameService.markPlayerOffline(gameId, teamId, player, player);
+    case 'gps': {
+      const coords = { latitude: 2.1944 + rand(-0.003, 0.003), longitude: 102.2491 + rand(-0.003, 0.003) };
+      return () => gameService.updateTeamGps(gameId, teamId, coords);
+    }
+    case 'join':
+      return () => gameService.joinTeamByPin(gameId, op.pins[i % op.pins.length], `load-joiner-${process.pid}`);
+    case 'submit': {
+      const clueId = op.items?.[i];
+      if (!clueId) return null;
+      return () =>
+        gameService.submitCluePhoto(gameId, {
+          gameId,
+          teamId,
+          teamName: teamId,
+          teamColor: '#000000',
+          clueId,
+          clueTitle: clueId,
+          selfieBase64: photo,
+          submittedBy: player,
+          submissionCoords: { latitude: 2.1944, longitude: 102.2491 },
+        } as any);
+    }
+    case 'approve': {
+      const submissionId = op.items?.[i];
+      if (!submissionId) return null;
+      return () => gameService.verifySubmission(gameId, submissionId, 'approve');
+    }
+    case 'broadcast':
+      return () => gameService.sendBroadcast({ gameId, message: `load test ${i}`, type: 'info' } as any);
+  }
+}
+
+/** Fire `op` at a fixed rate (open loop: the schedule never waits for earlier requests). */
+async function runLoadOp(op: LoadOp, gameId: string, photo: string): Promise<LoadOpResult> {
+  const interval = 1000 / op.qps;
+  const scheduled = op.count;
+  const start = performance.now() + op.offsetMs;
+  const r: LoadOpResult = {
+    op: op.op, scheduled, issued: 0, ok: 0, err: 0, errors: {}, latencies: [], lateMs: [], maxInFlight: 0, wallSeconds: 0, ranOutOfItems: 0,
+  };
+  let inFlight = 0;
+  let lastDone = start;
+  const pending: Promise<void>[] = [];
+
+  for (let i = 0; i < scheduled; i++) {
+    const due = start + i * interval;
+    if (due > performance.now()) await sleep(due - performance.now());
+    const call = loadCall(op, gameId, i, photo);
+    if (!call) {
+      r.ranOutOfItems++;
+      continue;
+    }
+    r.issued++;
+    r.lateMs.push(Math.max(0, performance.now() - due));
+    r.maxInFlight = Math.max(r.maxInFlight, ++inFlight);
+    const ctx: { swallowed?: string } = {};
+    const t0 = performance.now();
+    pending.push(
+      callContext
+        .run(ctx, call)
+        .then(() => {
+          if (ctx.swallowed) throw new Error(ctx.swallowed);
+        })
+        .then(
+          () => {
+            r.ok++;
+          },
+          (e: any) => {
+            r.err++;
+            const key = String(e?.message || e).slice(0, 160);
+            r.errors[key] = (r.errors[key] || 0) + 1;
+          }
+        )
+        .finally(() => {
+          lastDone = performance.now();
+          r.latencies.push(lastDone - t0);
+          inFlight--;
+        })
+    );
+  }
+  await Promise.all(pending);
+  r.wallSeconds = (lastDone - start) / 1000;
+  return r;
 }
 
 function syntheticPhoto(kb: number): string {
@@ -168,6 +270,14 @@ const roles: Record<Task['role'], (t: any) => Promise<Record<string, unknown>>> 
       heapMB: Math.round(mem.heapUsed / 1048576),
       rssMB: Math.round(mem.rss / 1048576),
     };
+  },
+
+  /** Load mode: every op of this worker at its share of the target QPS, in parallel. */
+  async load(t: Extract<Task, { role: 'load' }>) {
+    // Build the photo before any schedule starts: generating it blocks the event loop.
+    const submit = t.ops.find((op) => op.op === 'submit');
+    const photo = submit ? syntheticPhoto(submit.photoKB) : '';
+    return { ops: await Promise.all(t.ops.map((op) => runLoadOp(op, t.gameId, photo))) };
   },
 
   /** S6: a team uploading photos one clue after another. */

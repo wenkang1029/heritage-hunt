@@ -44,6 +44,42 @@ npm run stress -- --scale=2       # worker / 玩家数量 ×2（注意内存：�
 
 每个场景也会检查：worker 没崩、**没有悄悄切到 mock 假数据**（B7）、heartbeat 没有被吞掉的写入失败。
 
+## 负载模式：指定每个接口的 QPS
+
+加 `--load` 就不跑 S1–S6，改成按固定速率打指定的接口：
+
+```bash
+npm run stress -- --load=heartbeat:25 --duration=30                  # heartbeat 25 qps，30 秒
+npm run stress -- --load=heartbeat:20,gps:5,submit:2 --teams=3       # 多个接口同时打
+npm run stress -- --load=approve:5 --p95=500 --max-error-rate=0.01   # 加上通过标准
+```
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `--load=op:qps,...` | — | op：`heartbeat` `offline` `gps` `join` `submit` `approve` `broadcast` |
+| `--duration=秒` | 30 | |
+| `--procs=N` | 4 | worker process 数（= 多少个独立 client 分摊这些 QPS） |
+| `--teams=N` | 1 | 请求轮流打在几个 team doc 上（1 = 全部挤在同一个 doc，最狠） |
+| `--players=N` | 10 | 每队几个玩家 id（heartbeat / offline 轮流用） |
+| `--photo-kb=KB` | 140 | submit 的照片大小 |
+| `--max-error-rate=0~1` | 0 | 错误率超过就 FAIL |
+| `--p95=ms` | 不限 | p95 延迟超过就 FAIL |
+
+- **开环（open-loop）**：照时间表发请求，不等上一个回来。系统变慢时请求会堆积（报告里的 `peak in-flight`），
+  跟真实玩家一样，不会因为等待而把压力自动降下来。
+- `send lateness` 是压测端自己有没有跟上时间表；p95 > 50ms 会 FAIL，表示是压测机不够力，不是系统的问题。
+- heartbeat / offline 在 app 里会把错误吞掉（只 `console.warn`），负载模式会把它算回那一个请求的失败。
+- `submit` / `approve` 会先自动建好需要的 clue / pending submission（每个请求一个，不重复用）。
+- `broadcast` 目前会 100% `PERMISSION_DENIED`：文档里的规则没有 `broadcasts` 子集合。
+
+**真实游戏大概多少 QPS？** 30 个玩家：heartbeat 每人 20 秒一次 ≈ 1.5 qps，GPS 每人最快 30 秒一次 ≈ 1 qps，
+每个 team doc（5 人）≈ 0.4 写入/秒。`heartbeat:25` 已经是真实负载的十几倍。
+
+**已知现象**：heartbeat + offline + approve + join 一起打（每个 team doc 约 12 个 transaction/秒）时，
+部分 client 会卡住约 10 秒，Firestore SDK 判定离线，之后 `joinTeamByPin` 会从本地缓存查 PIN、查不到，
+回报「No team found with PIN」（app 的 bug：断线却说 PIN 错）。这个卡顿有多少是 emulator 自己的 transaction
+实现造成的，emulator 里分辨不出来，要在独立的 Firebase 项目上验证。
+
 ## 已验证：脚本真的抓得到 bug
 
 把 `gameService.ts` 换回修 bug 前的版本跑：S1、S2、S3、S4、S5 全部 FAIL
