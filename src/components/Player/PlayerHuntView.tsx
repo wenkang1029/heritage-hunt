@@ -5,7 +5,7 @@
  * Provides real-time map, clue cards, native camera selfie capture, instant client compression, and celebratory confetti.
  */
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import type {
   Game,
@@ -13,6 +13,7 @@ import type {
   Clue,
   Submission,
   GeoCoordinate,
+  BroadcastMessage,
 } from '../../types/index.ts';
 import { HuntMap } from '../Map/HuntMap.tsx';
 import { compressPhoto, formatBytes } from '../../services/imageCompression.ts';
@@ -35,6 +36,8 @@ import {
   Crosshair,
   Flame,
   Radio,
+  Megaphone,
+  Bell,
 } from 'lucide-react';
 import {
   calculateHaversineDistance,
@@ -111,6 +114,90 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       return next;
     });
   };
+
+  // Web Audio chime generator (self-contained, zero asset dependency)
+  const playBroadcastChime = useCallback((type: 'info' | 'alert' | 'urgent' = 'info') => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      gain.connect(ctx.destination);
+      osc1.connect(gain);
+      osc2.connect(gain);
+
+      if (type === 'urgent') {
+        osc1.frequency.setValueAtTime(880, now);
+        osc2.frequency.setValueAtTime(1174.66, now + 0.15);
+      } else if (type === 'alert') {
+        osc1.frequency.setValueAtTime(659.25, now);
+        osc2.frequency.setValueAtTime(880, now + 0.12);
+      } else {
+        osc1.frequency.setValueAtTime(523.25, now);
+        osc2.frequency.setValueAtTime(659.25, now + 0.12);
+      }
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+      osc1.start(now);
+      osc1.stop(now + 0.25);
+      osc2.start(now + 0.12);
+      osc2.stop(now + 0.6);
+    } catch {
+      // AudioContext may be restricted before user interaction
+    }
+  }, []);
+
+  // Broadcasts Subscription (Option B) & Active Alert State (Option A)
+  const [broadcasts, setBroadcasts] = useState<BroadcastMessage[]>([]);
+  const [showAnnouncementsModal, setShowAnnouncementsModal] = useState<boolean>(false);
+  const [dismissedBroadcastId, setDismissedBroadcastId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('melaka_hunt_dismissed_broadcast_id');
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const unsub = gameService.subscribeToBroadcasts(game.id, (bList) => {
+      setBroadcasts(bList);
+    });
+    return () => unsub();
+  }, [game.id]);
+
+  // Audio / Haptic alert when a new active broadcast arrives
+  const lastAlertedBroadcastId = useRef<string | null>(null);
+  useEffect(() => {
+    if (game.activeBroadcast && game.activeBroadcast.id !== lastAlertedBroadcastId.current) {
+      lastAlertedBroadcastId.current = game.activeBroadcast.id;
+      playBroadcastChime(game.activeBroadcast.type);
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([200, 100, 200]);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [game.activeBroadcast, playBroadcastChime]);
+
+  const handleDismissActiveAlert = (id: string) => {
+    setDismissedBroadcastId(id);
+    try {
+      localStorage.setItem('melaka_hunt_dismissed_broadcast_id', id);
+    } catch {
+      // ignore
+    }
+  };
+
+  const isBroadcastDismissed = game.activeBroadcast?.id === dismissedBroadcastId;
+  const hasActiveBroadcastAlert = !!game.activeBroadcast && !isBroadcastDismissed;
 
   // Leaderboard ranking calculations for top bar (e.g. 1/3)
   const sortedTeams = useMemo(() => {
@@ -579,6 +666,31 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             </span>
           </div>
 
+          {/* GM Announcements & Broadcasts Bell (Option B) */}
+          <button
+            type="button"
+            onClick={() => setShowAnnouncementsModal(true)}
+            className={`relative p-1.5 sm:p-2 rounded-xl border shadow-sm cursor-pointer transition-all shrink-0 ${
+              hasActiveBroadcastAlert
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 hover:bg-amber-500/30'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
+            title={t('player.announcementsBtn')}
+          >
+            <Bell className={`w-4 h-4 ${hasActiveBroadcastAlert ? 'text-amber-400 animate-bounce' : ''}`} />
+            {broadcasts.length > 0 && (
+              <span
+                className={`absolute -top-1 -right-1 px-1 min-w-[16px] h-4 rounded-full text-[9px] font-black flex items-center justify-center ${
+                  hasActiveBroadcastAlert
+                    ? 'bg-amber-400 text-slate-950 animate-pulse'
+                    : 'bg-slate-700 text-slate-200 border border-slate-600'
+                }`}
+              >
+                {broadcasts.length}
+              </span>
+            )}
+          </button>
+
           {/* Tour Guide Button */}
           <button
             type="button"
@@ -593,6 +705,62 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
           </button>
         </div>
       </header>
+
+      {/* Live GM Active Broadcast Slide-Down Alert (Option A) */}
+      {game.activeBroadcast && !isBroadcastDismissed && (
+        <div
+          className={`relative z-40 px-3 sm:px-4 py-2.5 border-b shadow-xl flex items-center justify-between gap-3 text-xs animate-slideDown ${
+            game.activeBroadcast.type === 'urgent'
+              ? 'bg-gradient-to-r from-rose-950/95 via-rose-900/95 to-slate-950 border-rose-500/60 text-rose-200'
+              : game.activeBroadcast.type === 'alert'
+              ? 'bg-gradient-to-r from-amber-950/95 via-amber-900/95 to-slate-950 border-amber-500/60 text-amber-200'
+              : 'bg-gradient-to-r from-sky-950/95 via-sky-900/95 to-slate-950 border-sky-500/60 text-sky-200'
+          }`}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div
+              className={`p-1.5 rounded-lg shrink-0 ${
+                game.activeBroadcast.type === 'urgent'
+                  ? 'bg-rose-500/20 text-rose-400 animate-ping'
+                  : 'bg-amber-500/20 text-amber-400'
+              }`}
+            >
+              <Megaphone className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-black/40 border border-white/10">
+                  {game.activeBroadcast.type}
+                </span>
+                <span className="text-[10px] text-slate-300 font-bold truncate">
+                  {game.activeBroadcast.sender || 'Game Master'}
+                </span>
+              </div>
+              <p className="text-white font-semibold text-xs truncate mt-0.5">
+                {game.activeBroadcast.message}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowAnnouncementsModal(true)}
+              className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold cursor-pointer transition-colors"
+            >
+              {language === 'zh' ? '查看' : 'View'}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDismissActiveAlert(game.activeBroadcast!.id)}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer transition-colors"
+              title={t('player.dismissAlert')}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Floating Status / Feedback Banner */}
       {submissionFeedback && (
@@ -1528,6 +1696,120 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Player Announcements & Broadcast History Modal (Option B) */}
+      {showAnnouncementsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl max-h-[90dvh] overflow-y-auto space-y-4">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
+                  <Megaphone className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-white">
+                    {t('player.announcementsTitle')}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    {t('player.announcementsSubtitle')}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAnnouncementsModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Currently Active Broadcast Card (Option A) */}
+            {game.activeBroadcast && (
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                    {t('player.activeBroadcastBadge')}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {new Date(game.activeBroadcast.sentAt).toLocaleTimeString()}
+                  </span>
+                </div>
+                <div
+                  className={`p-2.5 rounded-lg border text-xs font-medium text-white leading-relaxed ${
+                    game.activeBroadcast.type === 'urgent'
+                      ? 'bg-rose-950/40 border-rose-500/40 text-rose-200'
+                      : game.activeBroadcast.type === 'alert'
+                      ? 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+                      : 'bg-sky-950/40 border-sky-500/40 text-sky-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-black/40 border border-white/10">
+                      {game.activeBroadcast.type}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {game.activeBroadcast.sender || 'Game Master'}
+                    </span>
+                  </div>
+                  {game.activeBroadcast.message}
+                </div>
+              </div>
+            )}
+
+            {/* Past Announcements Feed (Option B) */}
+            <div>
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                {t('player.broadcastHistoryBadge')} ({broadcasts.length})
+              </div>
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {broadcasts.length > 0 ? (
+                  broadcasts.map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs flex flex-col gap-1"
+                    >
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span
+                          className={`font-bold uppercase tracking-wider px-1.5 py-0.2 rounded border text-[9px] ${
+                            b.type === 'urgent'
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                              : b.type === 'alert'
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                              : 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+                          }`}
+                        >
+                          {b.type}
+                        </span>
+                        <span className="text-slate-500 font-mono">
+                          {new Date(b.sentAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <p className="text-slate-200 text-xs leading-relaxed mt-0.5">
+                        {b.message}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-500 italic py-4 text-center">
+                    {t('player.noAnnouncements')}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAnnouncementsModal(false)}
+              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs cursor-pointer transition-colors"
+            >
+              {t('common.close')}
+            </button>
           </div>
         </div>
       )}

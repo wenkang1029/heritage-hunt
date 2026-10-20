@@ -36,6 +36,8 @@ import type {
   Unsubscribe,
   GameStatus,
   Zone,
+  BroadcastMessage,
+  SendBroadcastPayload,
 } from '../types/index.ts';
 import { calculateHaversineDistance } from '../utils/haversine.ts';
 import { normalizeClueZh } from '../data/cluesZh.ts';
@@ -100,6 +102,9 @@ export interface IGameService {
   subscribeToTeams(gameId: string, callback: (teams: Team[]) => void): Unsubscribe;
   subscribeToClues(gameId: string, callback: (clues: Clue[]) => void): Unsubscribe;
   subscribeToSubmissions(gameId: string, callback: (submissions: Submission[]) => void): Unsubscribe;
+  subscribeToBroadcasts(gameId: string, callback: (broadcasts: BroadcastMessage[]) => void): Unsubscribe;
+  sendBroadcast(payload: SendBroadcastPayload): Promise<BroadcastMessage>;
+  clearActiveBroadcast(gameId: string): Promise<void>;
   createTeam(gameId: string, name: string, color: string, pin: string): Promise<Team>;
   joinTeamByPin(gameId: string, pin: string, nickname: string): Promise<{ team: Team; playerId: string }>;
   updateTeamGps(gameId: string, teamId: string, coords: GeoCoordinate): Promise<void>;
@@ -211,6 +216,28 @@ class UnifiedGameService implements IGameService {
       (err) => {
         console.warn('Firestore submissions snapshot error, falling back to mock:', err);
         mockAdapter.subscribeToSubmissions(gameId, callback);
+      }
+    );
+  }
+
+  subscribeToBroadcasts(gameId: string, callback: (broadcasts: BroadcastMessage[]) => void): Unsubscribe {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.subscribeToBroadcasts(gameId, callback);
+    }
+
+    const broadcastsCol = collection(firestore, 'games', gameId, 'broadcasts');
+    const q = query(broadcastsCol, orderBy('sentAt', 'desc'));
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as BroadcastMessage));
+        callback(list);
+      },
+      (err) => {
+        console.warn('Firestore broadcasts snapshot error, falling back to mock:', err);
+        mockAdapter.subscribeToBroadcasts(gameId, callback);
       }
     );
   }
@@ -875,6 +902,51 @@ class UnifiedGameService implements IGameService {
     } catch (e) {
       console.warn('Could not persist global settings/zones:', e);
     }
+  }
+
+  async sendBroadcast(payload: SendBroadcastPayload): Promise<BroadcastMessage> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.sendBroadcast(payload);
+    }
+
+    await ensureAnonymousAuth();
+    const now = Date.now();
+    const bCol = collection(firestore, 'games', payload.gameId, 'broadcasts');
+    const newRef = doc(bCol);
+    const broadcastMsg: BroadcastMessage = {
+      id: newRef.id,
+      gameId: payload.gameId,
+      message: payload.message.trim(),
+      type: payload.type || 'info',
+      sender: payload.sender || 'Game Master',
+      sentAt: now,
+      expiresAt: payload.expiresInMinutes ? now + payload.expiresInMinutes * 60 * 1000 : null,
+    };
+
+    await setDoc(newRef, broadcastMsg);
+
+    const gameRef = doc(firestore, 'games', payload.gameId);
+    await updateDoc(gameRef, {
+      activeBroadcast: broadcastMsg,
+      updatedAt: serverTimestamp(),
+    });
+
+    return broadcastMsg;
+  }
+
+  async clearActiveBroadcast(gameId: string): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.clearActiveBroadcast(gameId);
+    }
+
+    await ensureAnonymousAuth();
+    const gameRef = doc(firestore, 'games', gameId);
+    await updateDoc(gameRef, {
+      activeBroadcast: null,
+      updatedAt: serverTimestamp(),
+    });
   }
 }
 

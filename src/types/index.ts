@@ -169,6 +169,18 @@ export type GameStatus =
   | 'ended'
   | 'completed';
 
+export type BroadcastType = 'info' | 'alert' | 'urgent';
+
+export interface BroadcastMessage {
+  id: string;
+  gameId: string;
+  message: string;
+  type: BroadcastType;
+  sender?: string;
+  sentAt: number | string;
+  expiresAt?: number | string | null;
+}
+
 export interface Game {
   id: string;
   name: string;
@@ -181,6 +193,7 @@ export interface Game {
   isLeaderboardFrozen?: boolean;
   isFrozen?: boolean; // Interop alias for isLeaderboardFrozen
   zones: Zone[];
+  activeBroadcast?: BroadcastMessage | null;
   createdAt: number | string;
   updatedAt?: number | string;
 }
@@ -267,6 +280,14 @@ export interface UpdateGameTimerPayload {
 export interface ToggleFreezeLeaderboardPayload {
   gameId: string;
   isFrozen: boolean;
+}
+
+export interface SendBroadcastPayload {
+  gameId: string;
+  message: string;
+  type?: BroadcastType;
+  sender?: string;
+  expiresInMinutes?: number;
 }
 
 export interface BulkClueUploadItem {

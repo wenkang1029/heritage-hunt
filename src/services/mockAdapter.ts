@@ -14,6 +14,8 @@ import type {
   Unsubscribe,
   GameStatus,
   Zone,
+  BroadcastMessage,
+  SendBroadcastPayload,
 } from '../types/index.ts';
 import { calculateHaversineDistance } from '../utils/haversine.ts';
 import {
@@ -30,6 +32,7 @@ export interface MockState {
   teams: Record<string, Team>;
   clues: Record<string, Clue>;
   submissions: Record<string, Submission>;
+  broadcasts?: Record<string, BroadcastMessage>;
 }
 
 type Listener<T> = (data: T) => void;
@@ -55,6 +58,7 @@ export class MockAdapterService {
   private teamsListeners = new Set<Listener<Team[]>>();
   private cluesListeners = new Set<Listener<Clue[]>>();
   private submissionsListeners = new Set<Listener<Submission[]>>();
+  private broadcastsListeners = new Set<Listener<BroadcastMessage[]>>();
 
   constructor() {
     this.state = this.loadState();
@@ -111,6 +115,7 @@ export class MockAdapterService {
       teams: initialTeams,
       clues: initialClues,
       submissions: {},
+      broadcasts: {},
     };
   }
 
@@ -122,6 +127,9 @@ export class MockAdapterService {
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed?.game && parsed?.teams && parsed?.clues && parsed?.submissions) {
+            if (!parsed.broadcasts) {
+              parsed.broadcasts = {};
+            }
             return parsed;
           }
         }
@@ -213,6 +221,11 @@ export class MockAdapterService {
       (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
     );
     this.submissionsListeners.forEach((fn) => fn([...subsArray]));
+
+    const broadcastsArray = Object.values(this.state.broadcasts || {}).sort(
+      (a, b) => Number(new Date(b.sentAt).getTime()) - Number(new Date(a.sentAt).getTime())
+    );
+    this.broadcastsListeners.forEach((fn) => fn([...broadcastsArray]));
   }
 
   getGame(): Game {
@@ -257,6 +270,17 @@ export class MockAdapterService {
     callback([...subsArray]);
     return () => {
       this.submissionsListeners.delete(callback);
+    };
+  }
+
+  subscribeToBroadcasts(_gameId: string, callback: (broadcasts: BroadcastMessage[]) => void): Unsubscribe {
+    this.broadcastsListeners.add(callback);
+    const broadcastsArray = Object.values(this.state.broadcasts || {}).sort(
+      (a, b) => Number(new Date(b.sentAt).getTime()) - Number(new Date(a.sentAt).getTime())
+    );
+    callback([...broadcastsArray]);
+    return () => {
+      this.broadcastsListeners.delete(callback);
     };
   }
 
@@ -705,6 +729,36 @@ export class MockAdapterService {
         // ignore
       }
     }
+    this.broadcastMutation();
+  }
+
+  async sendBroadcast(payload: SendBroadcastPayload): Promise<BroadcastMessage> {
+    const id = `bc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const now = Date.now();
+    const broadcast: BroadcastMessage = {
+      id,
+      gameId: payload.gameId,
+      message: payload.message,
+      type: payload.type || 'info',
+      sender: payload.sender || 'Game Master',
+      sentAt: now,
+      expiresAt: payload.expiresInMinutes ? now + payload.expiresInMinutes * 60 * 1000 : null,
+    };
+
+    if (!this.state.broadcasts) {
+      this.state.broadcasts = {};
+    }
+    this.state.broadcasts[id] = broadcast;
+    this.state.game.activeBroadcast = broadcast;
+    this.state.game.updatedAt = now;
+
+    this.broadcastMutation();
+    return broadcast;
+  }
+
+  async clearActiveBroadcast(_gameId: string): Promise<void> {
+    this.state.game.activeBroadcast = null;
+    this.state.game.updatedAt = Date.now();
     this.broadcastMutation();
   }
 
