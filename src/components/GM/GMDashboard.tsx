@@ -1945,7 +1945,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* MODAL: Create New Game */}
       {/* ========================================================================= */}
       {showCreateGameModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <h3 className="text-lg font-black text-white mb-1">{t('gm.createGameTitle')}</h3>
             <p className="text-xs text-slate-400 mb-4">
@@ -2021,7 +2021,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* MODAL: Edit Team Name & PIN */}
       {/* ========================================================================= */}
       {editingTeam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <h3 className="text-base font-black text-white mb-1">{t('gm.editTeamTitle')}</h3>
             <p className="text-xs text-slate-400 mb-4">
@@ -2099,7 +2099,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* MODAL: Edit Zone */}
       {/* ========================================================================= */}
       {editingZone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <h3 className="text-base font-black text-white mb-1">{t('gm.editZoneTitle')}</h3>
             <p className="text-xs text-slate-400 mb-4">
@@ -2166,7 +2166,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
       {/* Create New Zone Modal */}
       {showCreateZoneModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl animate-fade-in max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-black text-white flex items-center gap-2">
@@ -2278,7 +2278,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
       {/* Force Stop Game Confirmation Modal */}
       {showForceStopModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0">
@@ -2342,7 +2342,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
       {/* Fullscreen Uncropped Image Lightbox Modal */}
       {showBroadcastModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl max-h-[92dvh] overflow-y-auto space-y-5">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">

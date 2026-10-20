@@ -107,7 +107,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all duration-200"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

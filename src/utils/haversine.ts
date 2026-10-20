@@ -79,6 +79,7 @@ export function calculateBearing(coord1: GeoPointInput, coord2: GeoPointInput): 
 export interface CompassHeading {
   code: string;
   label: string;
+  directionZh: string;
   arrow: string;
   bearingDeg: number;
 }
@@ -86,6 +87,16 @@ export interface CompassHeading {
 export function getCompassDirection(bearingDeg: number, lang: 'en' | 'zh' = 'zh'): CompassHeading {
   const directionsEn = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const directionsZh = ['正北', '东北', '正东', '东南', '正南', '西南', '正西', '西北'];
+  const phrasesZh = [
+    '正北方向',
+    '东北方向',
+    '正东方向',
+    '东南方向',
+    '正南方向',
+    '西南方向',
+    '正西方向',
+    '西北方向',
+  ];
   const arrows = ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'];
 
   const normalized = (bearingDeg % 360 + 360) % 360;
@@ -93,6 +104,7 @@ export function getCompassDirection(bearingDeg: number, lang: 'en' | 'zh' = 'zh'
   return {
     code: directionsEn[index],
     label: lang === 'zh' ? directionsZh[index] : directionsEn[index],
+    directionZh: phrasesZh[index],
     arrow: arrows[index],
     bearingDeg: Math.round(normalized),
   };

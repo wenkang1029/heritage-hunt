@@ -128,7 +128,7 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
 
   return (
     <div
-      className="fixed inset-x-3 bottom-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[420px] z-[95] animate-in fade-in slide-in-from-bottom-6 duration-300 pointer-events-auto"
+      className="fixed inset-x-3 bottom-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[420px] z-[9999] animate-in fade-in slide-in-from-bottom-6 duration-300 pointer-events-auto"
       role="dialog"
       aria-modal="false"
       aria-label={`${tourName} Tour`}

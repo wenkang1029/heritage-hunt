@@ -409,7 +409,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   }, [hideCluePins, playerCoords, uncompletedClues]);
 
   return (
-    <div className={`relative ${className} overflow-hidden bg-slate-950`}>
+    <div className={`relative ${className} overflow-hidden bg-slate-950 isolate`}>
       <MapContainer
         center={[MELAKA_MAP_CENTER.latitude, MELAKA_MAP_CENTER.longitude]}
         zoom={16}
@@ -766,7 +766,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
 
       {/* Explorer Mode Badge */}
       {hideCluePins && !isPlottingZone && (
-        <div className="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-xl text-[11px] font-bold text-slate-200 flex items-center gap-1.5 pointer-events-none">
+        <div className="absolute top-3 left-3 z-20 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-xl text-[11px] font-bold text-slate-200 flex items-center gap-1.5 pointer-events-none">
           <Crosshair className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
           <span>探险家模式：图钉已隐藏 · 跟随雷达探索</span>
         </div>
@@ -774,7 +774,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
 
       {/* Floating Zone Plotting HUD Toolbar */}
       {isPlottingZone && (
-        <div className="absolute top-3 left-3 right-3 sm:left-auto sm:right-3 z-[1000] flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-slate-700/90 shadow-2xl">
+        <div className="absolute top-3 left-3 right-3 sm:left-auto sm:right-3 z-20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-slate-700/90 shadow-2xl">
           {/* Zone & Live Count Info */}
           <div className="flex items-center gap-2.5 mr-1">
             <div className="relative flex items-center justify-center shrink-0">
@@ -856,7 +856,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
       )}
 
       {/* Map Recenter Buttons */}
-      <div className={`absolute ${bottomOffsetClass} right-4 z-[1000] flex flex-col gap-2`}>
+      <div className={`absolute ${bottomOffsetClass} right-4 z-20 flex flex-col gap-2`}>
         {playerCoords && (
           <button
             onClick={() => setTargetRecenter(playerCoords)}

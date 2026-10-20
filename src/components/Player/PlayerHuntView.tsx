@@ -35,7 +35,6 @@ import {
   Users,
   Crosshair,
   Flame,
-  Radio,
   Megaphone,
   Bell,
 } from 'lucide-react';
@@ -60,6 +59,49 @@ export interface PlayerHuntViewProps {
   nickname: string;
   playerId?: string;
 }
+
+interface AdventureCompassProps {
+  bearing: number;
+  directionZh: string;
+  className?: string;
+}
+
+const AdventureCompass: React.FC<AdventureCompassProps> = ({ bearing, directionZh, className = 'w-9 h-9' }) => {
+  return (
+    <div
+      className={`relative flex items-center justify-center shrink-0 ${className}`}
+      title={`${directionZh} (${Math.round(bearing)}°)`}
+    >
+      <svg viewBox="0 0 44 44" className="w-full h-full drop-shadow-md select-none">
+        {/* Outer Ring & Bezel */}
+        <circle cx="22" cy="22" r="20" fill="#090d16" stroke="#334155" strokeWidth="2" />
+        <circle cx="22" cy="22" r="16.5" fill="#0f172a" stroke="#1e293b" strokeWidth="1" />
+        {/* Cardinal Tick marks */}
+        <line x1="22" y1="3" x2="22" y2="6.5" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" />
+        <line x1="41" y1="22" x2="37.5" y2="22" stroke="#64748b" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="22" y1="41" x2="22" y2="37.5" stroke="#64748b" strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="3" y1="22" x2="6.5" y2="22" stroke="#64748b" strokeWidth="1.2" strokeLinecap="round" />
+        {/* Cardinal Lettering: 北 (N) in gold, 东 (E), 南 (S), 西 (W) */}
+        <text x="22" y="10.8" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="#fbbf24">北</text>
+        <text x="35" y="23.8" textAnchor="middle" fontSize="4.6" fontWeight="bold" fill="#94a3b8">东</text>
+        <text x="22" y="37" textAnchor="middle" fontSize="4.6" fontWeight="bold" fill="#94a3b8">南</text>
+        <text x="9" y="23.8" textAnchor="middle" fontSize="4.6" fontWeight="bold" fill="#94a3b8">西</text>
+        {/* Dynamic Rotating 3D Needle */}
+        <g style={{ transform: `rotate(${bearing}deg)`, transformOrigin: '22px 22px', transition: 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)' }}>
+          {/* Target Pointer (Red Arrow with dual-tone lighting) */}
+          <polygon points="22,6.5 25.5,22 22,20" fill="#ef4444" />
+          <polygon points="22,6.5 18.5,22 22,20" fill="#b91c1c" />
+          {/* Tail Pointer (Silver/Slate with dual-tone shading) */}
+          <polygon points="22,35.5 25.5,22 22,24" fill="#94a3b8" />
+          <polygon points="22,35.5 18.5,22 22,24" fill="#64748b" />
+          {/* Center Brass Ring & Pivot */}
+          <circle cx="22" cy="22" r="3.2" fill="#d97706" />
+          <circle cx="22" cy="22" r="1.8" fill="#ffffff" />
+        </g>
+      </svg>
+    </div>
+  );
+};
 
 export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   game,
@@ -1263,11 +1305,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 ? 'bg-slate-900/95 border-orange-500/80 shadow-orange-500/20'
                 : radarStage === 'medium'
                 ? 'bg-slate-900/95 border-amber-500/80 shadow-amber-500/20'
-                : 'bg-slate-900/95 border-slate-700/80'
+                : 'bg-slate-900/95 border-slate-700/80 shadow-slate-950/60'
             }`}
           >
-            {/* Header: Stage Badge + Auto/Locked Badge + Target Switcher / Reset Button */}
-            <div className="flex items-center justify-between gap-2 mb-2">
+            {/* Header: Target Title + Points Badge + Target Switcher / Reset Button */}
+            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-800/80">
               <div className="flex items-center gap-1.5 min-w-0">
                 <span
                   className={`w-2.5 h-2.5 rounded-full shrink-0 ${
@@ -1280,18 +1322,14 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                       : 'bg-blue-400'
                   }`}
                 />
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-300 truncate">
-                  {t('player.radarTitle')}
-                </span>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                  isAutoTracking
-                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                }`}>
-                  {isAutoTracking ? t('player.autoRadarActive') : t('player.trackingBadge')}
+                <h4 className="font-bold text-xs sm:text-sm text-white truncate leading-tight">
+                  {trackedClue.title}
+                </h4>
+                <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                  +{trackedClue.points}
                 </span>
                 {radarStage === 'target' && (
-                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 animate-bounce">
+                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 animate-bounce shrink-0">
                     &lt; 20m
                   </span>
                 )}
@@ -1323,7 +1361,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               </div>
             </div>
 
-            {/* Target Info & Proximity Status */}
+            {/* Target Info: Clue Thumbnail + Adventure Compass & Chinese Direction Guidance + Action Button */}
             <div className="flex items-center gap-3">
               {/* Clue Thumbnail */}
               <div
@@ -1337,15 +1375,18 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     });
                   }
                 }}
-                className="w-13 h-13 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer"
+                className="w-13 h-13 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group shadow"
                 title={t('player.modalTapUncropped')}
               >
                 {trackedClue.targetPhotoBase64 ? (
-                  <img
-                    src={trackedClue.targetPhotoBase64}
-                    alt={trackedClue.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    <img
+                      src={trackedClue.targetPhotoBase64}
+                      alt={trackedClue.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-500">
                     <Camera className="w-5 h-5" />
@@ -1353,57 +1394,53 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 )}
               </div>
 
-              {/* Title & Guidance Distance */}
+              {/* Real Adventure Compass + Chinese Direction Guidance */}
               <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-xs sm:text-sm text-white truncate leading-tight">
-                  {trackedClue.title}
-                </h4>
-
-                {/* Distance and Signal readout */}
-                <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                  {trackedDistance !== null && compassHeading ? (
-                    <>
-                      {radarStage === 'target' ? (
-                        <span className="text-xs font-black text-emerald-400 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                          <span>{t('player.radarSignalTarget')}</span>
-                        </span>
-                      ) : radarStage === 'near' ? (
-                        <span className="text-xs font-bold text-orange-400 flex items-center gap-1">
-                          <Flame className="w-3.5 h-3.5 shrink-0" />
-                          <span>
-                            {t('player.radarSignalNear', {
-                              meters: trackedDistance,
-                            })}
-                          </span>
-                        </span>
-                      ) : radarStage === 'medium' ? (
-                        <span className="text-xs font-bold text-amber-400 flex items-center gap-1">
-                          <Radio className="w-3.5 h-3.5 shrink-0" />
-                          <span>
-                            {t('player.radarSignalMedium', {
-                              meters: trackedDistance,
-                            })}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-xs font-medium text-slate-300 flex items-center gap-1">
-                          <span>
-                            {t('player.radarSignalFar', {
-                              arrow: compassHeading.arrow,
-                              direction: compassHeading.label,
-                              meters: trackedDistance,
-                            })}
-                          </span>
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-xs text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 animate-spin" />
-                      <span>正在获取 GPS 定位...</span>
-                    </span>
+                <div className="flex items-center gap-2.5">
+                  {trackedBearing !== null && compassHeading && (
+                    <AdventureCompass
+                      bearing={compassHeading.bearingDeg}
+                      directionZh={compassHeading.directionZh}
+                      className="w-9 h-9"
+                    />
                   )}
+
+                  <div className="min-w-0 flex-1">
+                    {trackedDistance !== null && compassHeading ? (
+                      <>
+                        {radarStage === 'target' ? (
+                          <div className="text-xs font-black text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                            <span>{language === 'zh' ? '目标就在身边！(<20m)' : 'Target in Range (<20m)!'}</span>
+                          </div>
+                        ) : radarStage === 'near' ? (
+                          <div>
+                            <div className="text-xs font-black text-orange-400 flex items-center gap-1 truncate">
+                              <Flame className="w-3.5 h-3.5 shrink-0 text-orange-400" />
+                              <span>{language === 'zh' ? `正在接近！朝${compassHeading.label}` : `Closing in! Head ${compassHeading.code}`}</span>
+                            </div>
+                            <div className="text-[11px] text-amber-300 font-mono font-medium mt-0.5">
+                              {language === 'zh' ? `约 ${trackedDistance} 米 (${compassHeading.bearingDeg}°)` : `~${trackedDistance} m (${compassHeading.bearingDeg}°)`}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="text-xs font-black text-white truncate">
+                              {language === 'zh' ? `朝【${compassHeading.directionZh}】前行` : `Head ${compassHeading.code} (${compassHeading.label})`}
+                            </div>
+                            <div className="text-[11px] text-amber-300 font-mono font-medium mt-0.5">
+                              {language === 'zh' ? `约 ${trackedDistance} 米 (${compassHeading.bearingDeg}°)` : `~${trackedDistance} m (${compassHeading.bearingDeg}°)`}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 animate-spin" />
+                        <span>{language === 'zh' ? '正在获取 GPS 定位...' : 'Acquiring GPS...'}</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1422,9 +1459,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   <button
                     type="button"
                     onClick={() => handleOpenNativeCamera(trackedClue)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-2.5 py-2 rounded-xl text-xs flex items-center gap-1 cursor-pointer transition-colors border border-slate-700"
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold p-2.5 rounded-xl text-xs flex items-center justify-center cursor-pointer transition-colors border border-slate-700 shadow"
+                    title={t('player.modalOpenCamBtn')}
                   >
-                    <Camera className="w-3.5 h-3.5 text-amber-400" />
+                    <Camera className="w-4 h-4 text-amber-400" />
                   </button>
                 )}
               </div>
@@ -1488,7 +1526,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       {/* 4. Camera Selfie Capture Modal */}
       {isCapturing && selectedClue && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-md">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-md">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl relative max-h-[90dvh] overflow-y-auto">
             {/* Close Button */}
             <button
@@ -1702,7 +1740,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       {/* Player Announcements & Broadcast History Modal (Option B) */}
       {showAnnouncementsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-2xl max-h-[90dvh] overflow-y-auto space-y-4">
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
