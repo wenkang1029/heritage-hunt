@@ -68,7 +68,7 @@ export interface WorkerResult {
   ok: boolean;
   role: Task['role'];
   label: string;
-  warnings: { mockFallback: number; swallowed: number; samples: string[] };
+  warnings: { mockFallback: number; listenerStopped: number; swallowed: number; samples: string[] };
   data?: any;
   error?: string;
 }

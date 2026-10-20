@@ -17,17 +17,19 @@ const callContext = new AsyncLocalStorage<{ swallowed?: string }>();
 
 // gameService swallows some errors with console.warn (heartbeat failures, the silent
 // fallback to mock data). Count them: under stress they are failures, not noise.
-const warnings = { mockFallback: 0, swallowed: 0, samples: [] as string[] };
+const warnings = { mockFallback: 0, listenerStopped: 0, swallowed: 0, samples: [] as string[] };
 const origWarn = console.warn;
 console.warn = (...args: unknown[]) => {
   const msg = args.map((a) => (a instanceof Error ? a.message : String(a))).join(' ');
   const ctx = callContext.getStore();
+  let counted = true;
   if (/fall(ing|back) (back )?to mock|fallback to mock/i.test(msg)) warnings.mockFallback++;
+  else if (/listener stopped/.test(msg)) warnings.listenerStopped++;
   else if (/^Failed to /.test(msg)) {
     warnings.swallowed++;
     if (ctx) ctx.swallowed = msg;
-  }
-  if (warnings.samples.length < 5) warnings.samples.push(msg.slice(0, 300));
+  } else counted = false;
+  if (counted && warnings.samples.length < 5) warnings.samples.push(msg.slice(0, 300));
   if (process.env.STRESS_VERBOSE) origWarn(...args);
 };
 
@@ -274,7 +276,31 @@ const roles: Record<Task['role'], (t: any) => Promise<Record<string, unknown>>> 
 
   /** S7: the phone loses its connection; every action must say so clearly and promptly. */
   async offline(t: Extract<Task, { role: 'offline' }>) {
-    const { disableNetwork } = await import('firebase/firestore');
+    const { disableNetwork, enableNetwork } = await import('firebase/firestore');
+
+    // --- B7: connection status follows reality and never swaps in mock data
+    const statuses: string[] = [];
+    gameService.subscribeToConnectionStatus((st) => statuses.push(st.state));
+    const waitFor = async (state: string, ms: number) => {
+      const t0 = performance.now();
+      while (performance.now() - t0 < ms) {
+        if (statuses[statuses.length - 1] === state) return Math.round(performance.now() - t0);
+        await sleep(50);
+      }
+      return -1;
+    };
+    gameService.subscribeToGame(t.gameId, () => {});
+    const firstOnline = await waitFor('online', 5000);
+    await disableNetwork(db!);
+    const wentOffline = await waitFor('offline', 8000);
+    await enableNetwork(db!);
+    const backOnline = await waitFor('online', 8000);
+    // A listener Firestore terminates: the stress rules (= docs rules) deny `broadcasts`.
+    let broadcastCallbacks = 0;
+    gameService.subscribeToBroadcasts(t.gameId, () => broadcastCallbacks++);
+    const wentError = await waitFor('error', 8000);
+    const status = { firstOnline, wentOffline, backOnline, wentError, broadcastCallbacks, statuses };
+
     await disableNetwork(db!);
     // Outcome of one action: its error message, 'succeeded', or 'hung' (no answer in 15s).
     const attempt = async (fn: () => Promise<unknown>) => {
@@ -287,6 +313,8 @@ const roles: Record<Task['role'], (t: any) => Promise<Record<string, unknown>>> 
       return { outcome, ms: Math.round(performance.now() - t0) };
     };
     return {
+      status,
+      bootstrap: await attempt(() => gameService.initializeDefaultGame(`s7-offline-${process.pid}`)),
       join: await attempt(() => gameService.joinTeamByPin(t.gameId, t.pin, 'offline-player')),
       createTeam: await attempt(() => gameService.createTeam(t.gameId, 'Offline Dup', '#000000', t.takenPin)),
       submit: await attempt(() =>

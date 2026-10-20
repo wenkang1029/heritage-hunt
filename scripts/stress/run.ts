@@ -138,7 +138,7 @@ async function runWorkers(tasks: Task[], timeoutMs: number): Promise<WorkerResul
           ok: false,
           role: tasks[i].role,
           label: tasks[i].label,
-          warnings: { mockFallback: 0, swallowed: 0, samples: [] },
+          warnings: { mockFallback: 0, listenerStopped: 0, swallowed: 0, samples: [] },
           error: `worker exited with code ${code} without a result`,
         })
       );
@@ -236,12 +236,14 @@ interface ScenarioResult {
 function commonChecks(results: WorkerResult[]): { checks: Check[]; workerErrors: string[] } {
   const crashed = results.filter((r) => !r.ok);
   const mockFallback = results.reduce((a, r) => a + r.warnings.mockFallback, 0);
+  const listenerStopped = results.reduce((a, r) => a + r.warnings.listenerStopped, 0);
   const swallowed = results.reduce((a, r) => a + r.warnings.swallowed, 0);
   const samples = results.flatMap((r) => r.warnings.samples).slice(0, 3);
   return {
     checks: [
       { name: 'no worker crashed', pass: crashed.length === 0, detail: `${crashed.length} crashed` },
       { name: 'no silent fallback to mock data (B7)', pass: mockFallback === 0, detail: `${mockFallback} fallbacks` },
+      { name: 'no Firestore listener terminated', pass: listenerStopped === 0, detail: `${listenerStopped} stopped` },
       {
         name: 'no swallowed write failures (heartbeat / offline)',
         pass: swallowed === 0,
@@ -578,13 +580,26 @@ async function s7(): Promise<ScenarioResult> {
   const subs = await readSubmissions(game.id);
   const isConnectionError = (o?: { outcome: string; ms: number }) => o?.outcome === CONNECTION_ERROR_MESSAGE;
   const show = (o?: { outcome: string; ms: number }) => (o ? `${o.outcome} (${o.ms}ms)` : 'no result');
+  // S7 terminates the broadcasts listener on purpose, so that common check doesn't apply here.
   const common = commonChecks([r]);
+  const commonS7 = common.checks.filter((c) => c.name !== 'no Firestore listener terminated');
+  const st = r.data?.status;
+  const ms = (v?: number) => (v === undefined ? 'no result' : v < 0 ? 'never' : `after ${v}ms`);
 
   return {
     id: 's7',
-    title: 'S7 lost connection — join, GM create team (PIN already taken), submit photo',
+    title: 'S7 lost connection — status banner, load game, join, GM create team (PIN taken), submit',
     checks: [
-      ...common.checks,
+      ...commonS7,
+      { name: 'status: online once connected', pass: st?.firstOnline >= 0, detail: ms(st?.firstOnline) },
+      { name: 'status: offline when the network drops (after the 3s grace)', pass: st?.wentOffline >= 0, detail: ms(st?.wentOffline) },
+      { name: 'status: back online when the network returns', pass: st?.backOnline >= 0, detail: ms(st?.backOnline) },
+      {
+        name: 'status: error when Firestore terminates a listener, no mock data delivered',
+        pass: st?.wentError >= 0 && st?.broadcastCallbacks === 0,
+        detail: `${ms(st?.wentError)}, ${st?.broadcastCallbacks} callbacks · sequence ${st?.statuses?.join('→')}`,
+      },
+      { name: 'loading the game offline says "cannot reach server" (no fake game)', pass: isConnectionError(r.data?.bootstrap), detail: show(r.data?.bootstrap) },
       { name: 'join says "cannot reach server", not "No team found"', pass: isConnectionError(r.data?.join), detail: show(r.data?.join) },
       { name: 'create team says "cannot reach server", does not hang', pass: isConnectionError(r.data?.createTeam), detail: show(r.data?.createTeam) },
       { name: 'submit says "cannot reach server"', pass: isConnectionError(r.data?.submit), detail: show(r.data?.submit) },

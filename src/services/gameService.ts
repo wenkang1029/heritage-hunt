@@ -70,6 +70,93 @@ async function withConnectionError<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 /**
+ * Live connection status shown to players and the GM.
+ * - online:  every listener has data confirmed by the server
+ * - offline: some listener is serving cached data (the SDK is reconnecting by itself)
+ * - error:   Firestore terminated a listener (e.g. permission-denied, quota); it will not
+ *            recover on its own, the page has to be reloaded
+ */
+export type ConnectionState = 'online' | 'offline' | 'error';
+export interface ConnectionStatus {
+  state: ConnectionState;
+  error?: string;
+}
+
+const listenerStates = new Map<number, { fromCache: boolean; error?: string }>();
+const statusCallbacks = new Set<(status: ConnectionStatus) => void>();
+let nextListenerId = 1;
+let lastStatus: ConnectionStatus = { state: 'online' };
+
+function computeStatus(): ConnectionStatus {
+  const states = [...listenerStates.values()];
+  const failed = states.find((st) => st.error);
+  if (failed) return { state: 'error', error: failed.error };
+  if (states.some((st) => st.fromCache)) return { state: 'offline' };
+  return { state: 'online' };
+}
+
+// Every page load briefly serves cached data before the server answers; only report
+// 'offline' when it lasts, so players don't see a "connection lost" flash on each open.
+const OFFLINE_GRACE_MS = 3000;
+let offlineTimer: ReturnType<typeof setTimeout> | null = null;
+
+function emitStatus(next: ConnectionStatus) {
+  if (next.state === lastStatus.state && next.error === lastStatus.error) return;
+  lastStatus = next;
+  statusCallbacks.forEach((cb) => cb(next));
+}
+
+function publishStatus() {
+  const next = computeStatus();
+  if (next.state !== 'offline') {
+    if (offlineTimer) clearTimeout(offlineTimer);
+    offlineTimer = null;
+    emitStatus(next);
+  } else if (!offlineTimer && lastStatus.state !== 'offline') {
+    offlineTimer = setTimeout(() => {
+      offlineTimer = null;
+      if (computeStatus().state === 'offline') emitStatus({ state: 'offline' });
+    }, OFFLINE_GRACE_MS);
+  }
+}
+
+/** Registers a Firestore listener with the connection status; returns its reporting hooks. */
+function trackListener(name: string) {
+  const id = nextListenerId++;
+  let emitted = false;
+  listenerStates.set(id, { fromCache: true });
+  return {
+    /**
+     * False for a query snapshot where only metadata (fromCache / pending writes) changed,
+     * so the app callback isn't re-run with identical data. The first snapshot always counts,
+     * even for an empty collection.
+     */
+    changed(snapshot: { docChanges(): unknown[] }) {
+      if (!emitted) {
+        emitted = true;
+        return true;
+      }
+      return snapshot.docChanges().length > 0;
+    },
+    snapshot(fromCache: boolean) {
+      if (listenerStates.get(id)?.error) return;
+      listenerStates.set(id, { fromCache });
+      publishStatus();
+    },
+    error(err: unknown) {
+      console.warn(`Firestore ${name} listener stopped:`, err);
+      const code = (err as { code?: string })?.code;
+      listenerStates.set(id, { fromCache: true, error: code || String(err) });
+      publishStatus();
+    },
+    dispose() {
+      listenerStates.delete(id);
+      publishStatus();
+    },
+  };
+}
+
+/**
  * Safely reads environment variables across Vite browser and Node.js environments.
  */
 function getEnvVar(key: string): string | undefined {
@@ -128,6 +215,7 @@ export interface IGameService {
   subscribeToClues(gameId: string, callback: (clues: Clue[]) => void): Unsubscribe;
   subscribeToSubmissions(gameId: string, callback: (submissions: Submission[]) => void): Unsubscribe;
   subscribeToBroadcasts(gameId: string, callback: (broadcasts: BroadcastMessage[]) => void): Unsubscribe;
+  subscribeToConnectionStatus(callback: (status: ConnectionStatus) => void): Unsubscribe;
   sendBroadcast(payload: SendBroadcastPayload): Promise<BroadcastMessage>;
   clearActiveBroadcast(gameId: string): Promise<void>;
   createTeam(gameId: string, name: string, color: string, pin: string): Promise<Team>;
@@ -168,18 +256,27 @@ class UnifiedGameService implements IGameService {
     }
 
     const gameRef = doc(firestore, 'games', gameId);
-    return onSnapshot(
+    const status = trackListener('game');
+    let lastJson = '';
+    // includeMetadataChanges: also notified when only the cache/server state flips,
+    // which is what drives the connection status.
+    const unsub = onSnapshot(
       gameRef,
+      { includeMetadataChanges: true },
       (snapshot) => {
-        if (snapshot.exists()) {
-          callback({ id: snapshot.id, ...snapshot.data() } as Game);
-        }
+        status.snapshot(snapshot.metadata.fromCache);
+        if (!snapshot.exists()) return;
+        const json = JSON.stringify(snapshot.data());
+        if (json === lastJson) return; // metadata-only change
+        lastJson = json;
+        callback({ id: snapshot.id, ...snapshot.data() } as Game);
       },
-      (err) => {
-        console.warn('Firestore game snapshot error, falling back to mock:', err);
-        mockAdapter.subscribeToGame(gameId, callback);
-      }
+      (err) => status.error(err)
     );
+    return () => {
+      unsub();
+      status.dispose();
+    };
   }
 
   subscribeToTeams(gameId: string, callback: (teams: Team[]) => void): Unsubscribe {
@@ -189,18 +286,23 @@ class UnifiedGameService implements IGameService {
     }
 
     const teamsCol = collection(firestore, 'games', gameId, 'teams');
-    return onSnapshot(
+    const status = trackListener('teams');
+    const unsub = onSnapshot(
       teamsCol,
+      { includeMetadataChanges: true },
       (snapshot) => {
+        status.snapshot(snapshot.metadata.fromCache);
+        if (!status.changed(snapshot)) return;
         const teams = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Team));
         teams.sort((a, b) => b.score - a.score);
         callback(teams);
       },
-      (err) => {
-        console.warn('Firestore teams snapshot error, falling back to mock:', err);
-        mockAdapter.subscribeToTeams(gameId, callback);
-      }
+      (err) => status.error(err)
     );
+    return () => {
+      unsub();
+      status.dispose();
+    };
   }
 
   subscribeToClues(gameId: string, callback: (clues: Clue[]) => void): Unsubscribe {
@@ -210,17 +312,22 @@ class UnifiedGameService implements IGameService {
     }
 
     const cluesCol = collection(firestore, 'games', gameId, 'clues');
-    return onSnapshot(
+    const status = trackListener('clues');
+    const unsub = onSnapshot(
       cluesCol,
+      { includeMetadataChanges: true },
       (snapshot) => {
+        status.snapshot(snapshot.metadata.fromCache);
+        if (!status.changed(snapshot)) return;
         const clues = snapshot.docs.map((d) => normalizeClueZh({ id: d.id, ...d.data() } as Clue));
         callback(clues);
       },
-      (err) => {
-        console.warn('Firestore clues snapshot error, falling back to mock:', err);
-        mockAdapter.subscribeToClues(gameId, (clues) => callback(clues.map(normalizeClueZh)));
-      }
+      (err) => status.error(err)
     );
+    return () => {
+      unsub();
+      status.dispose();
+    };
   }
 
   subscribeToSubmissions(gameId: string, callback: (submissions: Submission[]) => void): Unsubscribe {
@@ -232,17 +339,22 @@ class UnifiedGameService implements IGameService {
     const subsCol = collection(firestore, 'games', gameId, 'submissions');
     const q = query(subsCol, orderBy('submittedAt', 'desc'));
 
-    return onSnapshot(
+    const status = trackListener('submissions');
+    const unsub = onSnapshot(
       q,
+      { includeMetadataChanges: true },
       (snapshot) => {
+        status.snapshot(snapshot.metadata.fromCache);
+        if (!status.changed(snapshot)) return;
         const subs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Submission));
         callback(subs);
       },
-      (err) => {
-        console.warn('Firestore submissions snapshot error, falling back to mock:', err);
-        mockAdapter.subscribeToSubmissions(gameId, callback);
-      }
+      (err) => status.error(err)
     );
+    return () => {
+      unsub();
+      status.dispose();
+    };
   }
 
   subscribeToBroadcasts(gameId: string, callback: (broadcasts: BroadcastMessage[]) => void): Unsubscribe {
@@ -254,17 +366,35 @@ class UnifiedGameService implements IGameService {
     const broadcastsCol = collection(firestore, 'games', gameId, 'broadcasts');
     const q = query(broadcastsCol, orderBy('sentAt', 'desc'));
 
-    return onSnapshot(
+    const status = trackListener('broadcasts');
+    const unsub = onSnapshot(
       q,
+      { includeMetadataChanges: true },
       (snapshot) => {
+        status.snapshot(snapshot.metadata.fromCache);
+        if (!status.changed(snapshot)) return;
         const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as BroadcastMessage));
         callback(list);
       },
-      (err) => {
-        console.warn('Firestore broadcasts snapshot error, falling back to mock:', err);
-        mockAdapter.subscribeToBroadcasts(gameId, callback);
-      }
+      (err) => status.error(err)
     );
+    return () => {
+      unsub();
+      status.dispose();
+    };
+  }
+
+  /** Live connection status (always 'online' in mock mode). Calls back immediately. */
+  subscribeToConnectionStatus(callback: (status: ConnectionStatus) => void): Unsubscribe {
+    if (!this.getFirestoreDb()) {
+      callback({ state: 'online' });
+      return () => {};
+    }
+    statusCallbacks.add(callback);
+    callback(lastStatus);
+    return () => {
+      statusCallbacks.delete(callback);
+    };
   }
 
   // =========================================================================
@@ -755,8 +885,10 @@ class UnifiedGameService implements IGameService {
 
       return defaultGame;
     } catch (err) {
-      console.warn('Firestore bootstrap fallback to mock:', err);
-      return mockAdapter.getGame();
+      // Never fall back to mock data here: players would see a fake game and think it's live.
+      console.warn('Could not load game from Firestore:', err);
+      if (isOfflineError(err)) throw new Error(CONNECTION_ERROR_MESSAGE);
+      throw err;
     }
   }
 

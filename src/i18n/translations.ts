@@ -11,6 +11,10 @@ export const translations = {
     topBar: {
       firestoreConnected: 'Firestore Live Connected',
       localMockMode: 'Local Mock Mode',
+      connectionLost: 'Connection lost · reconnecting',
+      connectionLostDetail: 'Connection lost. Reconnecting… What you see may be out of date until it is back.',
+      connectionError: 'Disconnected',
+      connectionErrorDetail: 'Live updates stopped. Reload the page to reconnect.',
       room: 'Room:',
       playerMode: 'Player Mode',
       gmWarRoom: 'GM War Room',
@@ -56,6 +60,8 @@ export const translations = {
       gmModalIncorrect: 'Incorrect GM Passcode.',
       gmDefaultPasscode: 'Default passcode: melaka2026',
       connecting: 'Connecting to Melaka Heritage Hunt...',
+      loadFailed: 'Could not load the game',
+      retry: 'Retry',
       initializing: 'Initializing real-time Firestore synchronization',
     },
 
@@ -357,6 +363,10 @@ export const translations = {
     topBar: {
       firestoreConnected: 'Firestore 实时云端同步',
       localMockMode: '本地离线模拟模式',
+      connectionLost: '连线中断 · 重连中',
+      connectionLostDetail: '连线中断，正在重新连接… 恢复之前，画面上的资料可能不是最新的。',
+      connectionError: '已断开',
+      connectionErrorDetail: '实时更新已停止，请重新载入页面。',
       room: '房间号:',
       playerMode: '玩家界面',
       gmWarRoom: 'GM 控制台',
@@ -402,6 +412,8 @@ export const translations = {
       gmModalIncorrect: 'GM 密码错误，请重试。',
       gmDefaultPasscode: '默认密码：melaka2026',
       connecting: '正在连接马六甲寻宝云端服务...',
+      loadFailed: '无法载入游戏',
+      retry: '重试',
       initializing: '正在初始化 Firestore 实时双向数据同步',
     },
 

@@ -41,9 +41,11 @@ npm run stress -- --scale=2       # worker / 玩家数量 ×2（注意内存：�
 | S4 | 两个 GM 同一时间批准同样 10 张 | 每张只批准一次、分数没翻倍 | B3 |
 | S5 | 8 台手机在 game 还不存在时同时打开 app，然后马上加入 | 只有一个 client 建 game、加入的人没被覆盖掉 | B8 |
 | S6 | 6 台手机在线，2 队每秒上传 140KB 照片 | 每台都收到每张；报告延迟、每台收到的数据量、内存 | 负载 / fan-out |
-| S7 | 手机断线（`disableNetwork`）后加入、GM 建队（PIN 已被占用）、提交照片 | 都马上回报「连不上服务器」；不误报 PIN 错、不卡住、不写出重复 PIN | B10 |
+| S7 | 手机断线（`disableNetwork`）→ 恢复；Firestore 中断一个 listener；断线时载入游戏、加入、GM 建队（PIN 已被占用）、提交照片 | 连线状态 online→offline→online→error 跟着实际走、不送假资料；各动作马上回报「连不上服务器」，不误报 PIN 错、不卡住、不写出重复 PIN | B7 / B10 |
 
-每个场景也会检查：worker 没崩、**没有悄悄切到 mock 假数据**（B7）、heartbeat 没有被吞掉的写入失败。
+每个场景也会检查：worker 没崩、**没有悄悄切到 mock 假数据**（B7）、没有 listener 被 Firestore 中断、heartbeat 没有被吞掉的写入失败。
+
+> S7 用「`broadcasts` 被规则拒绝」来触发 listener 中断。等安全规则（B9）补上 `broadcasts` 之后，这一项要改用别的方式触发。
 
 ## 负载模式：指定每个接口的 QPS
 

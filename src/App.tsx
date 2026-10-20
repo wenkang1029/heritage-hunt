@@ -8,13 +8,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Game, Team, Clue, Submission } from './types/index.ts';
-import { gameService, getDataSourceMode } from './services/gameService.ts';
+import { gameService, getDataSourceMode, type ConnectionStatus } from './services/gameService.ts';
 import { useGeolocation } from './hooks/useGeolocation.ts';
 import { PlayerHuntView } from './components/Player/PlayerHuntView.tsx';
 import { JoinTeamModal } from './components/Player/JoinTeamModal.tsx';
 import { GMDashboard } from './components/GM/GMDashboard.tsx';
 import { UserGuideSection } from './components/Home/UserGuideSection.tsx';
-import { Shield, Smartphone, ArrowRight, Lock, MapPin, Globe } from 'lucide-react';
+import { Shield, Smartphone, ArrowRight, Lock, MapPin, Globe, WifiOff, AlertTriangle, RotateCw } from 'lucide-react';
 import { useLanguage } from './context/LanguageContext.tsx';
 
 const LS_GM_AUTH = 'HERITAGE_GM_AUTH';
@@ -51,6 +51,11 @@ export const App: React.FC = () => {
 
   const { t, language, openSwitchModal } = useLanguage();
   const dataSourceMode = getDataSourceMode();
+
+  // Live connection status (B7: never silently swap to mock data, tell the user instead)
+  const [connection, setConnection] = useState<ConnectionStatus>({ state: 'online' });
+  const [loadError, setLoadError] = useState<string | null>(null);
+  useEffect(() => gameService.subscribeToConnectionStatus(setConnection), []);
 
   // Helper to sync URL without triggering page reloads
   const updateUrlParams = useCallback((params: { game?: string; mode?: string; pin?: string }) => {
@@ -109,6 +114,7 @@ export const App: React.FC = () => {
         }
       } catch (err: any) {
         console.error('Failed to load application:', err);
+        setLoadError(err?.message || String(err));
       }
     }
 
@@ -240,6 +246,24 @@ export const App: React.FC = () => {
     updateUrlParams({});
   };
 
+  if (!game && loadError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
+        <WifiOff className="w-10 h-10 text-rose-400 mb-4" />
+        <h2 className="text-lg font-bold text-white">{t('home.loadFailed')}</h2>
+        <p className="text-xs text-slate-400 mt-1 max-w-sm">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-sm font-bold cursor-pointer"
+        >
+          <RotateCw className="w-4 h-4" />
+          {t('home.retry')}
+        </button>
+      </div>
+    );
+  }
+
   if (!game) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
@@ -250,6 +274,21 @@ export const App: React.FC = () => {
     );
   }
 
+  const isLive = dataSourceMode === 'firestore';
+  const statusDot =
+    !isLive || connection.state === 'offline'
+      ? ['bg-amber-400', 'bg-amber-500']
+      : connection.state === 'error'
+        ? ['bg-rose-400', 'bg-rose-500']
+        : ['bg-emerald-400', 'bg-emerald-500'];
+  const statusLabel = !isLive
+    ? t('topBar.localMockMode')
+    : connection.state === 'online'
+      ? t('topBar.firestoreConnected')
+      : connection.state === 'offline'
+        ? t('topBar.connectionLost')
+        : t('topBar.connectionError');
+
   return (
     <div className="h-[100dvh] max-h-[100dvh] w-full bg-slate-950 flex flex-col overflow-hidden text-slate-100 font-sans antialiased selection:bg-rose-500 selection:text-white">
       {/* Universal Status & Perspective Bar */}
@@ -257,19 +296,11 @@ export const App: React.FC = () => {
         <div className="flex items-center gap-2 min-w-0">
           <span className="flex h-2 w-2 relative shrink-0">
             <span
-              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                dataSourceMode === 'firestore' ? 'bg-emerald-400' : 'bg-amber-400'
-              }`}
+              className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${statusDot[0]}`}
             />
-            <span
-              className={`relative inline-flex rounded-full h-2 w-2 ${
-                dataSourceMode === 'firestore' ? 'bg-emerald-500' : 'bg-amber-500'
-              }`}
-            />
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${statusDot[1]}`} />
           </span>
-          <span className="text-[11px] font-mono text-slate-400 truncate hidden xs:inline">
-            {dataSourceMode === 'firestore' ? t('topBar.firestoreConnected') : t('topBar.localMockMode')}
-          </span>
+          <span className="text-[11px] font-mono text-slate-400 truncate hidden xs:inline">{statusLabel}</span>
           <span className="text-[10px] text-slate-500 hidden md:inline">
             • {t('topBar.room')} <strong className="text-amber-400 font-mono">{game.id}</strong>
           </span>
@@ -321,6 +352,37 @@ export const App: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Connection banner: the top-bar label is hidden on small phones */}
+      {isLive && connection.state !== 'online' && (
+        <div
+          role="status"
+          className={`shrink-0 z-40 px-3 py-1.5 flex items-center justify-center gap-2 text-[11px] font-bold text-center ${
+            connection.state === 'offline'
+              ? 'bg-amber-500/15 text-amber-300 border-b border-amber-500/30'
+              : 'bg-rose-500/15 text-rose-300 border-b border-rose-500/30'
+          }`}
+        >
+          {connection.state === 'offline' ? (
+            <>
+              <WifiOff className="w-3.5 h-3.5 shrink-0" />
+              <span>{t('topBar.connectionLostDetail')}</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span>{t('topBar.connectionErrorDetail')}</span>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="ml-1 underline underline-offset-2 cursor-pointer hover:text-white"
+              >
+                {t('home.retry')}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 1. HOME / LANDING SCREEN (If on homepage with direct GM Login) */}
