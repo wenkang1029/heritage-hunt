@@ -717,15 +717,15 @@ describe('Adversarial Test Suite 3: Mock Adapter Concurrency & Scaling Stress', 
     await adapter.verifySubmission('melaka-hunt-2026', sub.id, 'approve', 100);
     assert.strictEqual(teamCobalt.score, initialScore + 100);
 
-    // Second verification attempt on the same submission:
-    // Idempotent systems should either no-op, reject, or not duplicate points.
-    await adapter.verifySubmission('melaka-hunt-2026', sub.id, 'approve', 100);
-
-    // Empirical check: MockAdapter does not gate on sub.status === 'approved', so points are awarded again
+    // Second verification attempt on the same submission is rejected and awards nothing.
+    await assert.rejects(
+      () => adapter.verifySubmission('melaka-hunt-2026', sub.id, 'approve', 100),
+      /already been reviewed/
+    );
     assert.strictEqual(
       teamCobalt.score,
-      initialScore + 200,
-      'Duplicate verification increments score twice (lack of status idempotency guard)'
+      initialScore + 100,
+      'Duplicate verification must not increment score twice'
     );
   });
 

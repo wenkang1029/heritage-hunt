@@ -484,9 +484,15 @@ export class MockAdapterService {
       throw new Error(`Submission ${submissionId} not found`);
     }
 
+    if (sub.status !== 'pending') {
+      throw new Error(`Submission ${submissionId} has already been reviewed (${sub.status})`);
+    }
+
     const team = this.state.teams[sub.teamId];
     const clue = this.state.clues[sub.clueId];
-    const basePoints = points ?? clue?.points ?? 100;
+    const cluePoints = clue?.points ?? 100;
+    // approve: `points` overrides the clue's points; bonus: `points` is the bonus on top.
+    const basePoints = action === 'approve' ? (points ?? cluePoints) : cluePoints;
 
     if (action === 'approve') {
       const awarded = basePoints;
@@ -510,7 +516,7 @@ export class MockAdapterService {
         };
       }
     } else if (action === 'bonus') {
-      const bonusAmount = 20;
+      const bonusAmount = points ?? 20;
       const awarded = basePoints + bonusAmount;
       this.state.submissions[submissionId] = {
         ...sub,

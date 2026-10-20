@@ -301,20 +301,33 @@ class UnifiedGameService implements IGameService {
     }
 
     const teamDoc = snap.docs[0];
-    const teamData = teamDoc.data() as Team;
     const playerId = authUser?.uid || `player_${Date.now()}`;
 
-    const member: TeamMember = {
-      id: playerId,
-      nickname: nickname.trim(),
-      joinedAt: Date.now(),
-      lastSeenAt: Date.now(),
-      isOnline: true,
-    };
+    // Upsert by player id inside a transaction: re-joining (refresh / re-scan) must not
+    // add a second copy of the same player, and concurrent joins must not drop each other.
+    const teamData = await runTransaction(firestore, async (txn) => {
+      const teamSnap = await txn.get(teamDoc.ref);
+      if (!teamSnap.exists()) {
+        throw new Error(`No team found with PIN "${cleanPin}". Please check with your Game Master.`);
+      }
+      const data = teamSnap.data() as Team;
+      const members = data.members || [];
+      const existing = members.find((m) => m.id === playerId);
 
-    await updateDoc(teamDoc.ref, {
-      lastActiveAt: serverTimestamp(),
-      members: arrayUnion(member),
+      const member: TeamMember = {
+        id: playerId,
+        nickname: nickname.trim(),
+        joinedAt: existing?.joinedAt ?? Date.now(),
+        lastSeenAt: Date.now(),
+        isOnline: true,
+      };
+      const updatedMembers = [...members.filter((m) => m.id !== playerId), member];
+
+      txn.update(teamDoc.ref, {
+        lastActiveAt: serverTimestamp(),
+        members: updatedMembers,
+      });
+      return { ...data, members: updatedMembers };
     });
 
     return {
@@ -336,39 +349,42 @@ class UnifiedGameService implements IGameService {
 
     try {
       const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
-      const snap = await getDoc(teamRef);
-      if (!snap.exists()) return;
+      // Transaction so teammates' heartbeats don't overwrite each other's members entries
+      await runTransaction(firestore, async (txn) => {
+        const snap = await txn.get(teamRef);
+        if (!snap.exists()) return;
 
-      const data = snap.data() as Team;
-      const members = data.members || [];
-      let updated = false;
+        const data = snap.data() as Team;
+        const members = data.members || [];
+        let updated = false;
 
-      const updatedMembers = members.map((m) => {
-        if (m.id === playerId || (nickname && m.nickname === nickname)) {
-          updated = true;
-          return {
-            ...m,
+        const updatedMembers = members.map((m) => {
+          if (m.id === playerId || (nickname && m.nickname === nickname)) {
+            updated = true;
+            return {
+              ...m,
+              id: playerId,
+              lastSeenAt: Date.now(),
+              isOnline: true,
+            };
+          }
+          return m;
+        });
+
+        if (!updated && nickname) {
+          updatedMembers.push({
             id: playerId,
+            nickname: nickname.trim(),
+            joinedAt: Date.now(),
             lastSeenAt: Date.now(),
             isOnline: true,
-          };
+          });
         }
-        return m;
-      });
 
-      if (!updated && nickname) {
-        updatedMembers.push({
-          id: playerId,
-          nickname: nickname.trim(),
-          joinedAt: Date.now(),
-          lastSeenAt: Date.now(),
-          isOnline: true,
+        txn.update(teamRef, {
+          members: updatedMembers,
+          lastActiveAt: serverTimestamp(),
         });
-      }
-
-      await updateDoc(teamRef, {
-        members: updatedMembers,
-        lastActiveAt: serverTimestamp(),
       });
     } catch (err) {
       console.warn('Failed to update player heartbeat:', err);
@@ -388,26 +404,28 @@ class UnifiedGameService implements IGameService {
 
     try {
       const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
-      const snap = await getDoc(teamRef);
-      if (!snap.exists()) return;
+      await runTransaction(firestore, async (txn) => {
+        const snap = await txn.get(teamRef);
+        if (!snap.exists()) return;
 
-      const data = snap.data() as Team;
-      const members = data.members || [];
+        const data = snap.data() as Team;
+        const members = data.members || [];
 
-      const updatedMembers = members.map((m) => {
-        if (m.id === playerId || (nickname && m.nickname === nickname)) {
-          return {
-            ...m,
-            lastSeenAt: Date.now(),
-            isOnline: false,
-          };
-        }
-        return m;
-      });
+        const updatedMembers = members.map((m) => {
+          if (m.id === playerId || (nickname && m.nickname === nickname)) {
+            return {
+              ...m,
+              lastSeenAt: Date.now(),
+              isOnline: false,
+            };
+          }
+          return m;
+        });
 
-      await updateDoc(teamRef, {
-        members: updatedMembers,
-        lastActiveAt: serverTimestamp(),
+        txn.update(teamRef, {
+          members: updatedMembers,
+          lastActiveAt: serverTimestamp(),
+        });
       });
     } catch (err) {
       console.warn('Failed to mark player offline:', err);
@@ -441,6 +459,26 @@ class UnifiedGameService implements IGameService {
     }
 
     await ensureAnonymousAuth();
+
+    // Duplicate checks (same rules as the mock adapter)
+    const teamSnap = await getDoc(doc(firestore, 'games', gameId, 'teams', submission.teamId));
+    if (!teamSnap.exists()) {
+      throw new Error(`Team ${submission.teamId} not found`);
+    }
+    if (((teamSnap.data() as Team).completedClueIds || []).includes(submission.clueId)) {
+      throw new Error('Your team has already completed this clue!');
+    }
+    const pendingSnap = await getDocs(
+      query(
+        collection(firestore, 'games', gameId, 'submissions'),
+        where('teamId', '==', submission.teamId),
+        where('clueId', '==', submission.clueId),
+        where('status', '==', 'pending')
+      )
+    );
+    if (!pendingSnap.empty) {
+      throw new Error('You already have a pending submission for this clue awaiting GM review.');
+    }
 
     // Verify clue distance if coordinates available
     let distanceMeters: number | null = null;
@@ -497,13 +535,20 @@ class UnifiedGameService implements IGameService {
       }
 
       const subData = subSnap.data() as Submission;
+      // Only pending submissions can be reviewed, so a double click or two GMs
+      // reviewing at once never awards points twice (the txn re-reads on retry).
+      if (subData.status !== 'pending') {
+        throw new Error(`Submission ${submissionId} has already been reviewed (${subData.status})`);
+      }
+
       const teamRef = doc(firestore, 'games', gameId, 'teams', subData.teamId);
       const teamSnap = await txn.get(teamRef);
 
       const clueRef = doc(firestore, 'games', gameId, 'clues', subData.clueId);
       const clueSnap = await txn.get(clueRef);
       const cluePoints = clueSnap.exists() ? (clueSnap.data() as Clue).points : 100;
-      const basePoints = points ?? cluePoints;
+      // approve: `points` overrides the clue's points; bonus: `points` is the bonus on top.
+      const basePoints = action === 'approve' ? (points ?? cluePoints) : cluePoints;
 
       if (action === 'approve') {
         txn.update(subRef, {
@@ -520,7 +565,7 @@ class UnifiedGameService implements IGameService {
           });
         }
       } else if (action === 'bonus') {
-        const bonusAmount = 20;
+        const bonusAmount = points ?? 20;
         const totalAwarded = basePoints + bonusAmount;
         txn.update(subRef, {
           status: 'approved',
@@ -649,11 +694,21 @@ class UnifiedGameService implements IGameService {
         createdAt: Date.now(),
       };
 
-      await setDoc(gameRef, defaultGame);
-
-      for (const team of DEFAULT_TEAMS) {
-        const teamRef = doc(firestore, 'games', defaultGame.id, 'teams', team.id);
-        await setDoc(teamRef, team);
+      // Several clients can open the app before the game exists: only the client whose
+      // transaction actually creates the game doc seeds it. Teams are written in the same
+      // transaction, so nobody sees the game without its teams, and a late client never
+      // re-writes a team (wiping members who already joined).
+      const existingGame = await runTransaction(firestore, async (txn) => {
+        const snap = await txn.get(gameRef);
+        if (snap.exists()) return { id: snap.id, ...snap.data() } as Game;
+        txn.set(gameRef, defaultGame);
+        for (const team of DEFAULT_TEAMS) {
+          txn.set(doc(firestore, 'games', defaultGame.id, 'teams', team.id), team);
+        }
+        return null;
+      });
+      if (existingGame) {
+        return existingGame;
       }
 
       try {
@@ -682,11 +737,12 @@ class UnifiedGameService implements IGameService {
     action: 'approve' | 'reject' | 'bonus',
     options?: { bonusPoints?: number; rejectionReason?: string }
   ) {
+    // bonusPoints only applies to 'bonus'; passing it for 'approve' would override the clue's points.
     return this.verifySubmission(
       gameId,
       submissionId,
       action,
-      options?.bonusPoints,
+      action === 'bonus' ? options?.bonusPoints : undefined,
       options?.rejectionReason
     );
   }

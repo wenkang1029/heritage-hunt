@@ -443,9 +443,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   ) => {
     try {
       setIsProcessingAction(true);
-      const bonus = action === 'bonus' ? 25 : 0;
       await gameService.reviewSubmission(game.id, submission.id, action, {
-        bonusPoints: bonus,
+        bonusPoints: action === 'bonus' ? 25 : undefined,
         rejectionReason: action === 'reject' ? 'Photo does not clearly match the landmark detail.' : undefined,
       });
     } catch (err: any) {
