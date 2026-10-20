@@ -25,7 +25,8 @@ export type Task =
   | (TaskBase & { role: 'bootstrap'; joinPin?: string; nickname: string })
   | (TaskBase & { role: 'listener'; durationMs: number; startedAt: number })
   | (TaskBase & { role: 'uploader'; teamId: string; clueIds: string[]; photoKB: number; intervalMs: number })
-  | (TaskBase & { role: 'load'; durationMs: number; ops: LoadOp[] });
+  | (TaskBase & { role: 'load'; durationMs: number; ops: LoadOp[] })
+  | (TaskBase & { role: 'offline'; pin: string; takenPin: string; teamId: string; clueId: string });
 
 /** Load mode (--load=op:qps): operations a worker fires at a fixed rate. */
 export const LOAD_OPS = ['heartbeat', 'offline', 'gps', 'join', 'submit', 'approve', 'broadcast'] as const;

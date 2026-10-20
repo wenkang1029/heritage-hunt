@@ -41,6 +41,7 @@ npm run stress -- --scale=2       # worker / 玩家数量 ×2（注意内存：�
 | S4 | 两个 GM 同一时间批准同样 10 张 | 每张只批准一次、分数没翻倍 | B3 |
 | S5 | 8 台手机在 game 还不存在时同时打开 app，然后马上加入 | 只有一个 client 建 game、加入的人没被覆盖掉 | B8 |
 | S6 | 6 台手机在线，2 队每秒上传 140KB 照片 | 每台都收到每张；报告延迟、每台收到的数据量、内存 | 负载 / fan-out |
+| S7 | 手机断线（`disableNetwork`）后加入、GM 建队（PIN 已被占用）、提交照片 | 都马上回报「连不上服务器」；不误报 PIN 错、不卡住、不写出重复 PIN | B10 |
 
 每个场景也会检查：worker 没崩、**没有悄悄切到 mock 假数据**（B7）、heartbeat 没有被吞掉的写入失败。
 
@@ -76,14 +77,14 @@ npm run stress -- --load=approve:5 --p95=500 --max-error-rate=0.01   # 加上通
 每个 team doc（5 人）≈ 0.4 写入/秒。`heartbeat:25` 已经是真实负载的十几倍。
 
 **已知现象**：heartbeat + offline + approve + join 一起打（每个 team doc 约 12 个 transaction/秒）时，
-部分 client 会卡住约 10 秒，Firestore SDK 判定离线，之后 `joinTeamByPin` 会从本地缓存查 PIN、查不到，
-回报「No team found with PIN」（app 的 bug：断线却说 PIN 错）。这个卡顿有多少是 emulator 自己的 transaction
-实现造成的，emulator 里分辨不出来，要在独立的 Firebase 项目上验证。
+部分 client 会卡住约 10 秒，Firestore SDK 判定离线，join / submit 会失败。修 B10 之后玩家看到的是
+「Cannot reach the game server…」（之前会误报「No team found with PIN」）。这个卡顿有多少是 emulator 自己的
+transaction 实现造成的，emulator 里分辨不出来，要在独立的 Firebase 项目上验证。
 
 ## 已验证：脚本真的抓得到 bug
 
-把 `gameService.ts` 换回修 bug 前的版本跑：S1、S2、S3、S4、S5 全部 FAIL
-（例：S4 "20 approvals for 10 submissions"，分数 2900 vs 1450）。修复后 6/6 PASS。
+把 `gameService.ts` 换回修 bug 前的版本跑：S1–S5、S7 全部 FAIL
+（例：S4 "20 approvals for 10 submissions"，分数 2900 vs 1450；S7 建队卡住 15 秒）。修复后 7/7 PASS。
 
 ## 限制
 

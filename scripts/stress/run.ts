@@ -91,7 +91,7 @@ async function resetEmulator() {
   await fetch(`${AUTH}/emulator/v1/projects/${PROJECT_ID}/accounts`, { method: 'DELETE' });
 }
 
-const { gameService, isMockMode } = await import('../../src/services/gameService.ts');
+const { gameService, isMockMode, CONNECTION_ERROR_MESSAGE } = await import('../../src/services/gameService.ts');
 const { db, ensureAnonymousAuth } = await import('../../src/services/firebase.ts');
 const { DEFAULT_TEAMS } = await import('../../src/data/melakaZones.ts');
 const { doc, getDoc, getDocs, collection } = await import('firebase/firestore');
@@ -567,6 +567,35 @@ async function s6(): Promise<ScenarioResult> {
   };
 }
 
+/** S7 — Lost connection: join / create team / submit must report it, not mislead or hang (B10). */
+async function s7(): Promise<ScenarioResult> {
+  const { game, clues } = await newGame('stress-s7', 2, 1);
+  const [r] = await runWorkers(
+    [{ role: 'offline', label: 's7-offline', gameId: game.id, pin: '1001', takenPin: '2002', teamId: 'team_1', clueId: clues[0].id }],
+    90000
+  );
+  const teams = (await getDocs(collection(db!, 'games', game.id, 'teams'))).docs.map((d) => d.data() as any);
+  const subs = await readSubmissions(game.id);
+  const isConnectionError = (o?: { outcome: string; ms: number }) => o?.outcome === CONNECTION_ERROR_MESSAGE;
+  const show = (o?: { outcome: string; ms: number }) => (o ? `${o.outcome} (${o.ms}ms)` : 'no result');
+  const common = commonChecks([r]);
+
+  return {
+    id: 's7',
+    title: 'S7 lost connection — join, GM create team (PIN already taken), submit photo',
+    checks: [
+      ...common.checks,
+      { name: 'join says "cannot reach server", not "No team found"', pass: isConnectionError(r.data?.join), detail: show(r.data?.join) },
+      { name: 'create team says "cannot reach server", does not hang', pass: isConnectionError(r.data?.createTeam), detail: show(r.data?.createTeam) },
+      { name: 'submit says "cannot reach server"', pass: isConnectionError(r.data?.submit), detail: show(r.data?.submit) },
+      { name: 'no team created with a duplicate PIN', pass: teams.filter((t) => t.pin === '2002').length === 1, detail: `${teams.filter((t) => t.pin === '2002').length} team(s) with PIN 2002` },
+      { name: 'no submission written', pass: subs.length === 0, detail: `${subs.length}` },
+    ],
+    metrics: {},
+    workerErrors: common.workerErrors,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Load mode (--load=op:qps,...)
 // ---------------------------------------------------------------------------
@@ -708,7 +737,7 @@ async function loadTest(spec: { op: LoadOpName; qps: number }[]): Promise<Scenar
 
 const SCENARIOS: Record<string, () => Promise<ScenarioResult>> = LOAD
   ? { load: () => loadTest(LOAD) }
-  : { s1, s2, s3, s4, s5, s6 };
+  : { s1, s2, s3, s4, s5, s6, s7 };
 const selected = Object.keys(SCENARIOS).filter((id) => LOAD || !ONLY || ONLY.includes(id));
 
 console.log(`Heritage Hunt stress test — emulator ${HOST}, project ${PROJECT_ID}, scale ×${SCALE}`);

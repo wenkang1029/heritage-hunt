@@ -32,7 +32,7 @@ console.warn = (...args: unknown[]) => {
 };
 
 const { gameService } = await import('../../src/services/gameService.ts');
-const { ensureAnonymousAuth } = await import('../../src/services/firebase.ts');
+const { ensureAnonymousAuth, db } = await import('../../src/services/firebase.ts');
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const rand = (min: number, max: number) => min + Math.random() * (max - min);
@@ -269,6 +269,39 @@ const roles: Record<Task['role'], (t: any) => Promise<Record<string, unknown>>> 
       maxDocs,
       heapMB: Math.round(mem.heapUsed / 1048576),
       rssMB: Math.round(mem.rss / 1048576),
+    };
+  },
+
+  /** S7: the phone loses its connection; every action must say so clearly and promptly. */
+  async offline(t: Extract<Task, { role: 'offline' }>) {
+    const { disableNetwork } = await import('firebase/firestore');
+    await disableNetwork(db!);
+    // Outcome of one action: its error message, 'succeeded', or 'hung' (no answer in 15s).
+    const attempt = async (fn: () => Promise<unknown>) => {
+      const t0 = performance.now();
+      const timeout = new Promise<string>((res) => setTimeout(() => res('hung'), 15000));
+      const outcome = await Promise.race([
+        fn().then(() => 'succeeded', (e: any) => String(e?.message || e)),
+        timeout,
+      ]);
+      return { outcome, ms: Math.round(performance.now() - t0) };
+    };
+    return {
+      join: await attempt(() => gameService.joinTeamByPin(t.gameId, t.pin, 'offline-player')),
+      createTeam: await attempt(() => gameService.createTeam(t.gameId, 'Offline Dup', '#000000', t.takenPin)),
+      submit: await attempt(() =>
+        gameService.submitCluePhoto(t.gameId, {
+          gameId: t.gameId,
+          teamId: t.teamId,
+          teamName: t.teamId,
+          teamColor: '#000000',
+          clueId: t.clueId,
+          clueTitle: t.clueId,
+          selfieBase64: 'data:image/jpeg;base64,/9j/4AAQSkZJRg==',
+          submittedBy: 'offline-player',
+          submissionCoords: { latitude: 2.1944, longitude: 102.2491 },
+        } as any)
+      ),
     };
   },
 

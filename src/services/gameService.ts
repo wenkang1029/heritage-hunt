@@ -14,6 +14,8 @@ import {
   where,
   getDocs,
   getDoc,
+  getDocsFromServer,
+  getDocFromServer,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -43,6 +45,29 @@ import { calculateHaversineDistance } from '../utils/haversine.ts';
 import { normalizeClueZh } from '../data/cluesZh.ts';
 
 export type DataSourceMode = 'firestore' | 'mock';
+
+export const CONNECTION_ERROR_MESSAGE =
+  'Cannot reach the game server. Please check your internet connection and try again.';
+
+function isOfflineError(err: unknown): boolean {
+  const e = err as { code?: string; message?: string } | null;
+  return e?.code === 'unavailable' || e?.code === 'deadline-exceeded' || /client is offline/i.test(e?.message || '');
+}
+
+/**
+ * Checks that decide something (does this PIN exist / is it taken / was this clue already
+ * submitted) must read from the server: offline, getDocs silently answers from the local
+ * cache, so "no connection" would look like "not found". Offline errors become one clear
+ * connection message instead of a misleading "No team found" / raw Firestore error.
+ */
+async function withConnectionError<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (isOfflineError(err)) throw new Error(CONNECTION_ERROR_MESSAGE);
+    throw err;
+  }
+}
 
 /**
  * Safely reads environment variables across Vite browser and Node.js environments.
@@ -257,7 +282,7 @@ class UnifiedGameService implements IGameService {
 
     const teamsCol = collection(firestore, 'games', gameId, 'teams');
     const q = query(teamsCol, where('pin', '==', cleanPin));
-    const snap = await getDocs(q);
+    const snap = await withConnectionError(() => getDocsFromServer(q));
     if (!snap.empty) {
       throw new Error(`PIN "${cleanPin}" is already assigned to team "${snap.docs[0].data().name}"`);
     }
@@ -294,7 +319,7 @@ class UnifiedGameService implements IGameService {
 
     const teamsCol = collection(firestore, 'games', gameId, 'teams');
     const q = query(teamsCol, where('pin', '==', cleanPin));
-    const snap = await getDocs(q);
+    const snap = await withConnectionError(() => getDocsFromServer(q));
 
     if (snap.empty) {
       throw new Error(`No team found with PIN "${cleanPin}". Please check with your Game Master.`);
@@ -305,7 +330,7 @@ class UnifiedGameService implements IGameService {
 
     // Upsert by player id inside a transaction: re-joining (refresh / re-scan) must not
     // add a second copy of the same player, and concurrent joins must not drop each other.
-    const teamData = await runTransaction(firestore, async (txn) => {
+    const teamData = await withConnectionError(() => runTransaction(firestore, async (txn) => {
       const teamSnap = await txn.get(teamDoc.ref);
       if (!teamSnap.exists()) {
         throw new Error(`No team found with PIN "${cleanPin}". Please check with your Game Master.`);
@@ -328,7 +353,7 @@ class UnifiedGameService implements IGameService {
         members: updatedMembers,
       });
       return { ...data, members: updatedMembers };
-    });
+    }));
 
     return {
       team: { ...teamData, id: teamDoc.id },
@@ -461,19 +486,23 @@ class UnifiedGameService implements IGameService {
     await ensureAnonymousAuth();
 
     // Duplicate checks (same rules as the mock adapter)
-    const teamSnap = await getDoc(doc(firestore, 'games', gameId, 'teams', submission.teamId));
+    const teamSnap = await withConnectionError(() =>
+      getDocFromServer(doc(firestore, 'games', gameId, 'teams', submission.teamId))
+    );
     if (!teamSnap.exists()) {
       throw new Error(`Team ${submission.teamId} not found`);
     }
     if (((teamSnap.data() as Team).completedClueIds || []).includes(submission.clueId)) {
       throw new Error('Your team has already completed this clue!');
     }
-    const pendingSnap = await getDocs(
-      query(
-        collection(firestore, 'games', gameId, 'submissions'),
-        where('teamId', '==', submission.teamId),
-        where('clueId', '==', submission.clueId),
-        where('status', '==', 'pending')
+    const pendingSnap = await withConnectionError(() =>
+      getDocsFromServer(
+        query(
+          collection(firestore, 'games', gameId, 'submissions'),
+          where('teamId', '==', submission.teamId),
+          where('clueId', '==', submission.clueId),
+          where('status', '==', 'pending')
+        )
       )
     );
     if (!pendingSnap.empty) {
@@ -893,7 +922,7 @@ class UnifiedGameService implements IGameService {
       const cleanPin = updates.pin.trim();
       const teamsCol = collection(firestore, 'games', gameId, 'teams');
       const q = query(teamsCol, where('pin', '==', cleanPin));
-      const snap = await getDocs(q);
+      const snap = await withConnectionError(() => getDocsFromServer(q));
       const conflict = snap.docs.find((d) => d.id !== teamId);
       if (conflict) {
         throw new Error(`PIN "${cleanPin}" is already assigned to "${conflict.data().name}"`);
