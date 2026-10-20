@@ -575,6 +575,44 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     return closest;
   }, [playerCoords, clues, completedClueIds, trackedClue?.id]);
 
+  // Highlight state for auto-scrolled clue card in the Clues tab
+  const [highlightedClueId, setHighlightedClueId] = useState<string | null>(null);
+
+  // Helper to scroll smoothly to a specific clue card in the Clues tab
+  const scrollToClueCard = useCallback((clueId: string) => {
+    // Delay ensures tab switch and virtual rendering are settled
+    setTimeout(() => {
+      const el = document.getElementById(`clue-card-${clueId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setHighlightedClueId(clueId);
+        setTimeout(() => {
+          setHighlightedClueId((prev) => (prev === clueId ? null : prev));
+        }, 2500);
+      }
+    }, 120);
+  }, []);
+
+  // Handle bottom navigation tab switching with auto-scroll to selected clue
+  const handleNavigateTab = useCallback((tab: 'map' | 'clues' | 'leaderboard') => {
+    if (tab === 'clues' && trackedClue) {
+      if (selectedZoneFilter !== 'all' && selectedZoneFilter !== trackedClue.zoneId) {
+        setSelectedZoneFilter('all');
+      }
+      scrollToClueCard(trackedClue.id);
+    }
+    setActiveTab(tab);
+  }, [trackedClue, selectedZoneFilter, scrollToClueCard]);
+
+  // Direct action from Floating Radar Card to jump directly to Clues tab and scroll to card
+  const handleJumpToClueInList = useCallback((clue: Clue) => {
+    if (selectedZoneFilter !== 'all' && selectedZoneFilter !== clue.zoneId) {
+      setSelectedZoneFilter('all');
+    }
+    setActiveTab('clues');
+    scrollToClueCard(clue.id);
+  }, [selectedZoneFilter, scrollToClueCard]);
+
   // Trigger Native Camera Input
   const handleOpenNativeCamera = (clue: Clue) => {
     setSelectedClue(clue);
@@ -960,12 +998,15 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 return (
                   <div
                     key={clue.id}
+                    id={`clue-card-${clue.id}`}
                     onClick={() => !isDone && handleOpenNativeCamera(clue)}
-                    className={`p-3 rounded-2xl border transition-all flex items-center gap-3.5 relative overflow-hidden ${
+                    className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 relative overflow-hidden ${
                       isDone
                         ? 'bg-emerald-950/20 border-emerald-800/40 opacity-80'
                         : isPending
                         ? 'bg-amber-950/20 border-amber-800/40'
+                        : highlightedClueId === clue.id
+                        ? 'bg-slate-900 border-amber-400 ring-4 ring-amber-400/50 shadow-2xl scale-[1.01]'
                         : 'bg-slate-900 border-slate-800 hover:border-slate-700 cursor-pointer shadow-lg'
                     }`}
                   >
@@ -1310,7 +1351,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
           >
             {/* Header: Target Title + Points Badge + Target Switcher / Reset Button */}
             <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-800/80">
-              <div className="flex items-center gap-1.5 min-w-0">
+              <div
+                onClick={() => handleJumpToClueInList(trackedClue)}
+                className="flex items-center gap-1.5 min-w-0 cursor-pointer group"
+                title={language === 'zh' ? '点击在线索列表中查看' : 'Click to view in Clues list'}
+              >
                 <span
                   className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                     radarStage === 'target'
@@ -1322,7 +1367,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                       : 'bg-blue-400'
                   }`}
                 />
-                <h4 className="font-bold text-xs sm:text-sm text-white truncate leading-tight">
+                <h4 className="font-bold text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors truncate leading-tight">
                   {trackedClue.title}
                 </h4>
                 <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
@@ -1395,13 +1440,17 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               </div>
 
               {/* Real Adventure Compass + Chinese Direction Guidance */}
-              <div className="flex-1 min-w-0">
+              <div
+                onClick={() => handleJumpToClueInList(trackedClue)}
+                className="flex-1 min-w-0 cursor-pointer group"
+                title={language === 'zh' ? '点击在线索列表中查看' : 'Click to view in Clues list'}
+              >
                 <div className="flex items-center gap-2.5">
                   {trackedBearing !== null && compassHeading && (
                     <AdventureCompass
                       bearing={compassHeading.bearingDeg}
                       directionZh={compassHeading.directionZh}
-                      className="w-9 h-9"
+                      className="w-9 h-9 group-hover:scale-105 transition-transform"
                     />
                   )}
 
@@ -1415,7 +1464,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           </div>
                         ) : radarStage === 'near' ? (
                           <div>
-                            <div className="text-xs font-black text-orange-400 flex items-center gap-1 truncate">
+                            <div className="text-xs font-black text-orange-400 group-hover:text-amber-300 transition-colors flex items-center gap-1 truncate">
                               <Flame className="w-3.5 h-3.5 shrink-0 text-orange-400" />
                               <span>{language === 'zh' ? `正在接近！朝${compassHeading.label}` : `Closing in! Head ${compassHeading.code}`}</span>
                             </div>
@@ -1425,7 +1474,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           </div>
                         ) : (
                           <div>
-                            <div className="text-xs font-black text-white truncate">
+                            <div className="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
                               {language === 'zh' ? `朝【${compassHeading.directionZh}】前行` : `Head ${compassHeading.code} (${compassHeading.label})`}
                             </div>
                             <div className="text-[11px] text-amber-300 font-mono font-medium mt-0.5">
@@ -1481,7 +1530,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       {/* 3. Bottom Navigation Bar - Fixed & Locked to Screen Bottom */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto z-40 h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex items-center justify-around px-3 shadow-[0_-4px_25px_rgba(0,0,0,0.6)]">
         <button
-          onClick={() => setActiveTab('map')}
+          onClick={() => handleNavigateTab('map')}
           className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl ${
             activeTab === 'map'
               ? 'text-rose-500 font-bold bg-rose-500/10'
@@ -1493,7 +1542,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         </button>
 
         <button
-          onClick={() => setActiveTab('clues')}
+          onClick={() => handleNavigateTab('clues')}
           className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl relative ${
             activeTab === 'clues'
               ? 'text-rose-500 font-bold bg-rose-500/10'
@@ -1512,7 +1561,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         </button>
 
         <button
-          onClick={() => setActiveTab('leaderboard')}
+          onClick={() => handleNavigateTab('leaderboard')}
           className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl ${
             activeTab === 'leaderboard'
               ? 'text-rose-500 font-bold bg-rose-500/10'
