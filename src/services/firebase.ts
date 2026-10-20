@@ -10,10 +10,12 @@ import {
   persistentLocalCache,
   persistentMultipleTabManager,
   memoryLocalCache,
+  connectFirestoreEmulator,
   type Firestore,
 } from 'firebase/firestore';
 import {
   getAuth,
+  connectAuthEmulator,
   signInAnonymously,
   onAuthStateChanged,
   type Auth,
@@ -96,6 +98,13 @@ if (isFirebaseConfigured()) {
     }
 
     auth = getAuth(app);
+
+    // Local Firebase Emulator Suite (stress tests / offline dev), ports match scripts/stress/firebase.json
+    const emulatorHost = getEnvVar('VITE_FIREBASE_EMULATOR_HOST');
+    if (emulatorHost) {
+      connectFirestoreEmulator(db, emulatorHost, 8080);
+      connectAuthEmulator(auth, `http://${emulatorHost}:9099`, { disableWarnings: true });
+    }
   } catch (err) {
     console.warn('Firebase initialization failed, falling back to mock mode:', err);
     app = null;

@@ -26,3 +26,7 @@ dist-ssr
 # Raw photo assets for batch processing
 raw_photos/*
 !raw_photos/README.md
+
+# stress test output
+scripts/stress/results/
+*-debug.log

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "emulators": "npx -y firebase-tools@14 emulators:start --config scripts/stress/firebase.json --project demo-heritage-hunt --only firestore,auth",
+    "stress": "node --experimental-strip-types --disable-warning=ExperimentalWarning --import ./scripts/stress/register.mjs scripts/stress/run.ts"
   },
   "dependencies": {
     "browser-image-compression": "^2.0.2",
