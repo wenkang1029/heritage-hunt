@@ -604,6 +604,44 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     setActiveTab(tab);
   }, [trackedClue, selectedZoneFilter, scrollToClueCard]);
 
+  // When already on the 'clues' tab, changing the selected/tracked clue card on the Floating Radar Card
+  // automatically scrolls the page to that respective clue card
+  const prevTrackedClueIdRef = useRef<string | null>(trackedClue?.id || null);
+  useEffect(() => {
+    if (activeTab === 'clues' && trackedClue && trackedClue.id !== prevTrackedClueIdRef.current) {
+      scrollToClueCard(trackedClue.id);
+    }
+    prevTrackedClueIdRef.current = trackedClue?.id || null;
+  }, [activeTab, trackedClue, scrollToClueCard]);
+
+  // Switch to the next available nearby clue from the Floating Radar Card
+  const handleSwitchNextRadarTarget = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!nearestUncompletedClues.length) return;
+    const nextIdx = (autoRadarIndex + 1) % Math.min(nearestUncompletedClues.length, 5);
+    setAutoRadarIndex(nextIdx);
+    const target = nearestUncompletedClues[nextIdx]?.clue;
+    if (target && activeTab === 'clues') {
+      if (selectedZoneFilter !== 'all' && selectedZoneFilter !== target.zoneId) {
+        setSelectedZoneFilter('all');
+      }
+      scrollToClueCard(target.id);
+    }
+  }, [nearestUncompletedClues, autoRadarIndex, activeTab, selectedZoneFilter, scrollToClueCard]);
+
+  // Reset manual locked tracking back to automatic radar
+  const handleResetAutoRadar = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setTrackedClueId(null);
+    if (activeTab === 'clues' && nearestUncompletedClues[0]?.clue) {
+      const topClue = nearestUncompletedClues[0].clue;
+      if (selectedZoneFilter !== 'all' && selectedZoneFilter !== topClue.zoneId) {
+        setSelectedZoneFilter('all');
+      }
+      scrollToClueCard(topClue.id);
+    }
+  }, [activeTab, nearestUncompletedClues, selectedZoneFilter, scrollToClueCard]);
+
   // Direct action from Floating Radar Card to jump directly to Clues tab and scroll to card
   const handleJumpToClueInList = useCallback((clue: Clue) => {
     if (selectedZoneFilter !== 'all' && selectedZoneFilter !== clue.zoneId) {
@@ -1384,7 +1422,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 {isAutoTracking && nearestUncompletedClues.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => setAutoRadarIndex((prev) => prev + 1)}
+                    onClick={handleSwitchNextRadarTarget}
                     className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
                     title={t('player.nextNearbyClue')}
                   >
@@ -1395,7 +1433,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 {!isAutoTracking && (
                   <button
                     type="button"
-                    onClick={() => setTrackedClueId(null)}
+                    onClick={handleResetAutoRadar}
                     className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
                     title="恢复自动感知"
                   >
