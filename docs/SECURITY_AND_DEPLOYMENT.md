@@ -17,6 +17,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Top-level system settings (e.g., custom geofence zones: /settings/zones)
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
     // Games collection: Anyone can read active game status; only GM can modify
     match /games/{gameId} {
       allow read: if true;
@@ -25,7 +31,7 @@ service cloud.firestore {
       // Teams sub-collection
       match /teams/{teamId} {
         allow read: if true;
-        // Teams can update their own GPS location and score
+        // Teams can update their own GPS location, members and status
         allow create, update: if isAuthenticated();
         allow delete: if false;
       }
@@ -33,14 +39,23 @@ service cloud.firestore {
       // Clues sub-collection: Players can view clues, GM creates them
       match /clues/{clueId} {
         allow read: if true;
-        allow write: if isAuthenticated();
+        allow create, update: if isAuthenticated();
+        allow delete: if false;
       }
 
       // Submissions sub-collection: Teams can submit, GM reviews
       match /submissions/{submissionId} {
         allow read: if true;
         allow create: if isAuthenticated() && request.resource.data.selfieBase64.size() < 300000; // max ~225KB
-        allow update, delete: if isAuthenticated();
+        allow update: if isAuthenticated();
+        allow delete: if false;
+      }
+
+      // Broadcasts sub-collection: GM live announcements to players
+      match /broadcasts/{broadcastId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if false;
       }
     }
   }
@@ -65,7 +80,7 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=xxxxxxxxxx
 VITE_FIREBASE_APP_ID=1:xxxxxxxx:web:xxxxxxxx
 
 # GM Passcode (for War Room access)
-VITE_GM_PASSCODE=melaka2026
+VITE_GM_PASSCODE=your_secret_passcode_here
 ```
 
 ---

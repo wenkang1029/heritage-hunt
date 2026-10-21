@@ -539,9 +539,6 @@ export const App: React.FC = () => {
                 </button>
               </div>
             </form>
-            <p className="text-[10px] text-slate-500 mt-3 font-mono">
-              {t('home.gmDefaultPasscode')}
-            </p>
           </div>
         </div>
       )}

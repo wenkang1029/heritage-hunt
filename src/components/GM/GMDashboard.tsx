@@ -900,9 +900,6 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-          <p className="text-[10px] text-slate-500 mt-3 font-mono">
-            {t('gm.defaultPasscode')}
-          </p>
         </div>
       </div>
     );

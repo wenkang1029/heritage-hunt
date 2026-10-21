@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Top-level system settings (e.g., custom geofence zones: /settings/zones)
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Games collection: Game status, timer, settings, active broadcast
+    match /games/{gameId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+
+      // Teams sub-collection
+      match /teams/{teamId} {
+        allow read: if true;
+        // Allow create & update by authenticated players/GM; prevent deletion
+        allow create, update: if isAuthenticated();
+        allow delete: if false;
+      }
+
+      // Clues sub-collection
+      match /clues/{clueId} {
+        allow read: if true;
+        allow create, update: if isAuthenticated();
+        allow delete: if false;
+      }
+
+      // Submissions sub-collection: Team uploads and GM reviews
+      match /submissions/{submissionId} {
+        allow read: if true;
+        // Enforce max ~225KB base64 payload to prevent malicious storage bloat
+        allow create: if isAuthenticated() && request.resource.data.selfieBase64.size() < 300000;
+        allow update: if isAuthenticated();
+        allow delete: if false;
+      }
+
+      // Broadcasts sub-collection: GM live broadcasts and player notification logs
+      match /broadcasts/{broadcastId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if false;
+      }
+    }
+  }
+}
