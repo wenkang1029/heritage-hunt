@@ -40,6 +40,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.tsx';
+import { getClueLabel } from '../../data/cluesZh.ts';
 
 // ============================================================================
 // Custom Leaflet DivIcons (No broken image asset URLs)
@@ -367,7 +368,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
     };
   }, [trackedClue, playerCoords]);
 
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const uncompletedClues = useMemo(() => {
     return clues.filter((c) => !completedSet.has(c.id) && c.location);
@@ -555,17 +556,17 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                         <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
                           <img
                             src={clue.targetPhotoBase64}
-                            alt={clue.title}
+                            alt={clue.title || getClueLabel(clue.id, language)}
                             className="w-full h-full object-cover"
                           />
                         </div>
                       )}
                       <div className="flex items-center justify-between gap-1 mb-1">
                         <h4 className="font-bold text-sm text-slate-100 leading-tight">
-                          {clue.title}
+                          {clue.title || getClueLabel(clue.id, language)}
                         </h4>
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                          +{clue.points} pts
+                          +{clue.points || 50} pts
                         </span>
                       </div>
 
@@ -663,13 +664,13 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                         <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
                           <img
                             src={clue.targetPhotoBase64}
-                            alt={clue.title}
+                            alt={clue.title || getClueLabel(clue.id, language)}
                             className="w-full h-full object-cover"
                           />
                         </div>
                       )}
                       <h4 className="font-bold text-sm text-slate-100 leading-tight mb-1">
-                        {clue.title}
+                        {clue.title || getClueLabel(clue.id, language)}
                       </h4>
                       <p className="text-xs text-emerald-400 font-bold mb-2">
                         🎯 已到达搜索范围（&lt;20米）！
@@ -708,21 +709,21 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                         <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
                           <img
                             src={clue.targetPhotoBase64}
-                            alt={clue.title}
+                            alt={clue.title || getClueLabel(clue.id, language)}
                             className="w-full h-full object-cover"
                           />
                         </div>
                       )}
                       <div className="flex items-center justify-between gap-1 mb-1">
                         <h4 className="font-bold text-sm text-slate-100 leading-tight">
-                          {clue.title}
+                          {clue.title || getClueLabel(clue.id, language)}
                         </h4>
                         <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
-                          +{clue.points} pts
+                          +{clue.points || 50} pts
                         </span>
                       </div>
                       <p className="text-xs text-slate-300 mb-2">
-                        {clue.landmarkName || clue.zoneId}
+                        {clue.zoneId}
                       </p>
                       <div className="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 py-1.5 px-2 rounded-lg border border-emerald-700/50 text-center flex items-center justify-center gap-1 shadow-sm">
                         <span>✓</span>

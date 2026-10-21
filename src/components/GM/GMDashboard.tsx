@@ -62,6 +62,7 @@ import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
 import { InteractiveTour, type TourStep } from '../Common/InteractiveTour.tsx';
 import { useLanguage } from '../../context/LanguageContext.tsx';
+import { getClueNumber, getClueLabel } from '../../data/cluesZh.ts';
 
 export interface GMDashboardProps {
   game: Game;
@@ -1337,7 +1338,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         </div>
 
                         <h3 className="font-bold text-sm text-amber-400 mb-3 truncate">
-                          {sub.clueTitle}
+                          {sub.clueTitle || getClueLabel(sub.clueId, language)}
                         </h3>
 
                         {/* Side-by-Side Photo Comparison */}
@@ -1359,8 +1360,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                                 if (targetClue?.targetPhotoBase64) {
                                   setLightboxImage({
                                     url: targetClue.targetPhotoBase64,
-                                    title: targetClue.title,
-                                    subtitle: targetClue.landmarkName || targetClue.zoneId,
+                                    title: targetClue.title || getClueLabel(targetClue.id, language),
+                                    subtitle: targetClue.zoneId,
                                     badge: t('common.targetLandmarkBadge'),
                                   });
                                 }
@@ -1402,7 +1403,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                                 setLightboxImage({
                                   url: sub.selfieBase64,
                                   title: `${sub.teamName} Submission Selfie`,
-                                  subtitle: sub.clueTitle,
+                                  subtitle: sub.clueTitle || getClueLabel(sub.clueId, language),
                                   badge: t('common.teamSelfieBadge'),
                                 });
                               }}
@@ -1533,72 +1534,96 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {clues.map((clue) => (
-                <div
-                  key={clue.id}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col"
-                >
+              {clues.map((clue) => {
+                const clueZone = game.zones.find((z) => z.id === clue.zoneId);
+                const clueTitle = getClueLabel(clue.id, language);
+
+                return (
                   <div
-                    onClick={() => {
-                      if (clue.targetPhotoBase64) {
-                        setLightboxImage({
-                          url: clue.targetPhotoBase64,
-                          title: clue.title,
-                          subtitle: clue.landmarkName || clue.zoneId,
-                          badge: t('common.targetLandmarkBadge'),
-                        });
-                      }
-                    }}
-                    className="w-full h-44 sm:h-48 bg-slate-950 overflow-hidden relative cursor-pointer group flex items-center justify-center border-b border-slate-800"
-                    title={t('common.viewFullUncropped')}
+                    key={clue.id}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col hover:border-slate-700 transition-all"
                   >
-                    {clue.targetPhotoBase64 ? (
-                      <>
-                        <img
-                          src={clue.targetPhotoBase64}
-                          alt={clue.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="bg-slate-900/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-700 shadow-lg flex items-center gap-1.5">
-                            <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
-                            <span>{t('gm.viewFullImage')}</span>
-                          </span>
+                    <div
+                      onClick={() => {
+                        if (clue.targetPhotoBase64) {
+                          setLightboxImage({
+                            url: clue.targetPhotoBase64,
+                            title: clueTitle,
+                            subtitle: clueZone?.name || clue.zoneId,
+                            badge: t('common.targetLandmarkBadge'),
+                          });
+                        }
+                      }}
+                      className="w-full h-44 sm:h-48 bg-slate-950 overflow-hidden relative cursor-pointer group flex items-center justify-center border-b border-slate-800"
+                      title={t('common.viewFullUncropped')}
+                    >
+                      {clue.targetPhotoBase64 ? (
+                        <>
+                          <img
+                            src={clue.targetPhotoBase64}
+                            alt={clueTitle}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="bg-slate-900/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-700 shadow-lg flex items-center gap-1.5">
+                              <Maximize2 className="w-3.5 h-3.5 text-amber-400" />
+                              <span>{t('gm.viewFullImage')}</span>
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-slate-600">
+                          {t('gm.noImage')}
                         </div>
-                        <div className="absolute top-2 right-2 bg-slate-900/80 p-1.5 rounded-lg text-slate-300 shadow">
-                          <Maximize2 className="w-4 h-4" />
-                        </div>
-                      </>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-slate-600">
-                        {t('gm.noImage')}
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3.5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">
-                          {clue.zoneId}
-                        </span>
-                        <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                          {clue.points} {t('gm.gmPointsUnit')}
+                      )}
+
+                      {/* Top Badges: Clue # Number & 50 Pts */}
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                        <span className="bg-slate-950/85 backdrop-blur-sm text-amber-300 font-mono font-black text-xs px-2 py-0.5 rounded-lg border border-amber-500/30 shadow-md">
+                          {getClueNumber(clue.id)}
                         </span>
                       </div>
-                      <h4 className="font-bold text-sm text-slate-100 truncate mb-1">
-                        {clue.title}
-                      </h4>
-                      <p className="text-xs text-slate-400 line-clamp-2">
-                        {clue.hint || t('gm.noHintSpecified')}
-                      </p>
+                      <div className="absolute top-2 right-2">
+                        <span className="bg-amber-500/20 backdrop-blur-sm text-amber-300 border border-amber-500/40 font-black text-xs px-2 py-0.5 rounded-lg shadow-md">
+                          50 {t('gm.gmPointsUnit')}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] font-mono text-slate-500 truncate">
-                      GPS: {clue.location.latitude.toFixed(4)}, {clue.location.longitude.toFixed(4)}
+                    <div className="p-3.5 flex-1 flex flex-col justify-between gap-2.5">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <h4 className="font-black text-sm text-white truncate">
+                            {clueTitle}
+                          </h4>
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-800 border border-slate-700 text-slate-300 shrink-0">
+                            <span
+                              className="w-2 h-2 rounded-full shrink-0"
+                              style={{ backgroundColor: clueZone?.color || '#94a3b8' }}
+                            />
+                            <span className="truncate max-w-[100px]">{clueZone?.name || clue.zoneId}</span>
+                          </span>
+                        </div>
+
+                        {clue.hint && (
+                          <p className="text-[11px] text-slate-400 line-clamp-2 bg-slate-950/60 p-2 rounded-xl border border-slate-800/80">
+                            💡 {clue.hint}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                        <span className="truncate">
+                          📍 {clue.location.latitude.toFixed(4)}, {clue.location.longitude.toFixed(4)}
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0">
+                          15m
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -2744,7 +2769,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 {language === 'zh' ? '队伍：' : 'Team: '}<span className="font-bold text-white">{rejectingSub.teamName}</span>
               </div>
               <div className="text-slate-400">
-                {language === 'zh' ? '线索：' : 'Clue: '}<span className="font-bold text-amber-300">{rejectingSub.clueTitle}</span>
+                {language === 'zh' ? '线索：' : 'Clue: '}<span className="font-bold text-amber-300">{rejectingSub.clueTitle || getClueLabel(rejectingSub.clueId, language)}</span>
               </div>
             </div>
 

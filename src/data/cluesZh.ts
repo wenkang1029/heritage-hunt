@@ -23,14 +23,22 @@ export const CLUES_ZH_MAP: Record<string, ClueZhMeta> = CLUES_ZH.reduce(
   {} as Record<string, ClueZhMeta>
 );
 
-export function normalizeClueZh<T extends { id: string; title?: string; landmarkName?: string; description?: string; hint?: string }>(clue: T): T {
-  const zh = CLUES_ZH_MAP[clue.id];
-  if (!zh) return clue;
+export function getClueNumber(id: string): string {
+  const match = id.match(/\d+/);
+  return match ? `#${match[0].padStart(3, '0')}` : id;
+}
+
+export function getClueLabel(id: string, language: 'zh' | 'en' = 'zh'): string {
+  const num = getClueNumber(id);
+  return language === 'zh' ? `线索 ${num}` : `Clue ${num}`;
+}
+
+export function normalizeClueZh<T extends { id: string; title?: string; landmarkName?: string; description?: string; hint?: string; points?: number }>(clue: T): T {
   return {
     ...clue,
-    title: zh.title,
-    landmarkName: zh.landmarkName,
-    description: zh.description,
-    hint: zh.hint,
+    title: '',
+    landmarkName: '',
+    description: '',
+    points: 50,
   };
 }

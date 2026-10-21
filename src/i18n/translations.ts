@@ -212,6 +212,17 @@ export const translations = {
       urgencyInfo: 'Info',
       urgencyAlert: 'Alert',
       urgencyUrgent: 'Urgent',
+      // Clue filters and views
+      filterAll: 'All',
+      filterUncompleted: 'Uncompleted',
+      filterCompleted: 'Completed',
+      filterClear: 'Clear Filter',
+      filterActiveZone: 'Active Zone Focus:',
+      filterZoneProgress: '{completed}/{total} Completed',
+      viewGrid: 'Grid',
+      viewList: 'List',
+      noCluesMatch: 'No clues match your current filters.',
+      resetFilterBtn: 'Reset All Filters',
     },
 
     // GM War Room Dashboard
@@ -591,6 +602,17 @@ export const translations = {
       urgencyInfo: '提示',
       urgencyAlert: '警告',
       urgencyUrgent: '紧急',
+      // Clue filters and views
+      filterAll: '全部',
+      filterUncompleted: '待探索',
+      filterCompleted: '已完成',
+      filterClear: '清除筛选',
+      filterActiveZone: '当前聚焦区域:',
+      filterZoneProgress: '已探索 {completed}/{total}',
+      viewGrid: '网格',
+      viewList: '列表',
+      noCluesMatch: '当前筛选条件下暂无线索',
+      resetFilterBtn: '重置所有筛选',
     },
 
     // GM War Room Dashboard

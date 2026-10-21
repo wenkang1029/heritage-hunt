@@ -40,7 +40,11 @@ import {
   Bell,
   XCircle,
   Pause,
+  LayoutGrid,
+  Filter,
+  RotateCcw,
 } from 'lucide-react';
+import { getClueNumber, getClueLabel } from '../../data/cluesZh.ts';
 import {
   calculateHaversineDistance,
   calculateBearing,
@@ -122,6 +126,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   const [activeTab, setActiveTab] = useState<'map' | 'clues' | 'leaderboard'>('map');
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState<string>('all');
+  const [clueStatusFilter, setClueStatusFilter] = useState<'all' | 'uncompleted' | 'completed'>('all');
+  const [clueViewMode, setClueViewMode] = useState<'grid' | 'list'>('grid');
 
   // Camera & submission state
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
@@ -533,12 +539,41 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     return nearestUncompletedClues[safeIdx]?.clue || null;
   }, [trackedClueId, clues, nearestUncompletedClues, autoRadarIndex]);
 
+  // Zone Progress Statistics for Filtering
+  const zoneStatsMap = useMemo(() => {
+    const stats: Record<string, { total: number; completed: number }> = {};
+    for (const z of game.zones) {
+      stats[z.id] = { total: 0, completed: 0 };
+    }
+    for (const c of clues) {
+      if (!stats[c.zoneId]) {
+        stats[c.zoneId] = { total: 0, completed: 0 };
+      }
+      stats[c.zoneId].total += 1;
+      if (completedClueIds.has(c.id)) {
+        stats[c.zoneId].completed += 1;
+      }
+    }
+    return stats;
+  }, [game.zones, clues, completedClueIds]);
+
+  const activeZone = useMemo(() => {
+    if (selectedZoneFilter === 'all') return null;
+    return game.zones.find((z) => z.id === selectedZoneFilter) || null;
+  }, [selectedZoneFilter, game.zones]);
+
   // Filtered and Sorted clues for the Clues Tab
   const filteredClues = useMemo(() => {
     let list =
       selectedZoneFilter === 'all'
         ? [...clues]
         : clues.filter((c) => c.zoneId === selectedZoneFilter);
+
+    if (clueStatusFilter === 'uncompleted') {
+      list = list.filter((c) => !completedClueIds.has(c.id));
+    } else if (clueStatusFilter === 'completed') {
+      list = list.filter((c) => completedClueIds.has(c.id));
+    }
 
     if (sortBy === 'distance' && playerCoords) {
       list.sort((a, b) => {
@@ -553,7 +588,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       });
     }
     return list;
-  }, [clues, selectedZoneFilter, sortBy, playerCoords, completedClueIds]);
+  }, [clues, selectedZoneFilter, clueStatusFilter, sortBy, playerCoords, completedClueIds]);
 
   // Radar Proximity for Tracked Clue
   const trackedDistance = useMemo(() => {
@@ -751,13 +786,15 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       setIsSubmitting(true);
       const coords = playerCoords || selectedClue.location || { latitude: 2.1944, longitude: 102.2491 };
 
+      const clueDisplayTitle = selectedClue.title || getClueLabel(selectedClue.id, language);
+
       await gameService.submitCluePhoto(game.id, {
         gameId: game.id,
         teamId: currentTeam.id,
         teamName: currentTeam.name,
         teamColor: currentTeam.color,
         clueId: selectedClue.id,
-        clueTitle: selectedClue.title,
+        clueTitle: clueDisplayTitle,
         selfieBase64: capturedPreview,
         submittedBy: nickname,
         submissionCoords: coords,
@@ -767,13 +804,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       setSubmissionFeedback('Selfie submitted! Waiting for Game Master verification.');
       setIsCapturing(false);
-      const submittedTitle = selectedClue.title;
       setSelectedClue(null);
       setCapturedPreview(null);
 
       await showAlert({
         title: 'Selfie Submitted!',
-        message: `Your selfie for "${submittedTitle}" was uploaded successfully! Waiting for Game Master verification.`,
+        message: `Your selfie for "${clueDisplayTitle}" was uploaded successfully! Waiting for Game Master verification.`,
         variant: 'success',
       });
 
@@ -1058,7 +1094,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         )}
 
         {activeTab === 'clues' && (
-          <div className="h-full overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-28">
+          <div className="h-full overflow-y-auto p-3 sm:p-4 space-y-3.5 pb-28">
             {/* 📍 Right Beside You (<100m) Highlight Section */}
             {playerCoords && nearbyCluesUnder100m.length > 0 && (
               <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-slate-900 border border-amber-500/40 shadow-xl">
@@ -1081,6 +1117,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
                   {nearbyCluesUnder100m.map((c) => {
                     const dist = calculateHaversineDistance(playerCoords, c.location!);
+                    const cZone = game.zones.find((z) => z.id === c.zoneId);
+                    const clueLabel = getClueLabel(c.id, language);
+
                     return (
                       <div
                         key={`nearby-${c.id}`}
@@ -1091,7 +1130,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           {c.targetPhotoBase64 ? (
                             <img
                               src={c.targetPhotoBase64}
-                              alt={c.title}
+                              alt={clueLabel}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                             />
                           ) : (
@@ -1099,8 +1138,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                               <Camera className="w-6 h-6" />
                             </div>
                           )}
-                          <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-sm border border-slate-700 text-[10px] font-black text-amber-400">
-                            +{c.points}
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-950/85 backdrop-blur-sm border border-slate-700 text-[10px] font-mono font-black text-amber-300">
+                            {getClueNumber(c.id)}
+                          </div>
+                          <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-slate-950/85 backdrop-blur-sm border border-slate-700 text-[10px] font-black text-amber-400">
+                            +50 分
                           </div>
                           <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md bg-emerald-950/90 backdrop-blur-sm border border-emerald-600/50 text-[10px] font-bold text-emerald-300 flex items-center gap-1 shadow">
                             <span>📍</span>
@@ -1108,9 +1150,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-bold text-xs text-white truncate mb-0.5">{c.title}</h4>
+                          <h4 className="font-bold text-xs text-white truncate mb-0.5">{clueLabel}</h4>
                           <p className="text-[10px] text-slate-400 truncate mb-2">
-                            {c.landmarkName || c.zoneId}
+                            {cZone?.name || c.zoneId}
                           </p>
                         </div>
                         <button
@@ -1127,221 +1169,628 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               </div>
             )}
 
-            {/* Zone Filter & Distance Sort Bar */}
-            <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <div className="flex items-center gap-1.5 shrink-0">
+            {/* Segmented Status Bar & View Mode Switcher */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
                 <button
-                  onClick={() => setSelectedZoneFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                    selectedZoneFilter === 'all'
+                  onClick={() => setClueStatusFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    clueStatusFilter === 'all'
                       ? 'bg-rose-600 text-white shadow-md'
-                      : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {t('player.allZones')} ({clues.length})
+                  {t('player.filterAll')} ({clues.length})
                 </button>
-                {game.zones.map((z) => (
+                <button
+                  onClick={() => setClueStatusFilter('uncompleted')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    clueStatusFilter === 'uncompleted'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t('player.filterUncompleted')} ({Math.max(0, clues.length - completedClueIds.size)})
+                </button>
+                <button
+                  onClick={() => setClueStatusFilter('completed')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    clueStatusFilter === 'completed'
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t('player.filterCompleted')} ({completedClueIds.size})
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                {/* Distance Sort Toggle */}
+                {playerCoords && (
+                  <button
+                    onClick={() => setSortBy((prev) => (prev === 'distance' ? 'default' : 'distance'))}
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                      sortBy === 'distance'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                    }`}
+                    title={sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}
+                  >
+                    <span>📍</span>
+                    <span className="text-[11px]">{sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}</span>
+                  </button>
+                )}
+
+                {/* View Mode Toggle: Grid vs List */}
+                <div className="flex items-center p-0.5 rounded-xl bg-slate-900 border border-slate-800">
+                  <button
+                    onClick={() => setClueViewMode('grid')}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      clueViewMode === 'grid' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                    title={t('player.viewGrid')}
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setClueViewMode('list')}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      clueViewMode === 'list' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                    title={t('player.viewList')}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Zone Filter Carousel */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              <button
+                onClick={() => setSelectedZoneFilter('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                  selectedZoneFilter === 'all'
+                    ? 'bg-rose-600 text-white shadow-md'
+                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                }`}
+              >
+                <span>{t('player.allZones')}</span>
+                <span className="text-[10px] opacity-80 font-mono">({clues.length})</span>
+              </button>
+              {game.zones.map((z) => {
+                const isSelected = selectedZoneFilter === z.id;
+                const stats = zoneStatsMap[z.id] || { total: 0, completed: 0 };
+                const allDone = stats.total > 0 && stats.completed === stats.total;
+
+                return (
                   <button
                     key={z.id}
                     onClick={() => setSelectedZoneFilter(z.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                      selectedZoneFilter === z.id
-                        ? 'bg-rose-600 text-white shadow-md'
-                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                      isSelected
+                        ? 'text-white shadow-lg ring-2 ring-white/30'
+                        : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
                     }`}
+                    style={
+                      isSelected
+                        ? {
+                            backgroundColor: z.color,
+                            borderColor: z.color,
+                            boxShadow: `0 0 14px ${z.color}66`,
+                          }
+                        : undefined
+                    }
                   >
                     <span
-                      className="w-2 h-2 rounded-full inline-block"
-                      style={{ background: z.color }}
+                      className="w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-sm"
+                      style={{ background: isSelected ? '#ffffff' : z.color }}
                     />
-                    {z.name}
+                    <span>{z.name}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        isSelected
+                          ? 'bg-black/30 text-white'
+                          : allDone
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {stats.completed}/{stats.total}
+                    </span>
+                    {allDone && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
                   </button>
-                ))}
-              </div>
-
-              {/* Distance Sort Toggle */}
-              {playerCoords && (
-                <button
-                  onClick={() => setSortBy((prev) => (prev === 'distance' ? 'default' : 'distance'))}
-                  className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
-                    sortBy === 'distance'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                      : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-                  }`}
-                  title={sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}
-                >
-                  <span>📍</span>
-                  <span className="text-[11px]">{sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}</span>
-                </button>
-              )}
+                );
+              })}
             </div>
 
-            {/* Clue Cards Grid */}
-            <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
-              {filteredClues.map((clue) => {
-                const isDone = completedClueIds.has(clue.id);
-                const isPending = pendingClueIds.has(clue.id);
-                const latestSub = latestSubByClue.get(clue.id);
-                const isRejected = !isDone && !isPending && latestSub?.status === 'rejected';
+            {/* 🔥 High-Impact Active Filter Focus Hero Banner */}
+            {(selectedZoneFilter !== 'all' || clueStatusFilter !== 'all') && (
+              <div
+                className="relative rounded-2xl p-3.5 border transition-all duration-300 shadow-xl overflow-hidden"
+                style={{
+                  background: activeZone
+                    ? `linear-gradient(135deg, ${activeZone.color}26 0%, #0f172a 100%)`
+                    : 'linear-gradient(135deg, rgba(244, 63, 94, 0.18) 0%, #0f172a 100%)',
+                  borderColor: activeZone ? `${activeZone.color}66` : 'rgba(244, 63, 94, 0.45)',
+                }}
+              >
+                <div
+                  className="absolute -top-12 -right-12 w-40 h-40 rounded-full blur-2xl pointer-events-none opacity-25"
+                  style={{ background: activeZone ? activeZone.color : '#f43f5e' }}
+                />
 
-                return (
-                  <div
-                    key={clue.id}
-                    id={`clue-card-${clue.id}`}
-                    onClick={() => !isDone && handleOpenNativeCamera(clue)}
-                    className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 relative overflow-hidden ${
-                      isDone
-                        ? 'bg-emerald-950/20 border-emerald-800/40 opacity-85'
-                        : isPending
-                        ? 'bg-amber-950/20 border-amber-800/40'
-                        : isRejected
-                        ? 'bg-rose-950/25 border-rose-800/50'
-                        : highlightedClueId === clue.id
-                        ? 'bg-slate-900 border-amber-400 ring-4 ring-amber-400/50 shadow-2xl scale-[1.01]'
-                        : 'bg-slate-900 border-slate-800 hover:border-slate-700 cursor-pointer shadow-lg'
-                    }`}
-                  >
-                    {/* Clue Target Photo Thumbnail */}
-                    <div
-                      onClick={(e) => {
-                        if (clue.targetPhotoBase64) {
-                          e.stopPropagation();
-                          setLightboxImage({
-                            url: clue.targetPhotoBase64,
-                            title: clue.title,
-                            subtitle: clue.landmarkName || clue.zoneId,
-                            badge: t('common.targetLandmarkBadge'),
-                          });
-                        }
-                      }}
-                      className="w-20 h-20 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group"
-                      title={t('player.modalTapUncropped')}
-                    >
-                      {clue.targetPhotoBase64 ? (
-                        <>
-                          <img
-                            src={clue.targetPhotoBase64}
-                            alt={clue.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Maximize2 className="w-5 h-5 text-white drop-shadow" />
-                          </div>
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-500">
-                          <Camera className="w-6 h-6" />
-                        </div>
-                      )}
-                      {isDone && (
-                        <div className="absolute inset-0 bg-emerald-950/70 flex items-center justify-center">
-                          <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-                        </div>
+                <div className="relative z-10 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/10 text-slate-200 border border-white/10 flex items-center gap-1">
+                        <Filter className="w-3 h-3 text-amber-400" />
+                        <span>{t('player.filterActiveZone')}</span>
+                      </span>
+                      {clueStatusFilter !== 'all' && (
+                        <span
+                          className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${
+                            clueStatusFilter === 'uncompleted'
+                              ? 'bg-amber-500/20 border-amber-500/30 text-amber-300'
+                              : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
+                          }`}
+                        >
+                          {clueStatusFilter === 'uncompleted'
+                            ? t('player.filterUncompleted')
+                            : t('player.filterCompleted')}
+                        </span>
                       )}
                     </div>
 
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
-                          {clue.landmarkName || clue.zoneId}
-                        </span>
-                        <span className="text-xs font-black text-amber-400 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 shrink-0">
-                          +{clue.points} {t('player.pointsUnit')}
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-sm text-slate-100 truncate mb-1">
-                        {clue.title}
-                      </h3>
-                      <p className="text-xs text-slate-400 line-clamp-1">
-                        {clue.hint || clue.description || t('player.noHint')}
-                      </p>
+                    <h3 className="text-base font-black text-white flex items-center gap-2 truncate">
+                      {activeZone ? (
+                        <>
+                          <span
+                            className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+                            style={{ background: activeZone.color }}
+                          />
+                          <span className="truncate">{activeZone.name}</span>
+                        </>
+                      ) : (
+                        <span>{t('player.allZones')}</span>
+                      )}
+                    </h3>
 
-                      {/* Status indicator & Track Button */}
-                      <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2 flex-wrap">
+                    {/* Zone Progress bar */}
+                    {(() => {
+                      const totalCount = activeZone ? (zoneStatsMap[activeZone.id]?.total || 0) : clues.length;
+                      const doneCount = activeZone ? (zoneStatsMap[activeZone.id]?.completed || 0) : completedClueIds.size;
+                      const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+                      return (
+                        <div className="mt-2">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex-1 h-2 rounded-full bg-slate-800/80 overflow-hidden border border-slate-700/60">
+                              <div
+                                className="h-full rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${pct}%`,
+                                  background: activeZone ? activeZone.color : '#10b981',
+                                }}
+                              />
+                            </div>
+                            <span className="text-[11px] font-mono font-bold text-slate-300 shrink-0">
+                              {doneCount}/{totalCount} ({pct}%)
+                            </span>
+                          </div>
+                          <p className="mt-1.5 text-[11px] text-slate-300 flex items-center gap-1.5 flex-wrap">
+                            <span>
+                              {language === 'zh'
+                                ? `显示 ${filteredClues.length} 个线索`
+                                : `Showing ${filteredClues.length} clues`}
+                            </span>
+                            {activeZone && (
+                              <span className="text-slate-400">
+                                · {language === 'zh' ? `待探索: ${totalCount - doneCount}` : `Uncompleted: ${totalCount - doneCount}`}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedZoneFilter('all');
+                      setClueStatusFilter('all');
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-rose-300 hover:text-white border border-rose-500/30 hover:border-rose-400 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>{t('player.filterClear')}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Empty State when no clues match */}
+            {filteredClues.length === 0 && (
+              <div className="py-12 px-4 text-center rounded-2xl bg-slate-900/60 border border-slate-800 my-4">
+                <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 mx-auto flex items-center justify-center mb-3 text-slate-400">
+                  <Compass className="w-7 h-7 text-amber-400" />
+                </div>
+                <h3 className="font-black text-sm text-white mb-1">
+                  {t('player.noCluesMatch')}
+                </h3>
+                <p className="text-xs text-slate-400 max-w-xs mx-auto mb-4">
+                  {language === 'zh'
+                    ? '请尝试切换其他区域或切换上方“全部 / 待探索”筛选'
+                    : 'Try selecting a different zone or switching to "All / Uncompleted"'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedZoneFilter('all');
+                    setClueStatusFilter('all');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors cursor-pointer shadow inline-flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{t('player.resetFilterBtn')}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Clue Cards Grid Mode */}
+            {clueViewMode === 'grid' && filteredClues.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5">
+                {filteredClues.map((clue) => {
+                  const isDone = completedClueIds.has(clue.id);
+                  const isPending = pendingClueIds.has(clue.id);
+                  const latestSub = latestSubByClue.get(clue.id);
+                  const isRejected = !isDone && !isPending && latestSub?.status === 'rejected';
+                  const clueZone = game.zones.find((z) => z.id === clue.zoneId);
+                  const dist = playerCoords && clue.location ? calculateHaversineDistance(playerCoords, clue.location) : null;
+                  const clueLabel = getClueLabel(clue.id, language);
+
+                  return (
+                    <div
+                      key={clue.id}
+                      id={`clue-card-${clue.id}`}
+                      onClick={() => !isDone && handleOpenNativeCamera(clue)}
+                      className={`group rounded-2xl border transition-all duration-300 overflow-hidden flex flex-col justify-between ${
+                        isDone
+                          ? 'bg-emerald-950/20 border-emerald-800/40 opacity-80'
+                          : isPending
+                          ? 'bg-amber-950/20 border-amber-800/40'
+                          : isRejected
+                          ? 'bg-rose-950/25 border-rose-800/50'
+                          : highlightedClueId === clue.id
+                          ? 'bg-slate-900 border-amber-400 ring-4 ring-amber-400/50 shadow-2xl scale-[1.02]'
+                          : 'bg-slate-900 border-slate-800 hover:border-slate-700 cursor-pointer shadow-lg hover:shadow-xl'
+                      }`}
+                    >
+                      {/* Photo Container */}
+                      <div className="relative aspect-[4/3] w-full bg-slate-950 overflow-hidden">
+                        {clue.targetPhotoBase64 ? (
+                          <>
+                            <img
+                              src={clue.targetPhotoBase64}
+                              alt={clueLabel}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                            />
+                            {/* Uncropped Lightbox Zoom Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLightboxImage({
+                                  url: clue.targetPhotoBase64,
+                                  title: clueLabel,
+                                  subtitle: clueZone?.name || clue.zoneId,
+                                  badge: t('common.targetLandmarkBadge'),
+                                });
+                              }}
+                              className="absolute bottom-1.5 right-1.5 p-1 rounded-lg bg-black/60 hover:bg-black/80 text-white/90 backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow"
+                              title={t('player.modalTapUncropped')}
+                            >
+                              <Maximize2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-600">
+                            <Camera className="w-8 h-8" />
+                          </div>
+                        )}
+
+                        {/* Top Badges: Clue # & 50 Pts */}
+                        <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between gap-1 pointer-events-none">
+                          <span className="px-1.5 py-0.5 rounded-md bg-slate-950/85 backdrop-blur-sm text-amber-300 font-mono font-black text-[11px] border border-amber-500/30 shadow">
+                            {getClueNumber(clue.id)}
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 backdrop-blur-sm text-amber-300 border border-amber-500/40 text-[10px] font-black shadow">
+                            50 分
+                          </span>
+                        </div>
+
+                        {/* Completed Overlay */}
+                        {isDone && (
+                          <div className="absolute inset-0 bg-emerald-950/75 backdrop-blur-[1px] flex flex-col items-center justify-center p-2 text-center">
+                            <CheckCircle2 className="w-8 h-8 text-emerald-400 mb-1 drop-shadow" />
+                            <span className="text-xs font-black text-emerald-200">
+                              {t('player.foundAndVerified')}
+                            </span>
+                            <span className="text-[10px] text-emerald-300 font-mono font-bold mt-0.5">
+                              +50 分
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Pending Review Overlay */}
+                        {isPending && (
+                          <div className="absolute inset-0 bg-amber-950/70 backdrop-blur-[1px] flex flex-col items-center justify-center p-2 text-center">
+                            <Clock className="w-7 h-7 text-amber-400 animate-pulse mb-1 drop-shadow" />
+                            <span className="text-xs font-black text-amber-200">
+                              {t('player.pendingReview')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Footer / Details & Action */}
+                      <div className="p-2.5 flex-1 flex flex-col justify-between gap-2">
+                        {/* Zone pill & Distance */}
+                        <div className="flex items-center justify-between gap-1 text-[10px]">
+                          <span className="font-bold truncate flex items-center gap-1 text-slate-300">
+                            <span
+                              className="w-2 h-2 rounded-full shrink-0"
+                              style={{ background: clueZone?.color || '#cbd5e1' }}
+                            />
+                            <span className="truncate">{clueZone?.name || clue.zoneId}</span>
+                          </span>
+                          {dist !== null && (
+                            <span className="font-mono text-slate-400 shrink-0">
+                              📍 {dist}m
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Action Area */}
+                        <div>
                           {isDone ? (
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                                <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
-                              </span>
-                              <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-1.5 py-0.5 rounded font-black">
-                                {t('player.scoreEarned', { points: latestSub?.awardedPoints || clue.points })}
-                              </span>
+                            <div className="w-full py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-center text-[11px] font-bold">
+                              ✓ 已完成 (+50分)
                             </div>
                           ) : isPending ? (
-                            <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
-                            </span>
+                            <div className="w-full py-1.5 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-300 text-center text-[11px] font-bold flex items-center justify-center gap-1">
+                              <Clock className="w-3 h-3 animate-spin" />
+                              <span>{t('player.pendingReview')}</span>
+                            </div>
                           ) : isRejected ? (
-                            <div className="flex flex-col gap-1 w-full">
-                              <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
-                                <XCircle className="w-3.5 h-3.5" /> {t('player.needsRetakeBadge')}
-                              </span>
-                              {latestSub?.rejectionReason && (
-                                <span className="text-[10px] text-rose-300 font-medium">
-                                  {t('player.gmRejectReason', { reason: latestSub.rejectionReason })}
-                                </span>
-                              )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenNativeCamera(clue);
+                              }}
+                              className="w-full py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-1 shadow cursor-pointer transition-colors"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>{t('player.retakeBtn')}</span>
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleOpenNativeCamera(clue);
                                 }}
-                                className="mt-0.5 bg-rose-600 hover:bg-rose-500 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow w-fit"
+                                className="flex-1 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs flex items-center justify-center gap-1 shadow cursor-pointer transition-all active:scale-95"
                               >
-                                <Camera className="w-3 h-3" />
-                                <span>{t('player.retakeBtn')}</span>
+                                <Camera className="w-3.5 h-3.5" />
+                                <span>{language === 'zh' ? '拍照' : 'Snap'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTrackedClueId((prev) => (prev === clue.id ? null : clue.id));
+                                }}
+                                className={`p-1.5 rounded-xl transition-all cursor-pointer border ${
+                                  trackedClueId === clue.id
+                                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
+                                    : isAutoTracking && trackedClue?.id === clue.id
+                                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                                }`}
+                                title={trackedClueId === clue.id ? '取消锁定' : '雷达锁定追踪'}
+                              >
+                                <Crosshair className="w-4 h-4" />
                               </button>
                             </div>
-                          ) : (
-                            <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
-                              <Camera className="w-3.5 h-3.5" /> {t('player.tapToSnap')}
-                            </span>
                           )}
                         </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-                        {!isDone && (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {playerCoords && clue.location && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
-                                📍 {calculateHaversineDistance(playerCoords, clue.location)}m
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setTrackedClueId((prev) => (prev === clue.id ? null : clue.id));
-                              }}
-                              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                                trackedClueId === clue.id
-                                  ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400'
-                                  : isAutoTracking && trackedClue?.id === clue.id
-                                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
-                              }`}
-                            >
-                              <Crosshair className="w-3 h-3" />
-                              <span>
-                                {trackedClueId === clue.id
-                                  ? t('player.trackingBadge')
-                                  : isAutoTracking && trackedClue?.id === clue.id
-                                  ? '📍 自动感知中'
-                                  : t('player.trackClueBtn')}
-                              </span>
-                            </button>
+            {/* Clue Cards List Mode */}
+            {clueViewMode === 'list' && filteredClues.length > 0 && (
+              <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
+                {filteredClues.map((clue) => {
+                  const isDone = completedClueIds.has(clue.id);
+                  const isPending = pendingClueIds.has(clue.id);
+                  const latestSub = latestSubByClue.get(clue.id);
+                  const isRejected = !isDone && !isPending && latestSub?.status === 'rejected';
+                  const clueZone = game.zones.find((z) => z.id === clue.zoneId);
+                  const dist = playerCoords && clue.location ? calculateHaversineDistance(playerCoords, clue.location) : null;
+                  const clueLabel = getClueLabel(clue.id, language);
+
+                  return (
+                    <div
+                      key={clue.id}
+                      id={`clue-card-${clue.id}`}
+                      onClick={() => !isDone && handleOpenNativeCamera(clue)}
+                      className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 relative overflow-hidden ${
+                        isDone
+                          ? 'bg-emerald-950/20 border-emerald-800/40 opacity-85'
+                          : isPending
+                          ? 'bg-amber-950/20 border-amber-800/40'
+                          : isRejected
+                          ? 'bg-rose-950/25 border-rose-800/50'
+                          : highlightedClueId === clue.id
+                          ? 'bg-slate-900 border-amber-400 ring-4 ring-amber-400/50 shadow-2xl scale-[1.01]'
+                          : 'bg-slate-900 border-slate-800 hover:border-slate-700 cursor-pointer shadow-lg'
+                      }`}
+                    >
+                      {/* Clue Target Photo Thumbnail */}
+                      <div
+                        onClick={(e) => {
+                          if (clue.targetPhotoBase64) {
+                            e.stopPropagation();
+                            setLightboxImage({
+                              url: clue.targetPhotoBase64,
+                              title: clueLabel,
+                              subtitle: clueZone?.name || clue.zoneId,
+                              badge: t('common.targetLandmarkBadge'),
+                            });
+                          }
+                        }}
+                        className="w-20 h-20 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group"
+                        title={t('player.modalTapUncropped')}
+                      >
+                        {clue.targetPhotoBase64 ? (
+                          <>
+                            <img
+                              src={clue.targetPhotoBase64}
+                              alt={clueLabel}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-500">
+                            <Camera className="w-6 h-6" />
+                          </div>
+                        )}
+                        <div className="absolute top-1 left-1 px-1 py-0.2 rounded bg-slate-950/85 text-amber-300 font-mono font-black text-[9px] border border-amber-500/30">
+                          {getClueNumber(clue.id)}
+                        </div>
+                        {isDone && (
+                          <div className="absolute inset-0 bg-emerald-950/70 flex items-center justify-center">
+                            <CheckCircle2 className="w-7 h-7 text-emerald-400" />
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    {!isDone && <ChevronRight className="w-5 h-5 text-slate-600 shrink-0" />}
-                  </div>
-                );
-              })}
-            </div>
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5 truncate">
+                            <span
+                              className="w-2 h-2 rounded-full shrink-0"
+                              style={{ background: clueZone?.color || '#94a3b8' }}
+                            />
+                            <span className="truncate">{clueZone?.name || clue.zoneId}</span>
+                          </span>
+                          <span className="text-xs font-black text-amber-400 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 shrink-0">
+                            +50 分
+                          </span>
+                        </div>
+                        <h3 className="font-bold text-sm text-slate-100 truncate mb-1">
+                          {clueLabel}
+                        </h3>
+
+                        {/* Status indicator & Track Button */}
+                        <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {isDone ? (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
+                                </span>
+                                <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-1.5 py-0.5 rounded font-black">
+                                  +50 分
+                                </span>
+                              </div>
+                            ) : isPending ? (
+                              <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+                                <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
+                              </span>
+                            ) : isRejected ? (
+                              <div className="flex flex-col gap-1 w-full">
+                                <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
+                                  <XCircle className="w-3.5 h-3.5" /> {t('player.needsRetakeBadge')}
+                                </span>
+                                {latestSub?.rejectionReason && (
+                                  <span className="text-[10px] text-rose-300 font-medium">
+                                    {t('player.gmRejectReason', { reason: latestSub.rejectionReason })}
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenNativeCamera(clue);
+                                  }}
+                                  className="mt-0.5 bg-rose-600 hover:bg-rose-500 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow w-fit"
+                                >
+                                  <Camera className="w-3 h-3" />
+                                  <span>{t('player.retakeBtn')}</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
+                                <Camera className="w-3.5 h-3.5" /> {t('player.tapToSnap')}
+                              </span>
+                            )}
+                          </div>
+
+                          {!isDone && (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {dist !== null && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                                  📍 {dist}m
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTrackedClueId((prev) => (prev === clue.id ? null : clue.id));
+                                }}
+                                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                                  trackedClueId === clue.id
+                                    ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400'
+                                    : isAutoTracking && trackedClue?.id === clue.id
+                                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                                }`}
+                              >
+                                <Crosshair className="w-3 h-3" />
+                                <span>
+                                  {trackedClueId === clue.id
+                                    ? t('player.trackingBadge')
+                                    : isAutoTracking && trackedClue?.id === clue.id
+                                    ? '📍 自动感知中'
+                                    : t('player.trackClueBtn')}
+                                </span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {!isDone && <ChevronRight className="w-5 h-5 text-slate-600 shrink-0" />}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -1586,10 +2035,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   }`}
                 />
                 <h4 className="font-bold text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors truncate leading-tight">
-                  {trackedClue.title}
+                  {getClueLabel(trackedClue.id, language)}
                 </h4>
                 <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                  +{trackedClue.points}
+                  +50 分
                 </span>
                 {radarStage === 'target' && (
                   <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 animate-bounce shrink-0">
@@ -1632,8 +2081,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   if (trackedClue.targetPhotoBase64) {
                     setLightboxImage({
                       url: trackedClue.targetPhotoBase64,
-                      title: trackedClue.title,
-                      subtitle: trackedClue.landmarkName || trackedClue.zoneId,
+                      title: getClueLabel(trackedClue.id, language),
+                      subtitle: game.zones.find((z) => z.id === trackedClue.zoneId)?.name || trackedClue.zoneId,
                       badge: t('common.targetLandmarkBadge'),
                     });
                   }
@@ -1645,7 +2094,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   <>
                     <img
                       src={trackedClue.targetPhotoBase64}
-                      alt={trackedClue.title}
+                      alt={getClueLabel(trackedClue.id, language)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
@@ -1811,9 +2260,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
                 {t('player.modalChallenge')}
               </span>
-              <h2 className="text-base sm:text-lg font-black text-white">{selectedClue.title}</h2>
+              <h2 className="text-base sm:text-lg font-black text-white">{getClueLabel(selectedClue.id, language)}</h2>
               <span className="text-xs text-emerald-400 font-bold">
-                {t('player.modalReward', { points: selectedClue.points })}
+                {t('player.modalReward', { points: selectedClue.points || 50 })}
               </span>
             </div>
 
@@ -1848,8 +2297,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   if (selectedClue.targetPhotoBase64) {
                     setLightboxImage({
                       url: selectedClue.targetPhotoBase64,
-                      title: selectedClue.title,
-                      subtitle: selectedClue.landmarkName || selectedClue.zoneId,
+                      title: getClueLabel(selectedClue.id, language),
+                      subtitle: game.zones.find((z) => z.id === selectedClue.zoneId)?.name || selectedClue.zoneId,
                       badge: t('common.targetLandmarkBadge'),
                     });
                   }
@@ -1861,7 +2310,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   <>
                     <img
                       src={selectedClue.targetPhotoBase64}
-                      alt={selectedClue.title}
+                      alt={getClueLabel(selectedClue.id, language)}
                       className="w-full h-full object-contain p-1 group-hover:scale-[1.02] transition-transform"
                     />
                     <div className="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-sm p-1.5 rounded-lg border border-slate-700 text-slate-300 group-hover:text-amber-400 transition-colors shadow">
@@ -1924,7 +2373,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     setLightboxImage({
                       url: capturedPreview,
                       title: 'Your Team Submission Selfie',
-                      subtitle: selectedClue.title,
+                      subtitle: getClueLabel(selectedClue.id, language),
                       badge: t('common.capturedSelfieBadge'),
                     });
                   }}
