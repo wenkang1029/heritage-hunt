@@ -14,14 +14,30 @@ import {
 const RAW_PHOTOS_DIR = 'C:\\Users\\User\\Projects\\heritage-hunt\\raw_photos';
 const GAME_ID = 'hunt-nkvcz';
 
-// Firebase credentials from .env.local
+function loadEnv() {
+  const envPath = fs.existsSync('.env.local') ? '.env.local' : '.env';
+  if (!fs.existsSync(envPath)) return process.env;
+  const content = fs.readFileSync(envPath, 'utf8');
+  const env = { ...process.env };
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq > 0) {
+      env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+    }
+  }
+  return env;
+}
+
+const env = loadEnv();
 const firebaseConfig = {
-  apiKey: "AIzaSyDpvWr7ekLe8_UKN-IXFrB2dgPdI52ae34",
-  authDomain: "heritage-hunt-2c719.firebaseapp.com",
-  projectId: "heritage-hunt-2c719",
-  storageBucket: "heritage-hunt-2c719.firebasestorage.app",
-  messagingSenderId: "917812049429",
-  appId: "1:917812049429:web:b9f1b7d42c23deb9f7801c"
+  apiKey: env.VITE_FIREBASE_API_KEY,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);

@@ -66,7 +66,7 @@
 
 5. **Environment Configuration:**
    - `.env.local` contains active Firebase credentials:
-     - `VITE_FIREBASE_API_KEY=AIzaSyDpvWr7ekLe8_UKN-IXFrB2dgPdI52ae34`
+     - `VITE_FIREBASE_API_KEY=AIzaSy...`
      - `VITE_FIREBASE_AUTH_DOMAIN=heritage-hunt-2c719.firebaseapp.com`
      - `VITE_FIREBASE_PROJECT_ID=heritage-hunt-2c719`
      - `VITE_FIREBASE_STORAGE_BUCKET=heritage-hunt-2c719.firebasestorage.app`

@@ -14,7 +14,7 @@
      `import('firebase/auth')` provides `getAuth`, `signInAnonymously`, `onAuthStateChanged`.
 2. **Environment & Secrets**:
    - `.env.local` lines 7–18 contains active credentials:
-     `VITE_FIREBASE_API_KEY=AIzaSyDpvWr7ekLe8_UKN-IXFrB2dgPdI52ae34`
+     `VITE_FIREBASE_API_KEY=AIzaSy...`
      `VITE_FIREBASE_PROJECT_ID=heritage-hunt-2c719`
      `VITE_GM_PASSCODE=melaka2026`
    - `.env.example` contains placeholder strings (`your_api_key_here`).
