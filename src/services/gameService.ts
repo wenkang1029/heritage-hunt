@@ -782,12 +782,32 @@ class UnifiedGameService implements IGameService {
     }
 
     const gameRef = doc(firestore, 'games', gameId);
-    await updateDoc(gameRef, {
+    const updatePayload: Record<string, any> = {
       timeRemainingSeconds,
-      ...(status ? { status } : {}),
-      ...(rallyPoint !== undefined ? { rallyPoint } : {}),
       updatedAt: serverTimestamp(),
-    });
+    };
+    if (status) {
+      updatePayload.status = status;
+    }
+    if (rallyPoint !== undefined) {
+      if (rallyPoint === null) {
+        updatePayload.rallyPoint = null;
+      } else {
+        const cleanRally: Record<string, any> = {
+          name: rallyPoint.name || 'Melaka Rally Point',
+          location: {
+            latitude: Number(rallyPoint.location.latitude),
+            longitude: Number(rallyPoint.location.longitude),
+          },
+          setAt: rallyPoint.setAt || Date.now(),
+        };
+        if (rallyPoint.note && typeof rallyPoint.note === 'string' && rallyPoint.note.trim()) {
+          cleanRally.note = rallyPoint.note.trim();
+        }
+        updatePayload.rallyPoint = cleanRally;
+      }
+    }
+    await updateDoc(gameRef, updatePayload);
   }
 
   async createClue(gameId: string, clue: Omit<Clue, 'id' | 'createdAt'>): Promise<Clue> {

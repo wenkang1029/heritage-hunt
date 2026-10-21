@@ -20,6 +20,7 @@ import type {
   GeoCoordinate,
   BroadcastMessage,
   BroadcastType,
+  RallyPoint,
 } from '../../types/index.ts';
 import { HuntMap } from '../Map/HuntMap.tsx';
 import { RallyMapPicker } from './RallyMapPicker.tsx';
@@ -103,6 +104,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const [rallyCoords, setRallyCoords] = useState<GeoCoordinate>({ latitude: 2.1944, longitude: 102.2491 });
   const [rallyLocationName, setRallyLocationName] = useState<string>('');
   const [rallyNote, setRallyNote] = useState<string>('');
+  const [rallyFlyTrigger, setRallyFlyTrigger] = useState<number>(0);
 
   const RALLY_PRESETS = useMemo(() => [
     {
@@ -573,13 +575,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
   const handleConfirmEndGameWithRally = async (includeRally: boolean) => {
     try {
-      let rallyPointData = null;
+      let rallyPointData: RallyPoint | null = null;
       if (includeRally) {
+        const trimmedNote = rallyNote.trim();
         rallyPointData = {
           name: rallyLocationName.trim() || (language === 'zh' ? '马六甲集结点' : 'Melaka Rally Point'),
-          location: rallyCoords,
-          note: rallyNote.trim() || undefined,
+          location: {
+            latitude: Number(rallyCoords.latitude),
+            longitude: Number(rallyCoords.longitude),
+          },
           setAt: Date.now(),
+          ...(trimmedNote ? { note: trimmedNote } : {}),
         };
       }
       await gameService.updateGameStatus(game.id, 'ended', rallyPointData);
@@ -2755,6 +2761,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       setSelectedRallyPreset(idx);
                       setRallyCoords(preset.location);
                       setRallyLocationName(preset.name);
+                      setRallyFlyTrigger((prev) => prev + 1);
                     }}
                     className={`px-3 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                       selectedRallyPreset === idx
@@ -2787,6 +2794,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 selectedCoords={rallyCoords}
                 onCoordsChange={(coords) => setRallyCoords(coords)}
                 onCustomSelect={() => setSelectedRallyPreset(-1)}
+                flyTrigger={rallyFlyTrigger}
               />
             </div>
 
