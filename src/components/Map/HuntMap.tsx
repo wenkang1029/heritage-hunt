@@ -24,6 +24,7 @@ import type {
   Clue,
   Team,
   GeoCoordinate,
+  RallyPoint,
 } from '../../types/index.ts';
 import { MELAKA_MAP_CENTER } from '../../data/melakaZones.ts';
 import { calculateHaversineDistance, calculateBearing } from '../../utils/haversine.ts';
@@ -36,12 +37,29 @@ import {
   Check,
   X,
   MousePointerClick,
+  ExternalLink,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.tsx';
 
 // ============================================================================
 // Custom Leaflet DivIcons (No broken image asset URLs)
 // ============================================================================
+
+function createRallyFlagIcon(): L.DivIcon {
+  return L.divIcon({
+    className: 'custom-rally-marker',
+    html: `
+      <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+        <span style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background: rgba(245, 158, 11, 0.4); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #F59E0B; border: 3px solid #FFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(245,158,11,0.6); position: relative; z-index: 2;">
+          <span style="font-size: 18px; line-height: 1;">🚩</span>
+        </div>
+      </div>
+    `,
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+  });
+}
 
 function createClueIcon(isCompleted: boolean, points: number): L.DivIcon {
   const bgColor = isCompleted ? '#10B981' : '#F59E0B';
@@ -293,6 +311,7 @@ export interface HuntMapProps {
   // Explorer Mode & Tracking Props
   hideCluePins?: boolean;
   trackedClue?: Clue | null;
+  rallyPoint?: RallyPoint | null;
 }
 
 export const HuntMap: React.FC<HuntMapProps> = ({
@@ -319,6 +338,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   bottomOffsetClass = 'bottom-4',
   hideCluePins = false,
   trackedClue = null,
+  rallyPoint = null,
 }) => {
   const [targetRecenter, setTargetRecenter] = React.useState<GeoCoordinate | null>(null);
 
@@ -731,6 +751,60 @@ export const HuntMap: React.FC<HuntMapProps> = ({
               </Marker>
             );
           })}
+
+        {/* 6. Rally Point Marker & Walking Guidance Line */}
+        {rallyPoint?.location && (
+          <>
+            <Marker
+              position={[rallyPoint.location.latitude, rallyPoint.location.longitude]}
+              icon={createRallyFlagIcon()}
+              zIndexOffset={2000}
+            >
+              <Popup>
+                <div className="w-56 p-1">
+                  <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs uppercase mb-1">
+                    <span>🚩</span>
+                    <span>{t('player.rallyFlagTitle')}</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-100 leading-tight mb-1">
+                    {rallyPoint.name}
+                  </h4>
+                  {rallyPoint.note && (
+                    <p className="text-xs text-amber-200 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20 mb-2 leading-relaxed">
+                      {rallyPoint.note}
+                    </p>
+                  )}
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${rallyPoint.location.latitude},${rallyPoint.location.longitude}&travelmode=walking`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{t('player.openInGoogleMaps')}</span>
+                    <ExternalLink className="w-3 h-3 text-emerald-200" />
+                  </a>
+                </div>
+              </Popup>
+            </Marker>
+
+            {/* Walking Flight Line from player GPS to Rally Point */}
+            {playerCoords && (
+              <Polyline
+                positions={[
+                  [playerCoords.latitude, playerCoords.longitude],
+                  [rallyPoint.location.latitude, rallyPoint.location.longitude],
+                ]}
+                pathOptions={{
+                  color: '#F59E0B',
+                  weight: 3,
+                  dashArray: '6, 8',
+                  opacity: 0.85,
+                }}
+              />
+            )}
+          </>
+        )}
 
         {/* Explorer Mode: Directional Ray from player towards tracked target when > 20m */}
         {hideCluePins && playerCoords && trackedRay && !trackedRay.isWithinRange && trackedRay.rayEnd && (

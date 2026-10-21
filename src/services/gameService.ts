@@ -40,6 +40,7 @@ import type {
   Zone,
   BroadcastMessage,
   SendBroadcastPayload,
+  RallyPoint,
 } from '../types/index.ts';
 import { calculateHaversineDistance } from '../utils/haversine.ts';
 import { normalizeClueZh } from '../data/cluesZh.ts';
@@ -230,7 +231,7 @@ export interface IGameService {
     reason?: string
   ): Promise<void>;
   toggleFreezeLeaderboard(gameId: string, isFrozen: boolean): Promise<void>;
-  updateGameTimer(gameId: string, timeRemainingSeconds: number, status?: GameStatus): Promise<void>;
+  updateGameTimer(gameId: string, timeRemainingSeconds: number, status?: GameStatus, rallyPoint?: RallyPoint | null): Promise<void>;
   createClue?(gameId: string, clue: Omit<Clue, 'id' | 'createdAt'>): Promise<Clue>;
   deleteClue?(gameId: string, clueId: string): Promise<void>;
 }
@@ -772,17 +773,19 @@ class UnifiedGameService implements IGameService {
   async updateGameTimer(
     gameId: string,
     timeRemainingSeconds: number,
-    status?: GameStatus
+    status?: GameStatus,
+    rallyPoint?: RallyPoint | null
   ): Promise<void> {
     const firestore = this.getFirestoreDb();
     if (!firestore) {
-      return mockAdapter.updateGameTimer(gameId, timeRemainingSeconds, status);
+      return mockAdapter.updateGameTimer(gameId, timeRemainingSeconds, status, rallyPoint);
     }
 
     const gameRef = doc(firestore, 'games', gameId);
     await updateDoc(gameRef, {
       timeRemainingSeconds,
       ...(status ? { status } : {}),
+      ...(rallyPoint !== undefined ? { rallyPoint } : {}),
       updatedAt: serverTimestamp(),
     });
   }
@@ -835,8 +838,8 @@ class UnifiedGameService implements IGameService {
         if (settingsSnap.exists() && Array.isArray(settingsSnap.data()?.zones) && settingsSnap.data().zones.length > 0) {
           initialZones = settingsSnap.data().zones;
         }
-      } catch (e) {
-        console.warn('Could not read settings/zones:', e);
+      } catch (_e) {
+        console.warn('Could not read settings/zones:', _e);
       }
 
       const defaultGame: Game = {
@@ -879,8 +882,8 @@ class UnifiedGameService implements IGameService {
             await setDoc(clueRef, { ...normalizedData, gameId: defaultGame.id });
           }
         }
-      } catch (e) {
-        console.warn('Could not copy clues during bootstrap:', e);
+      } catch (_e) {
+        console.warn('Could not copy clues during bootstrap:', _e);
       }
 
       return defaultGame;
@@ -911,12 +914,12 @@ class UnifiedGameService implements IGameService {
     );
   }
 
-  async updateGameStatus(gameId: string, status: GameStatus) {
+  async updateGameStatus(gameId: string, status: GameStatus, rallyPoint?: RallyPoint | null) {
     if (status === 'frozen') {
       return this.toggleFreezeLeaderboard(gameId, true);
     } else {
       await this.toggleFreezeLeaderboard(gameId, false);
-      return this.updateGameTimer(gameId, 7200, status);
+      return this.updateGameTimer(gameId, 7200, status, rallyPoint);
     }
   }
 
@@ -952,8 +955,8 @@ class UnifiedGameService implements IGameService {
         if (settingsSnap.exists() && Array.isArray(settingsSnap.data()?.zones) && settingsSnap.data().zones.length > 0) {
           zonesToUse = settingsSnap.data().zones;
         }
-      } catch (e) {
-        console.warn('Could not fetch global settings/zones:', e);
+      } catch (_e) {
+        console.warn('Could not fetch global settings/zones:', _e);
       }
     }
     if (zonesToUse.length === 0 && typeof window !== 'undefined') {
@@ -965,7 +968,7 @@ class UnifiedGameService implements IGameService {
             zonesToUse = parsed;
           }
         }
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
     }

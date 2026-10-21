@@ -181,6 +181,13 @@ export interface BroadcastMessage {
   expiresAt?: number | string | null;
 }
 
+export interface RallyPoint {
+  name: string;
+  location: GeoCoordinate;
+  note?: string;
+  setAt: number | string;
+}
+
 export interface Game {
   id: string;
   name: string;
@@ -194,6 +201,7 @@ export interface Game {
   isFrozen?: boolean; // Interop alias for isLeaderboardFrozen
   zones: Zone[];
   activeBroadcast?: BroadcastMessage | null;
+  rallyPoint?: RallyPoint | null;
   createdAt: number | string;
   updatedAt?: number | string;
 }

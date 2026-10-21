@@ -13,6 +13,7 @@ import type {
   GeoCoordinate,
   Unsubscribe,
   GameStatus,
+  RallyPoint,
   Zone,
   BroadcastMessage,
   SendBroadcastPayload,
@@ -565,12 +566,14 @@ export class MockAdapterService {
   async updateGameTimer(
     _gameId: string,
     timeRemainingSeconds: number,
-    status?: GameStatus
+    status?: GameStatus,
+    rallyPoint?: RallyPoint | null
   ): Promise<void> {
     this.state.game = {
       ...this.state.game,
       timeRemainingSeconds,
       ...(status ? { status } : {}),
+      ...(rallyPoint !== undefined ? { rallyPoint } : {}),
       updatedAt: Date.now(),
     };
     this.broadcastMutation();
