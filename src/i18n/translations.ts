@@ -275,6 +275,11 @@ export const translations = {
       rallyConfirmBtn: 'End Game & Set Gathering Point',
       rallyEndWithoutBtn: 'End Without Gathering Point',
       rallyCancelBtn: 'Cancel',
+      rallyMapPickerTitle: 'Exact Gathering Pinpoint Map',
+      rallyMapTapHint: 'Tap map or drag 🚩 to fine-tune exact spot',
+      useMyLocation: 'Use My Current Location',
+      locating: 'Locating...',
+      locationPermissionError: 'Could not access GPS location. Please check browser permissions.',
       bonusBtn: '+25 Bonus',
       rejectBtn: 'Reject',
       // Clues Tab
@@ -649,6 +654,11 @@ export const translations = {
       rallyConfirmBtn: '确认结束比赛并通知集合',
       rallyEndWithoutBtn: '仅结束比赛（不设集合点）',
       rallyCancelBtn: '取消',
+      rallyMapPickerTitle: '集合地点精确选点地图',
+      rallyMapTapHint: '点击地图或拖曳 🚩 旗帜微调地点',
+      useMyLocation: '定位我当前位置',
+      locating: '正在定位...',
+      locationPermissionError: '无法获取当前 GPS 位置，请检查浏览器定位权限。',
       bonusBtn: '+25 创意加分',
       rejectBtn: '驳回重拍',
       // Clues Tab

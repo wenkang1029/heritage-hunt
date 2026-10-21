@@ -22,6 +22,7 @@ import type {
   BroadcastType,
 } from '../../types/index.ts';
 import { HuntMap } from '../Map/HuntMap.tsx';
+import { RallyMapPicker } from './RallyMapPicker.tsx';
 import { gameService } from '../../services/gameService.ts';
 import { compressPhoto, extractExifGps } from '../../services/imageCompression.ts';
 import {
@@ -99,9 +100,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   // End Game & Rally Point Modal State
   const [showRallyModal, setShowRallyModal] = useState<boolean>(false);
   const [selectedRallyPreset, setSelectedRallyPreset] = useState<number>(0);
-  const [customRallyName, setCustomRallyName] = useState<string>('');
-  const [customRallyLat, setCustomRallyLat] = useState<string>('2.1944');
-  const [customRallyLng, setCustomRallyLng] = useState<string>('102.2491');
+  const [rallyCoords, setRallyCoords] = useState<GeoCoordinate>({ latitude: 2.1944, longitude: 102.2491 });
+  const [rallyLocationName, setRallyLocationName] = useState<string>('');
   const [rallyNote, setRallyNote] = useState<string>('');
 
   const RALLY_PRESETS = useMemo(() => [
@@ -544,6 +544,9 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   // Handle Game Status Change
   const handleStatusChange = async (newStatus: GameStatus, force: boolean = false) => {
     if (newStatus === 'ended') {
+      setSelectedRallyPreset(0);
+      setRallyCoords(RALLY_PRESETS[0].location);
+      setRallyLocationName(RALLY_PRESETS[0].name);
       setShowRallyModal(true);
       return;
     }
@@ -572,25 +575,12 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     try {
       let rallyPointData = null;
       if (includeRally) {
-        if (selectedRallyPreset >= 0 && selectedRallyPreset < RALLY_PRESETS.length) {
-          const preset = RALLY_PRESETS[selectedRallyPreset];
-          rallyPointData = {
-            name: preset.name,
-            location: preset.location,
-            note: rallyNote.trim() || undefined,
-            setAt: Date.now(),
-          };
-        } else {
-          rallyPointData = {
-            name: customRallyName.trim() || 'Melaka Rally Point',
-            location: {
-              latitude: parseFloat(customRallyLat) || 2.1944,
-              longitude: parseFloat(customRallyLng) || 102.2491,
-            },
-            note: rallyNote.trim() || undefined,
-            setAt: Date.now(),
-          };
-        }
+        rallyPointData = {
+          name: rallyLocationName.trim() || (language === 'zh' ? '马六甲集结点' : 'Melaka Rally Point'),
+          location: rallyCoords,
+          note: rallyNote.trim() || undefined,
+          setAt: Date.now(),
+        };
       }
       await gameService.updateGameStatus(game.id, 'ended', rallyPointData);
       setShowRallyModal(false);
@@ -2733,7 +2723,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       {/* End Game & Set Gathering Point Modal */}
       {showRallyModal && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
             <h3 className="text-lg font-black text-white mb-1 flex items-center gap-2">
               <span className="text-xl">🏁</span>
               <span>{t('gm.rallyModalTitle')}</span>
@@ -2751,93 +2741,68 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               </div>
             )}
 
-            {/* Presets List */}
-            <div className="mb-4">
+            {/* Quick Landmark Presets (Horizontal Scrollable Chips) */}
+            <div className="mb-3">
               <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
                 {t('gm.rallyPresetLabel')}
               </label>
-              <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-thin">
                 {RALLY_PRESETS.map((preset, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    onClick={() => setSelectedRallyPreset(idx)}
-                    className={`w-full text-left p-2.5 rounded-xl border text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                    onClick={() => {
+                      setSelectedRallyPreset(idx);
+                      setRallyCoords(preset.location);
+                      setRallyLocationName(preset.name);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                       selectedRallyPreset === idx
-                        ? 'bg-amber-500/15 border-amber-500/50 text-amber-200 font-bold'
+                        ? 'bg-amber-500/20 border-amber-500/60 text-amber-200 font-bold shadow-sm'
                         : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-300'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-base select-none">{preset.icon}</span>
-                      <span>{preset.name}</span>
-                    </div>
-                    {selectedRallyPreset === idx && (
-                      <span className="text-amber-400 font-black text-xs">✓</span>
-                    )}
+                    <span>{preset.icon}</span>
+                    <span>{preset.name.split('(')[0].trim()}</span>
                   </button>
                 ))}
-
-                {/* Custom Option */}
                 <button
                   type="button"
                   onClick={() => setSelectedRallyPreset(-1)}
-                  className={`w-full text-left p-2.5 rounded-xl border text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                     selectedRallyPreset === -1
-                      ? 'bg-amber-500/15 border-amber-500/50 text-amber-200 font-bold'
+                      ? 'bg-amber-500/20 border-amber-500/60 text-amber-200 font-bold shadow-sm'
                       : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-300'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base select-none">📍</span>
-                    <span>{t('gm.rallyCustomOption')}</span>
-                  </div>
-                  {selectedRallyPreset === -1 && (
-                    <span className="text-amber-400 font-black text-xs">✓</span>
-                  )}
+                  <span>📍</span>
+                  <span>{language === 'zh' ? '自由选点' : 'Custom Pin'}</span>
                 </button>
               </div>
             </div>
 
-            {/* Custom Location Inputs */}
-            {selectedRallyPreset === -1 && (
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5 mb-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">
-                    {t('gm.rallyNameLabel')}
-                  </label>
-                  <input
-                    type="text"
-                    value={customRallyName}
-                    onChange={(e) => setCustomRallyName(e.target.value)}
-                    placeholder="e.g. Geographer Cafe (鸡场街地理学家咖啡馆)"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Latitude</label>
-                    <input
-                      type="number"
-                      step="0.0001"
-                      value={customRallyLat}
-                      onChange={(e) => setCustomRallyLat(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Longitude</label>
-                    <input
-                      type="number"
-                      step="0.0001"
-                      value={customRallyLng}
-                      onChange={(e) => setCustomRallyLng(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Interactive Pinpoint Map */}
+            <div className="mb-4">
+              <RallyMapPicker
+                selectedCoords={rallyCoords}
+                onCoordsChange={(coords) => setRallyCoords(coords)}
+                onCustomSelect={() => setSelectedRallyPreset(-1)}
+              />
+            </div>
+
+            {/* Gathering Location Name Input */}
+            <div className="mb-3">
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                {t('gm.rallyNameLabel')}
+              </label>
+              <input
+                type="text"
+                value={rallyLocationName}
+                onChange={(e) => setRallyLocationName(e.target.value)}
+                placeholder="e.g. Geographer Cafe (鸡场街地理学家咖啡馆)"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
+              />
+            </div>
 
             {/* Optional Instructions */}
             <div className="mb-5">
@@ -2849,30 +2814,30 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                 value={rallyNote}
                 onChange={(e) => setRallyNote(e.target.value)}
                 placeholder={t('gm.rallyNotePlaceholder')}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none transition-colors"
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-slate-800">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-3 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => setShowRallyModal(false)}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer transition-colors"
               >
                 {t('gm.rallyCancelBtn')}
               </button>
               <button
                 type="button"
                 onClick={() => handleConfirmEndGameWithRally(false)}
-                className="px-3 py-2 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                className="px-3.5 py-2.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-xl text-xs font-bold cursor-pointer transition-colors"
               >
                 {t('gm.rallyEndWithoutBtn')}
               </button>
               <button
                 type="button"
                 onClick={() => handleConfirmEndGameWithRally(true)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-black shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-1.5"
               >
                 <span>🚩</span>
                 <span>{t('gm.rallyConfirmBtn')}</span>
