@@ -705,7 +705,7 @@ class UnifiedGameService implements IGameService {
 
       const clueRef = doc(firestore, 'games', gameId, 'clues', subData.clueId);
       const clueSnap = await txn.get(clueRef);
-      const cluePoints = clueSnap.exists() ? (clueSnap.data() as Clue).points : 100;
+      const cluePoints = clueSnap.exists() ? (clueSnap.data() as Clue).points : 50;
       // approve: `points` overrides the clue's points; bonus: `points` is the bonus on top.
       const basePoints = action === 'approve' ? (points ?? cluePoints) : cluePoints;
 
@@ -896,14 +896,17 @@ class UnifiedGameService implements IGameService {
     gameId: string,
     submissionId: string,
     action: 'approve' | 'reject' | 'bonus',
-    options?: { bonusPoints?: number; rejectionReason?: string }
+    options?: { bonusPoints?: number; rejectionReason?: string; points?: number }
   ) {
-    // bonusPoints only applies to 'bonus'; passing it for 'approve' would override the clue's points.
+    const pointsArg = action === 'approve'
+      ? options?.points
+      : (action === 'bonus' ? options?.bonusPoints : undefined);
+
     return this.verifySubmission(
       gameId,
       submissionId,
       action,
-      action === 'bonus' ? options?.bonusPoints : undefined,
+      pointsArg,
       options?.rejectionReason
     );
   }

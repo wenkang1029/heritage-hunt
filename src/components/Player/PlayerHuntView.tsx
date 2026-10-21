@@ -37,6 +37,8 @@ import {
   Flame,
   Megaphone,
   Bell,
+  XCircle,
+  Pause,
 } from 'lucide-react';
 import {
   calculateHaversineDistance,
@@ -443,6 +445,21 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     [teamSubmissions]
   );
 
+  const latestSubByClue = useMemo(() => {
+    const map = new Map<string, Submission>();
+    teamSubmissions.forEach((s) => {
+      const existing = map.get(s.clueId);
+      if (!existing || (Number(s.submittedAt) || 0) > (Number(existing.submittedAt) || 0)) {
+        map.set(s.clueId, s);
+      }
+    });
+    return map;
+  }, [teamSubmissions]);
+
+  const isGameLobby = game.status === 'lobby' || game.status === 'draft';
+  const isGamePaused = game.status === 'paused';
+  const isGameEnded = game.status === 'ended' || game.status === 'completed';
+
   // Sort State for Clues
   const [sortBy, setSortBy] = useState<'distance' | 'default'>('distance');
 
@@ -651,8 +668,33 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     scrollToClueCard(clue.id);
   }, [selectedZoneFilter, scrollToClueCard]);
 
-  // Trigger Native Camera Input
+  // Trigger Native Camera Input with Lifecycle Checks
   const handleOpenNativeCamera = (clue: Clue) => {
+    if (isGameLobby) {
+      showAlert({
+        title: language === 'zh' ? '比赛尚未开始' : 'Game Not Started Yet',
+        message: language === 'zh' ? '请等待主理人开赛哨声，开赛后方可打卡拍照！' : 'Please wait for the Game Master to officially start the game before submitting photos!',
+        variant: 'warning',
+      });
+      return;
+    }
+    if (isGamePaused) {
+      showAlert({
+        title: language === 'zh' ? '比赛暂停中' : 'Game Paused',
+        message: language === 'zh' ? '打卡提交暂时冻结，请等待裁判恢复比赛！' : 'Photo submissions are currently frozen. Please follow event organizers’ instructions.',
+        variant: 'warning',
+      });
+      return;
+    }
+    if (isGameEnded) {
+      showAlert({
+        title: language === 'zh' ? '比赛已结束' : 'Game Concluded',
+        message: language === 'zh' ? '打卡通道已关闭，请查看最终积分排行榜！' : 'Submissions are closed. Please view the final leaderboard!',
+        variant: 'info',
+      });
+      return;
+    }
+
     setSelectedClue(clue);
     setCapturedPreview(null);
     setCompressionStats(null);
@@ -823,6 +865,34 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
           </button>
         </div>
       </header>
+
+      {/* Game Lifecycle Banners */}
+      {isGameLobby && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-3 py-1.5 text-xs text-amber-300 flex items-center justify-center gap-1.5 font-bold shrink-0">
+          <Clock className="w-3.5 h-3.5 animate-pulse text-amber-400" />
+          <span>{t('player.gameLobbyBanner')}</span>
+        </div>
+      )}
+      {isGamePaused && (
+        <div className="bg-yellow-500/20 border-b border-yellow-500/40 px-3 py-1.5 text-xs text-yellow-300 flex items-center justify-center gap-1.5 font-bold shrink-0">
+          <Pause className="w-3.5 h-3.5 text-yellow-400" />
+          <span>{t('player.gamePausedBanner')}</span>
+        </div>
+      )}
+      {isGameEnded && (
+        <div className="bg-purple-950/70 border-b border-purple-500/40 px-3 py-1.5 text-xs text-purple-200 flex items-center justify-between font-bold shrink-0">
+          <span className="flex items-center gap-1.5">
+            <span>🏁</span>
+            <span>{t('player.gameEndedBanner')}</span>
+          </span>
+          <button
+            onClick={() => setActiveTab('leaderboard')}
+            className="px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg text-[10px] cursor-pointer shadow-sm transition-colors"
+          >
+            {language === 'zh' ? '查看排行榜 ➔' : 'Leaderboard ➔'}
+          </button>
+        </div>
+      )}
 
       {/* Live GM Active Broadcast Slide-Down Alert (Option A) */}
       {game.activeBroadcast && !isBroadcastDismissed && (
@@ -1032,6 +1102,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               {filteredClues.map((clue) => {
                 const isDone = completedClueIds.has(clue.id);
                 const isPending = pendingClueIds.has(clue.id);
+                const latestSub = latestSubByClue.get(clue.id);
+                const isRejected = !isDone && !isPending && latestSub?.status === 'rejected';
 
                 return (
                   <div
@@ -1040,9 +1112,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     onClick={() => !isDone && handleOpenNativeCamera(clue)}
                     className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 relative overflow-hidden ${
                       isDone
-                        ? 'bg-emerald-950/20 border-emerald-800/40 opacity-80'
+                        ? 'bg-emerald-950/20 border-emerald-800/40 opacity-85'
                         : isPending
                         ? 'bg-amber-950/20 border-amber-800/40'
+                        : isRejected
+                        ? 'bg-rose-950/25 border-rose-800/50'
                         : highlightedClueId === clue.id
                         ? 'bg-slate-900 border-amber-400 ring-4 ring-amber-400/50 shadow-2xl scale-[1.01]'
                         : 'bg-slate-900 border-slate-800 hover:border-slate-700 cursor-pointer shadow-lg'
@@ -1106,15 +1180,42 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
                       {/* Status indicator & Track Button */}
                       <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {isDone ? (
-                            <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
+                              </span>
+                              <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-1.5 py-0.5 rounded font-black">
+                                {t('player.scoreEarned', { points: latestSub?.awardedPoints || clue.points })}
+                              </span>
+                            </div>
                           ) : isPending ? (
                             <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
                               <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
                             </span>
+                          ) : isRejected ? (
+                            <div className="flex flex-col gap-1 w-full">
+                              <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
+                                <XCircle className="w-3.5 h-3.5" /> {t('player.needsRetakeBadge')}
+                              </span>
+                              {latestSub?.rejectionReason && (
+                                <span className="text-[10px] text-rose-300 font-medium">
+                                  {t('player.gmRejectReason', { reason: latestSub.rejectionReason })}
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenNativeCamera(clue);
+                                }}
+                                className="mt-0.5 bg-rose-600 hover:bg-rose-500 text-white font-bold py-1 px-2.5 rounded-lg text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow w-fit"
+                              >
+                                <Camera className="w-3 h-3" />
+                                <span>{t('player.retakeBtn')}</span>
+                              </button>
+                            </div>
                           ) : (
                             <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
                               <Camera className="w-3.5 h-3.5" /> {t('player.tapToSnap')}
@@ -1635,6 +1736,19 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               <span className="text-xs text-emerald-400 font-bold">
                 {t('player.modalReward', { points: selectedClue.points })}
               </span>
+            </div>
+
+            {/* Cultural & Religious Respect Notice */}
+            <div className="mb-3.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex items-start gap-2 shadow-sm">
+              <span className="text-base shrink-0 select-none">🕌</span>
+              <div className="leading-tight">
+                <strong className="block text-amber-300 font-bold mb-0.5">
+                  {t('player.respectNoticeTitle')}
+                </strong>
+                <p className="text-[11px] text-amber-200/90 leading-snug">
+                  {t('player.respectNoticeDesc')}
+                </p>
+              </div>
             </div>
 
             {/* Target Clue Photo */}

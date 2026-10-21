@@ -367,6 +367,10 @@ export const HuntMap: React.FC<HuntMapProps> = ({
     return clues.filter((c) => !completedSet.has(c.id) && c.location);
   }, [clues, completedSet]);
 
+  const completedClues = useMemo(() => {
+    return clues.filter((c) => completedSet.has(c.id) && c.location);
+  }, [clues, completedSet]);
+
   // Spatial clustering of uncompleted clues for Explorer Mode (Fuzzy Hotspot Bubbles)
   const fuzzyClusters = useMemo(() => {
     if (!hideCluePins) return [];
@@ -677,6 +681,54 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                   </Popup>
                 </Marker>
               </React.Fragment>
+            );
+          })}
+
+        {/* 5. Exact Pinpoint for Completed Clues in Explorer Mode (Revealed upon GM approval) */}
+        {hideCluePins &&
+          completedClues.map((clue) => {
+            if (!clue.location) return null;
+            return (
+              <Marker
+                key={`completed-exact-${clue.id}`}
+                position={[clue.location.latitude, clue.location.longitude]}
+                icon={createClueIcon(true, clue.points)}
+                interactive={!isPlottingZone}
+              >
+                {!isPlottingZone && (
+                  <Popup>
+                    <div className="w-56 p-1">
+                      {clue.targetPhotoBase64 && (
+                        <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
+                          <img
+                            src={clue.targetPhotoBase64}
+                            alt={clue.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <h4 className="font-bold text-sm text-slate-100 leading-tight">
+                          {clue.title}
+                        </h4>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0">
+                          +{clue.points} pts
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 mb-2">
+                        {clue.landmarkName || clue.zoneId}
+                      </p>
+                      <div className="text-[11px] font-bold text-emerald-400 bg-emerald-950/80 py-1.5 px-2 rounded-lg border border-emerald-700/50 text-center flex items-center justify-center gap-1 shadow-sm">
+                        <span>✓</span>
+                        <span>{t('player.foundAndVerified')}</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-400/80 text-center mt-1.5 font-mono">
+                        {t('player.exactPinRevealed')}
+                      </div>
+                    </div>
+                  </Popup>
+                )}
+              </Marker>
             );
           })}
 

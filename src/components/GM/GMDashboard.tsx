@@ -94,6 +94,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const [authError, setAuthError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'queue' | 'radar' | 'clues' | 'teams' | 'zones' | 'leaderboard'>('queue');
+  const [rejectingSub, setRejectingSub] = useState<Submission | null>(null);
   const [isProcessingAction, setIsProcessingAction] = useState<boolean>(false);
 
   // Copy Link State
@@ -436,17 +437,23 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     [submissions]
   );
 
-  // Handle Review Action (Approve, Reject, Bonus)
+  // Handle Review Action (Tiered points: 50, 60, 80; Reject with reason)
   const handleReviewAction = async (
     submission: Submission,
-    action: 'approve' | 'reject' | 'bonus'
+    action: 'approve' | 'reject' | 'bonus',
+    points?: number,
+    rejectionReason?: string
   ) => {
     try {
       setIsProcessingAction(true);
       await gameService.reviewSubmission(game.id, submission.id, action, {
-        bonusPoints: action === 'bonus' ? 25 : undefined,
-        rejectionReason: action === 'reject' ? 'Photo does not clearly match the landmark detail.' : undefined,
+        points: action === 'approve' ? (points ?? 50) : undefined,
+        bonusPoints: action === 'bonus' ? (points ?? 25) : undefined,
+        rejectionReason: action === 'reject' ? (rejectionReason || 'Photo does not match landmark criteria') : undefined,
       });
+      if (rejectingSub?.id === submission.id) {
+        setRejectingSub(null);
+      }
     } catch (err: any) {
       await showAlert({
         title: 'Review Action Failed',
@@ -659,7 +666,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           title,
           landmarkName: '马六甲历史地标',
           zoneId: game.zones[0]?.id || 'dutch-square',
-          points: 100,
+          points: 50,
           targetPhotoBase64: compressed.base64,
           location,
           hint: '仔细观察店屋外观与建筑细节。',
@@ -1345,31 +1352,54 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         )}
                       </div>
 
-                      <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-2 border-t border-slate-800">
-                        <button
-                          onClick={() => handleReviewAction(sub, 'approve')}
-                          disabled={isProcessingAction}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-md"
-                        >
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          <span>{t('gm.approveBtn')}</span>
-                        </button>
-                        <button
-                          onClick={() => handleReviewAction(sub, 'bonus')}
-                          disabled={isProcessingAction}
-                          className="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-md"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>{t('gm.bonusBtn')}</span>
-                        </button>
-                        <button
-                          onClick={() => handleReviewAction(sub, 'reject')}
-                          disabled={isProcessingAction}
-                          className="bg-rose-900/60 hover:bg-rose-800 text-rose-200 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors border border-rose-800"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>{t('gm.rejectBtn')}</span>
-                        </button>
+                      <div className="space-y-2 pt-2 border-t border-slate-800">
+                        <div className="text-[11px] font-bold text-slate-400 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                            <span>{language === 'zh' ? '创意自拍审核打分:' : 'Creative Selfie Scoring:'}</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {language === 'zh' ? '基准 50分 · 创意加成' : 'Base 50 · Creative Bonus'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
+                          <button
+                            onClick={() => handleReviewAction(sub, 'approve', 50)}
+                            disabled={isProcessingAction}
+                            title="Standard: Found landmark & valid selfie (50 pts)"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-md"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>{t('gm.scoreStandard')}</span>
+                          </button>
+                          <button
+                            onClick={() => handleReviewAction(sub, 'approve', 60)}
+                            disabled={isProcessingAction}
+                            title="Creative: Good pose, composition (+10 pts)"
+                            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-md"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                            <span>{t('gm.scoreCreative')}</span>
+                          </button>
+                          <button
+                            onClick={() => handleReviewAction(sub, 'approve', 80)}
+                            disabled={isProcessingAction}
+                            title="Very Creative: Outstanding pose, humor, artistic (+30 pts)"
+                            className="bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-md"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-yellow-200" />
+                            <span>{t('gm.scoreVeryCreative')}</span>
+                          </button>
+                          <button
+                            onClick={() => setRejectingSub(sub)}
+                            disabled={isProcessingAction}
+                            title="Reject submission"
+                            className="bg-rose-900/60 hover:bg-rose-800 text-rose-200 font-bold py-2 px-2 rounded-xl text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors border border-rose-800"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>{t('gm.rejectBtn')}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

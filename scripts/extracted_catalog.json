@@ -7,7 +7,7 @@
     "description": "A charming 19th-century Peranakan shophouse on Jalan Hang Lekiu transformed into a fragrant bakery where Western pastry craft meets Straits Chinese architecture.",
     "hint": "Where the scent of warm crusts meets old wooden louvered shutters, seek the welcoming corner of Hang Lekiu.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -19,7 +19,7 @@
     "description": "Rising above the tiled rooftops of Harmony Street, this three-tiered pagoda minaret blends Chinese pagoda architecture with Sumatran Moorish design, built in 1748.",
     "hint": "Look upward between shophouse gables to find a minaret masquerading as a pagoda.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -31,7 +31,7 @@
     "description": "The monumental entrance gateway of Masjid Kampung Kling features European glazed ceramic tiles, Corinthian-style capitals, and a Hindu-influenced pool pavilion.",
     "hint": "Find the tranquil courtyard gateway where green English ceramic tiles greet the faithful before ablutions.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -43,7 +43,7 @@
     "description": "Dedicated to Lord Ganesha and established in 1781 on land donated by the Dutch, this is the oldest functioning Hindu temple in Malaysia and Southeast Asia.",
     "hint": "On the Street of Goldsmiths, seek the yellow-ochre temple arch guarded by the remover of obstacles.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -55,7 +55,7 @@
     "description": "Intricate stucco carvings of South Indian deities, peacocks, and celestial guardians embellish the gopuram entrance of this sacred Dravidian temple.",
     "hint": "Look closely at the stepped tower above the sanctuary door to spot divine dancers carved in relief.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jonker-street"
   },
@@ -67,7 +67,7 @@
     "description": "Traditional handcrafted keepsakes, batik textiles, and rattan curios displayed along the bustling pedestrian walkway of Jalan Tukang Emas.",
     "hint": "Amidst the historic trade street, find vibrant woven handicrafts dangling from five-foot way eaves.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -79,7 +79,7 @@
     "description": "Standing at the convergence of Jalan Tokong and Jalan Hang Lekiu, this restored heritage shophouse preserves authentic Dutch drain tiles and timber window transoms.",
     "hint": "At the sharp junction of two ancient streets, find the corner shophouse with vintage curved signage.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -91,7 +91,7 @@
     "description": "Founded in 1645 by Kapitan Cina Tay Kie Ki, Cheng Hoon Teng is Malaysia's oldest Taoist temple. Its roof features masterwork \"Chien Nien\" mosaic ceramics showing mythical warriors and dragons.",
     "hint": "Gaze upon the curved temple ridge where broken shards of pottery come alive as battling heroes.",
     "difficulty": "hard",
-    "points": 140,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jalan-tokong"
   },
@@ -103,7 +103,7 @@
     "description": "A serene ornamental stone rockery and cascading water fountain courtyard dedicated to the Goddess of Mercy and the Eighteen Arhats meditating in quiet harmony.",
     "hint": "Behind the fragrant incense coils, discover stone sages perched among miniature mountain waterfalls.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jalan-tokong"
   },
@@ -115,7 +115,7 @@
     "description": "Xiang Lin Si Temple features a sacred white marble elephant bearing Bodhisattva Samantabhadra, representing patience, diligence, and boundless compassion.",
     "hint": "Directly opposite Cheng Hoon Teng, seek the majestic multi-tusked stone beast resting by the courtyard.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -127,7 +127,7 @@
     "description": "The two-story modern Buddhist sanctuary of Xiang Lin Si showcases soaring granitic pillars inscribed with Buddhist verses and golden lotus emblems.",
     "hint": "Stand before the monumental glass doors flanked by twin stone columns inscribed with golden dharma couplets.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -139,7 +139,7 @@
     "description": "A ceremonial cast bronze temple bell in the courtyard of Xiang Lin Si, inscribed in classical Chinese calligraphy with the complete Prajnaparamita Heart Sutra.",
     "hint": "Find the massive bronze bell whose rim carries ancient verses whispering the wisdom of emptiness.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jalan-tokong"
   },
@@ -151,7 +151,7 @@
     "description": "A whimsical heritage shophouse garden on Jalan Tokong known for its canine mosaic motifs, vintage green glaze ventilation bricks, and Peranakan iron grilles.",
     "hint": "Look near foot level along the garden wall to spot a charming tail wagging in ceramic tile.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -163,7 +163,7 @@
     "description": "The ornamental pedestrian welcome arch connecting Jalan Tokong and Jalan Hang Jebat, adorned with crimson festive lanterns and auspicious Chinese calligraphy.",
     "hint": "Pass beneath the grand oriental portal welcoming travelers into the heart of the night market.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jalan-tokong"
   },
@@ -175,7 +175,7 @@
     "description": "A stunning exterior cultural wall composed of hundreds of vintage blue-and-white porcelain tea bowls embedded in mortar to form classical Chinese characters.",
     "hint": "Search for a wall where ancient rice bowls form words rather than serving meals.",
     "difficulty": "hard",
-    "points": 140,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jalan-tokong"
   },
@@ -187,7 +187,7 @@
     "description": "A traditional Chinese opera and cultural performance pavilion attached to the Guan Yin Ting clan grounds, hosting centuries of sacred street theatre.",
     "hint": "Spot the open-sided cultural pavilion where actors once sang of emperors under golden lanterns.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -199,7 +199,7 @@
     "description": "A stately Straits Eclectic facade on Jalan Tokong displaying British colonial plaster moulding, Corinthian pilasters, and a classical pediment arch.",
     "hint": "Look above the street awnings to admire European classical pediments carved into shophouse crowns.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -211,7 +211,7 @@
     "description": "A dramatic golden equestrian sculpture honoring the Year of the Horse, symbolizing prosperity, dynamism, and Melaka's flourishing international trade heritage.",
     "hint": "Seek the shining golden steed frozen mid-gallop above the pedestrian square.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -223,7 +223,7 @@
     "description": "A monumental ceremonial Southern Lion Dance head commemorating Melaka's world-renowned Kun Seng Keng lion dance troupe and UNESCO heritage status.",
     "hint": "Stand face-to-face with the giant glittering beast with bristling fur and oversized mirrored eyes.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -235,7 +235,7 @@
     "description": "A brilliantly preserved Art Deco Peranakan red facade dating back to 1936, featuring geometric plaster reliefs, timber balustrades, and Baba Nyonya ancestral plaques.",
     "hint": "Find the fiery red building proudly bearing the year 1936 embossed upon its upper masonry.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -247,7 +247,7 @@
     "description": "Established in 1868, this guildhall served Hainanese seafarers and traders arriving in Malacca, featuring gilded ancestral tablets and carved stone drum pedestals.",
     "hint": "Look for the golden clan signboard honoring the maritime pioneers who hailed from Hainan Island.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -259,7 +259,7 @@
     "description": "A vintage Chinese medicinal dispensary on Jalan Hang Jebat preserving wooden apothecary drawers with calligraphy labels for ginseng, dried herbs, and remedies.",
     "hint": "Seek the old shopfront boasting hundreds of numbered wooden drawers holding ancient remedies.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jalan-tokong"
   },
@@ -271,7 +271,7 @@
     "description": "Authentic teak-wood French shutters painted in pastel celadon, designed in the 19th century to catch tropical sea breezes while ensuring private family discretion.",
     "hint": "Look up to the second floor for shutters of ocean green framed by intricate floral timber vents.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -283,7 +283,7 @@
     "description": "A nostalgic five-foot-way tavern with vintage typography, rustic enamel beer signs, and hand-strung red silk lanterns reminiscent of 1950s Malaya.",
     "hint": "Spot the nostalgic wooden tavern signboard welcoming thirsty travelers with retro Chinese script.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -295,7 +295,7 @@
     "description": "A beloved Jonker Walk culinary staple famous for its icy, explosion-in-your-mouth D24 durian puffs, featuring an iconic cartoon fruit character.",
     "hint": "Look for the spiky yellow cartoon king of fruits tempting passersby with sweet cream puffs.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -307,7 +307,7 @@
     "description": "Antique Victorian and Japanese Majolica tiles lining the five-foot way, imported during the rubber boom to showcase the wealth of Baba Nyonya merchants.",
     "hint": "Cast your eyes downwards along the tiled doorstep to find vivid hand-painted floral tiles.",
     "difficulty": "hard",
-    "points": 120,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jalan-tokong"
   },
@@ -319,7 +319,7 @@
     "description": "A traditional Chinese parchment lantern suspended outside a shophouse doorway, painted with the family clan surname on one side and a blessing on the other.",
     "hint": "Find the round red parchment lantern glowing with black ancestral calligraphy above a wooden lintel.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jalan-tokong"
   },
@@ -331,7 +331,7 @@
     "description": "Handcrafted buffalo hide shadow puppets (Wayang Kulit) and carved wooden marionettes displayed by traditional craftsmen along Jonker Walk.",
     "hint": "Spot the translucent leather puppet figures casting mythical shadows against a rustic shop window.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -343,7 +343,7 @@
     "description": "Heavy antique brass door knockers shaped like fierce lion guardians, designed to ward off malevolent spirits from entering Straits Chinese family homes.",
     "hint": "Inspect the polished dark timber doors for a menacing brass beast holding an iron ring in its jaws.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jonker-street"
   },
@@ -355,7 +355,7 @@
     "description": "A collector's paradise packed with antique grandfather clocks, colonial gramophones, porcelain ginger jars, and vintage tin advertising plaques.",
     "hint": "Step into the alleyway where ticking clocks and sepia relics freeze time in colonial Malaya.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -367,7 +367,7 @@
     "description": "A playful three-dimensional heritage signboard depicting a Baba gentleman and Nyonya lady dressed in traditional Kebaya and batik sarong.",
     "hint": "Look for the cheerful Peranakan couple sculpture extending a warm welcome from above an eatery doorway.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -379,7 +379,7 @@
     "description": "The monumental crimson landmark building at the foot of Jonker Walk, famous for white coffee, cendol, and traditional Melaka delicacies.",
     "hint": "Find the commanding multi-story red tower that greets everyone crossing the river onto Jonker Walk.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -391,7 +391,7 @@
     "description": "Dozens of vibrant red festive Chinese lanterns strung across the sky between Peranakan shophouse roofs, framing the street in auspicious celebration.",
     "hint": "Tilt your camera toward the sky to capture the sea of red globes dangling over the street.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -403,7 +403,7 @@
     "description": "Massive earthen glazed dragon jars and terracotta vessels once used aboard spice trading ships to preserve water and salted provisions during voyages.",
     "hint": "Discover the ancient glazed stoneware jars standing tall near the entrance of Malaqa House.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -415,7 +415,7 @@
     "description": "Exquisite openwork teak ventilation transoms carved with golden peonies, bats, and mythical qilin, crafted by Hokkien woodcarvers in the late 19th century.",
     "hint": "Above the doorway, look for intricate gilded wooden carvings featuring flora and auspicious bats.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jonker-street"
   },
@@ -427,7 +427,7 @@
     "description": "An iconic 19th-century Dutch-era corner shophouse painted in warm sunburst yellow, famed as a bohemian cultural gathering place with lush hanging tropical plants.",
     "hint": "Spot the sunny bright yellow shophouse where lush potted ferns spill into the street cafe.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -439,7 +439,7 @@
     "description": "A legendary Melaka beca (pedicab) elaborately adorned with artificial roses, vibrant batik fabrics, stuffed mascots, and colorful chrome spoked wheels.",
     "hint": "Find the flamboyantly decorated three-wheeled carriage blooming with electric flowers.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -451,7 +451,7 @@
     "description": "A cozy artisan niche along the canal wall where local portrait painters capture the likeness of travelers against the historic riverside landscape.",
     "hint": "Where the street meets the river canal, find an easel displaying hand-drawn charcoal portraits.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -463,7 +463,7 @@
     "description": "The commemorative stone plaque marking the mausoleum of Hang Jebat, the rebellious warrior who defied the Sultan in the name of brotherhood.",
     "hint": "Look for the solemn historical stone plaque bearing the name of the warrior who fought with a wavy kris.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -475,7 +475,7 @@
     "description": "A stone-lined freshwater well dating back to the Malacca Sultanate era, tucked within the tranquil stone courtyard of Hang Jebat's tomb.",
     "hint": "Within the quiet walled sanctuary, peer into the ancient round stone well that quenched warrior thirst.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jonker-street"
   },
@@ -487,7 +487,7 @@
     "description": "The stone gateway marking the descent from Jonker Street to the cobblestone river promenade, watched over by miniature stone lions.",
     "hint": "Find the entry gate where stone lion cubs sit atop pillars guarding the steps to the water.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -499,7 +499,7 @@
     "description": "A panoramic view over the historic Melaka River, once the world's busiest spice trade artery where over 80 languages were spoken in the 15th century.",
     "hint": "Gaze down the water where merchant caravels once dropped anchor loaded with nutmeg and cloves.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -511,7 +511,7 @@
     "description": "Vivid magenta bougainvillea blossoms cascading over the timber riverfront railing, framing historic shophouses across the tranquil water.",
     "hint": "Follow the river rail where vibrant purple blooms drape gracefully toward the gentle waves.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -523,7 +523,7 @@
     "description": "Erected in 1862 by Chinese philanthropist Tan Kim Seng to connect the Dutch administrative quarter with commercial Chinatown, replacing an ancient Portuguese drawbridge.",
     "hint": "Stand upon the iron balustrade of the main bridge that spans the divide between cultures.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -535,7 +535,7 @@
     "description": "The lively embarkation point where riverboats ferry sightseers past ancient warehouses, decorated shophouses, and mangrove swamps along Sungai Melaka.",
     "hint": "Look for the floating pontoon jetty where colorful tour boats glide in to pick up travelers.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -547,7 +547,7 @@
     "description": "An expansive outdoor wall painting capturing 15th-century maritime commerce during the reign of Sultan Mansur Shah, complete with Chinese junks and Arab dhows.",
     "hint": "Examine the large riverbank wall depicting ancient merchants bartering silk and porcelain.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -559,7 +559,7 @@
     "description": "The towering wooden masts and crow's nest of the 110-foot Flor de la Mar replica, the Portuguese flagship that sank in 1511 with the royal treasure of Malacca.",
     "hint": "Gaze across the river toward the towering wooden yardarms of a 16th-century Portuguese carrack.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -571,7 +571,7 @@
     "description": "A majestic 13-meter timber waterwheel built on the riverbank to replicate Islamic hydrological engineering used during the Melaka Sultanate era.",
     "hint": "Spot the giant wooden wheel with rotating water buckets turning lazily beside the river walkway.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -583,7 +583,7 @@
     "description": "Reconstructed along the rivermouth in 2006, this Dutch bastion was originally erected in 1660 using reddish-brown laterite stone blocks to guard against Bugis and Acehnese raids.",
     "hint": "Touch the rough red porous laterite stones forming the fortress rampart right along the water.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -595,7 +595,7 @@
     "description": "A heavy coastal defense cannon poised on an authentic wooden carriage, aiming across the river mouth where warships once engaged in fierce naval battles.",
     "hint": "Line up behind the dark cannon barrel pointing straight out toward the river bend.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -607,7 +607,7 @@
     "description": "The glass-protected excavation pit revealing 17th-century Dutch foundations, Portuguese musket balls, and broken Ming dynasty ceramic shards.",
     "hint": "Peer into the preserved ground trench where centuries of buried stone foundations are exposed.",
     "difficulty": "hard",
-    "points": 120,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "dutch-square"
   },
@@ -619,7 +619,7 @@
     "description": "An elegant black wrought-iron heritage street lamp post with curved Victorian filigree, illuminating the river promenade after sunset.",
     "hint": "Find the vintage cast-iron lamp post crowned with four glass lantern panes by the river rail.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -631,7 +631,7 @@
     "description": "Built in 1856 by French priest Father Farvé, this neo-Gothic Catholic church features twin soaring spires modeled after the Cathedral of Saint Peter in Montpellier.",
     "hint": "Look beyond the river to the skyward twin neo-Gothic church spires rising above the tree line.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -643,7 +643,7 @@
     "description": "The kaleidoscopic reflections of pastel shophouses, wooden shutters, and hanging flower baskets rippling across the surface of Sungai Melaka.",
     "hint": "Capture the mirror-like water where candy-colored shophouses dance upside down in the ripples.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -655,7 +655,7 @@
     "description": "A striking riverside mural depicting Ming Dynasty Princess Hang Li Po arriving in Malacca in 1459 with her 500 handmaidens, ribbons flowing in the maritime breeze.",
     "hint": "Seek the wall painting where an elegant Chinese princess with flowing green silk ribbons gazes out to sea.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -667,7 +667,7 @@
     "description": "A heartwarming community mural celebrating Melaka's veteran trishaw riders who have pedaled generations of travelers through the heritage city.",
     "hint": "Find the friendly painted face of a smiling beca driver ready to pedal into history.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -679,7 +679,7 @@
     "description": "A tranquil wooden boardwalk segment honoring the natural coastal mangrove ecosystem that sheltered Parameswara's nascent kingdom in 1400.",
     "hint": "Walk along the river boardwalk until you find the wooden observation deck honoring mangrove roots.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -691,7 +691,7 @@
     "description": "The bronze commemorative plaque marking the northeast bastion of the Portuguese fortress, named after Nossa Senhora da Victoria and later renamed by the Dutch.",
     "hint": "Locate the weathered bronze heritage plaque mounted in laterite declaring the site of Bastion Victoria.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "dutch-square"
   },
@@ -703,7 +703,7 @@
     "description": "An open-air resting pavilion constructed with traditional Malay timber joinery, featuring carved fascia boards (papan pator) and sweeping timber gables.",
     "hint": "Take respite in the shady wooden river pavilion adorned with traditional Malay fretwork carvings.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -715,7 +715,7 @@
     "description": "The soaring Gothic arched entrance and circular stained glass rose window of the 1856 church, glowing with jewel tones in the afternoon sun.",
     "hint": "Stand before the high arched stone church portal beneath the circular rose window.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -727,7 +727,7 @@
     "description": "A stone gun embrasure opening in the fortress parapet, precisely angled so Dutch musketeers and artillerymen could sweep approaching vessels with crossfire.",
     "hint": "Peer through the rectangular stone firing slit where gunners kept watch over enemy ships.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "dutch-square"
   },
@@ -739,7 +739,7 @@
     "description": "A massive 18th-century forged iron ship's anchor recovered from the seabed of the Malacca Straits, resting as a monument to merchant seafarers.",
     "hint": "Search along the stone river promenade for the colossal rusted iron anchor resting on cobblestones.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -751,7 +751,7 @@
     "description": "The elegant pedestrian suspension span connecting opposite riverbanks, offering an unbroken view of heritage shophouse roofs and boat traffic.",
     "hint": "Cross the suspended footbridge and look toward Dutch Square as riverboats pass beneath.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -763,7 +763,7 @@
     "description": "A whimsical waterfront dining wharf featuring antique ship wheels, nautical rope coils, and maritime brass lanterns along the water's edge.",
     "hint": "Spot the wooden steering wheel and nautical rigging decorating the riverside cafe deck.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -775,7 +775,7 @@
     "description": "The historic clock tower standing tall by the quayside, casting its brick-red reflection into the smooth current of the Melaka River.",
     "hint": "Capture the reflection of the clock tower shivering on the river's surface from the opposite bank.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -787,7 +787,7 @@
     "description": "The beating heart of historical Melaka, renowned worldwide for its terracotta-red Dutch colonial administrative edifices completed between 1650 and 1753.",
     "hint": "Stand at the center of the world-famous red plaza where all crimson walls converge.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -799,7 +799,7 @@
     "description": "Constructed by the Dutch in 1753 to celebrate a century of rule, built using Dutch bricks brought as ship ballast with massive 48-foot ceiling beams carved from single trees.",
     "hint": "Look upon the iconic red church facade crowned with a pristine white Latin cross.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -811,7 +811,7 @@
     "description": "The monumental entrance of Christ Church, featuring hand-carved Dutch fanlight louver windows and heavy brass-studded timber doors that have swung for 270 years.",
     "hint": "Approach the entrance of Christ Church to admire the semicircular sunburst fanlight above the doorway.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -823,7 +823,7 @@
     "description": "An ornate British Victorian fountain sculpted from English marble, erected by the people of Malacca in 1901 to commemorate Queen Victoria's Diamond Jubilee.",
     "hint": "Find the British colonial fountain where water trickles through three tiers of carved English stone.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -835,7 +835,7 @@
     "description": "A fiercely detailed royal lion head carved in bas-relief upon the fountain basin, spewing fresh water and bearing the Latin motto of the British Empire.",
     "hint": "Examine the lower marble basin of Victoria's fountain to find the roaring lion spout.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "dutch-square"
   },
@@ -847,7 +847,7 @@
     "description": "A 50-foot crimson clock tower built in 1886 by Peranakan philanthropist Tan Jiak Kim in memory of his father, Tan Beng Swee. Its imported clock mechanism still chimes.",
     "hint": "Look up to the square red clock tower that keeps time above the trishaw stand.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -859,7 +859,7 @@
     "description": "The four-sided clock dial manufactured in England by J.B. Joyce & Co., featuring Roman numerals and ornate black cast-iron hands against a cream face.",
     "hint": "Zoom in on the Roman numeral clock face that has ticked through British, Dutch, and Malaysian eras.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "dutch-square"
   },
@@ -871,7 +871,7 @@
     "description": "A miniature replica of a Dutch canvas-sailed windmill beside a whimsically painted fiberglass Friesian cow sculpture, celebrating Dutch agricultural heritage.",
     "hint": "Find where wooden windmill blades turn above a brightly painted dairy cow.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -883,7 +883,7 @@
     "description": "Built in 1650 as the official residence and town hall of the Dutch Governor, The Stadhuys is the oldest surviving Dutch colonial building in the East, now housing the History Museum.",
     "hint": "Stand before the heavy crimson portico announcing the Museum of History and Ethnography.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -895,7 +895,7 @@
     "description": "The monumental three-foot-thick masonry walls of The Stadhuys are punctured by massive white timber louvered casements that could withstand siege cannon fire.",
     "hint": "Find the stark contrast of giant white louvered wooden shutters against deep crimson walls.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -907,7 +907,7 @@
     "description": "The stately double-flight stone staircase ascending to the governor's reception chambers, trodden by Dutch VOC admirals and British resident commissioners.",
     "hint": "Ascend the broad red stone stairs where governors once climbed to their grand council chamber.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -919,7 +919,7 @@
     "description": "A sculpted white Sang Kancil statue commemorating the founding legend: Parameswara was resting under a Melaka tree when a tiny mousedeer kicked his hunting dogs into the river.",
     "hint": "Seek the courageous little white creature that inspired a prince to found an empire.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -931,7 +931,7 @@
     "description": "A colorful congregation of tourist trishaws parked along the Stadhuys curb, adorned with fairy lights, sound systems, and faux velvet floral thrones.",
     "hint": "Capture the fleet of colorful pedal carriages waiting to chauffeur hunters through red streets.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -943,7 +943,7 @@
     "description": "A magnificent centenarian rain tree whose sprawling emerald canopy blankets Dutch Square, shading generations of pilgrims and traders from the tropical noon sun.",
     "hint": "Look up into the colossal umbrella of green leaves sheltering the crimson clock tower.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -955,7 +955,7 @@
     "description": "A cylindrical British cast-iron pillar post box bearing the royal cipher of the reigning monarch, still serving as a functioning postal drop in Red Square.",
     "hint": "Find the red cylindrical iron pillar with a royal cipher where letters were once mailed back to London.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -967,7 +967,7 @@
     "description": "Numbered archaeological plaques (5, 10, 15) marking the stratified excavation layers that revealed Portuguese cobblestones, Dutch sewers, and British drains.",
     "hint": "Find the excavation wall where numbers mark how deep into the centuries archaeologists dug.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "dutch-square"
   },
@@ -979,7 +979,7 @@
     "description": "The secluded inner cobblestone courtyard of The Stadhuys featuring heavy teak doors, rain barrels, and a historic freshwater well tucked behind high security walls.",
     "hint": "Slip behind the main building into the quiet cobblestone courtyard surrounded by high red walls.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -991,7 +991,7 @@
     "description": "The sloping brick walkway leading from the rear terraces of The Stadhuys toward the reconstructed Melaka Sultanate Palace on the eastern flank of Bukit St. Paul.",
     "hint": "Follow the ascending red brick pathway climbing toward the traditional palace gardens.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -1003,7 +1003,7 @@
     "description": "The rhythmic series of semicircular masonry archways forming a cool, shaded colonnade corridor designed to shield colonial officers from tropical downpours.",
     "hint": "Stand beneath the repeating crimson arches creating a tunnel of shadows along the wall.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -1015,7 +1015,7 @@
     "description": "The ancient stone flight of stairs climbing from the back of The Stadhuys directly to the summit church ruins of St. Paul's Hill.",
     "hint": "Begin your climb at the steep stone staircase carving its way up the forested hill.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -1027,7 +1027,7 @@
     "description": "Weathered laterite stone blocks quarried from Pulau Upeh in the 16th century, laid down by Portuguese soldiers and missionaries climbing to the Chapel of the Virgin.",
     "hint": "Climb the rough-cut reddish steps that Portuguese sailors scaled five centuries ago.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1039,7 +1039,7 @@
     "description": "Ancient twisting frangipani (bunga kamboja) trees clinging to the laterite terrace walls, dropping fragrant white blossoms along the hillside path.",
     "hint": "Look for the white and yellow frangipani blossoms framing the red roofs of the square below.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1051,7 +1051,7 @@
     "description": "A stone obelisk monument erected by the British colonial administration in honor of fallen soldiers who died during the 1875-1876 Sungei Ujong War.",
     "hint": "Find the four-sided stone memorial obelisk standing solemn among the shady hillside trees.",
     "difficulty": "hard",
-    "points": 120,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "dutch-square"
   },
@@ -1063,7 +1063,7 @@
     "description": "A massive retaining terrace of laterite and lime mortar built to support the Governor's private summit gardens and fruit orchards overlooking the harbor.",
     "hint": "Examine the thick stone retaining wall holding up the upper garden terrace behind the town hall.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "dutch-square"
   },
@@ -1075,7 +1075,7 @@
     "description": "A spectacular hillside viewpoint offering an aerial panorama over the interlocking terracotta pantiles of Dutch Square, Christ Church, and the Melaka River.",
     "hint": "Look out from the hillside vantage point where the red roofs of Melaka spread like a crimson sea.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "dutch-square"
   },
@@ -1087,7 +1087,7 @@
     "description": "Gnarled, sprawling banyan fig tree roots winding like wooden serpents around the 500-year-old laterite fortification ramparts on Bukit Melaka.",
     "hint": "Find where giant tree roots embrace and swallow whole the ancient fortress walls.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1099,7 +1099,7 @@
     "description": "Sculpted from white Carrara marble in 1952. The morning after its consecration, a falling casuarina tree severed the right arm—the exact same arm dismembered in Rome centuries prior.",
     "hint": "Seek the white marble priest who stands missing his blessing right hand atop the hill.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1111,7 +1111,7 @@
     "description": "Built in 1521 by Portuguese fidalgo Duarte Coelho as Nossa Senhora da Annunciada, this roofless church has stood through Portuguese, Dutch, and British sieges for over 500 years.",
     "hint": "Capture the full ruined nave where stone arches frame the open blue sky above the summit.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "st-pauls-hill"
   },
@@ -1123,7 +1123,7 @@
     "description": "The Dutch added this sturdy square belfry tower in 1590. Inside the brick archway, a steep iron maintenance ladder reaches toward the vanished bell deck.",
     "hint": "Look through the narrow arched doorway of the belfry tower to find the iron ladder to nowhere.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "st-pauls-hill"
   },
@@ -1135,7 +1135,7 @@
     "description": "When the British converted the ruined church into a gunpowder magazine in 1795, they stood the massive Dutch gravestones upright along the inner walls to protect them.",
     "hint": "Walk inside the open-air church walls where colossal Dutch granite tombstones stand guard.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1147,7 +1147,7 @@
     "description": "An exquisitely carved 1676 granite tombstone for Johanna du Moulin, wife of VOC Upper Merchant Abraham Couperus, displaying intricate Dutch heraldry and skulls of memento mori.",
     "hint": "Find the gravestone dated 1676 where carved heraldic coats of arms meet winged hourglasses.",
     "difficulty": "hard",
-    "points": 140,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "st-pauls-hill"
   },
@@ -1159,7 +1159,7 @@
     "description": "A monumentally carved tombstone bearing the coat of arms of a high-ranking Vereenigde Oostindische Compagnie (VOC) merchant, complete with lions rampant and knight helmets.",
     "hint": "Examine the upright tombstones to spot twin rampant lions clutching a merchant shield.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "st-pauls-hill"
   },
@@ -1171,7 +1171,7 @@
     "description": "An open brick-lined subterranean burial vault inside the church where St. Francis Xavier's body was temporarily interred in 1553 for nine months before being transferred to Goa, India.",
     "hint": "Peer through the iron mesh into the sunken brick tomb that once held the body of a saint.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "st-pauls-hill"
   },
@@ -1183,7 +1183,7 @@
     "description": "Erected by the British in 1849, this square whitewashed lighthouse tower guided merchant ships navigating the treacherous shallows of the Malacca Strait.",
     "hint": "Find the whitewashed colonial lighthouse standing vigil at the crest of the hill.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1195,7 +1195,7 @@
     "description": "Historic naval artillery cannons mounted atop the summit ramparts, commanding an unobstructed view of the Straits of Malacca where treasure armadas once sailed.",
     "hint": "Stand behind the summit cannon aimed directly toward the sparkling waters of the strait.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1207,7 +1207,7 @@
     "description": "The sole surviving gatehouse of the formidable Portuguese fortress Fortaleza de Malaca built in 1511. Saved from British demolition in 1807 by Sir Stamford Raffles.",
     "hint": "Stand before the ancient archway that is the only piece of the great fortress left standing.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "a-famosa"
   },
@@ -1219,7 +1219,7 @@
     "description": "A stone bas-relief carved above the archway showing the Dutch VOC coat of arms, the year 1670, and a helmeted Dutch soldier holding an arquebus musket.",
     "hint": "Look directly above the archway to find a carved Dutch soldier and the year 1670.",
     "difficulty": "hard",
-    "points": 140,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "a-famosa"
   },
@@ -1231,7 +1231,7 @@
     "description": "A heavy cast-iron British 32-pounder fortress cannon mounted on a timber carriage on the lawn directly in front of the gate, guarding the entrance to the fortress.",
     "hint": "Find the massive black cannon aimed out from the green lawn in front of the gatehouse.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "a-famosa"
   },
@@ -1243,7 +1243,7 @@
     "description": "The massive unearthed laterite perimeter wall foundations of the 1511 fortress, revealing where Albuquerque's engineers used stones from dismantled mosques and royal tombs.",
     "hint": "Walk along the excavated stone moat wall exposing the foundation stones of the fortress.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "a-famosa"
   },
@@ -1255,7 +1255,7 @@
     "description": "Built in 1912 as the exclusive Malacca Club, this elegant Dutch-British building was chosen in 1956 by Tunku Abdul Rahman to announce the date of Malaya's independence.",
     "hint": "Look across the street to the whitewashed colonial mansion topped by two Moorish domes.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "a-famosa"
   },
@@ -1267,7 +1267,7 @@
     "description": "The ceremonial flagpole on Dataran Pahlawan where the Union Jack was lowered and the Malayan flag hoisted in 1957, surrounded by memorial plaques.",
     "hint": "Stand beneath the soaring flagpole at the edge of the historic parade field.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "a-famosa"
   },
@@ -1279,7 +1279,7 @@
     "description": "A painstaking full-scale wooden replica of Sultan Mansur Shah's 15th-century seven-tiered royal palace, constructed entirely of cengal and resak timber without a single iron nail.",
     "hint": "Gaze up at the soaring curved wooden roof ridges built without using a single nail.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "st-pauls-hill"
   },
@@ -1291,7 +1291,7 @@
     "description": "Intricate hand-carved floral openwork screens (sisik ikan and bunga raya) decorating the royal royal audience veranda, showcasing classical Malay carpentry.",
     "hint": "Inspect the timber veranda railing to admire intricate openwork flowers carved in hardwood.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1303,7 +1303,7 @@
     "description": "An ornamental Melaka bullock cart featuring its signature buffalo-horn upturned canopy, brightly painted wheels, and hand-carved wooden carriage framing.",
     "hint": "Find the colorful traditional bullock cart whose roof curves upward like the horns of an ox.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1315,7 +1315,7 @@
     "description": "Built during the Dutch era on the hill slope and remodeled by British governors, featuring monumental white Tuscan columns and panoramic verandahs.",
     "hint": "Seek the grand mansion with tall white colonial columns nestled against the hillside.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1327,7 +1327,7 @@
     "description": "A shaded stone staircase winding through lush tropical ferns, wild gingers, and giant mahogany trees connecting the museum gardens to the hill summit.",
     "hint": "Walk the shaded path where bird's nest ferns cascade over damp stone stairs.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1339,7 +1339,7 @@
     "description": "A lower fortification parapet facing south toward the harbor, where colonial gunners kept vigil against invading Portuguese and Dutch fleets.",
     "hint": "Locate the lower stone rampart where cannon muzzles pointed toward the old shoreline.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "st-pauls-hill"
   },
@@ -1351,7 +1351,7 @@
     "description": "As twilight settles over Melaka, street vendors raise their striped awnings and lanterns flicker to life along the vibrant corridor of Jalan Hang Jebat.",
     "hint": "Capture the magical moment when evening shadows fall and night market stalls spring to life.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -1363,7 +1363,7 @@
     "description": "A heavy solid-hardwood antique gallery signboard painted in black lacquer and adorned with gold leaf calligraphy wishing prosperity for ten thousand years.",
     "hint": "Find the deep black wooden signboard glowing with majestic gold calligraphy letters.",
     "difficulty": "hard",
-    "points": 130,
+    "points": 50,
     "radiusMeters": 25,
     "zoneId": "jonker-street"
   },
@@ -1375,7 +1375,7 @@
     "description": "Glowing warm amber streetlamps reflected in the ripples of the Melaka River as night boats glide under the illuminated bridges.",
     "hint": "Look down the river where glowing bridge arches cast shimmering golden paths on the dark water.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -1387,7 +1387,7 @@
     "description": "The shimmering waterfront panorama where historic warehouse silhouettes meet neon reflections from modern river cruise boats.",
     "hint": "Find the vantage where neon lights from boats paint streaks of ruby and emerald across the canal.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -1399,7 +1399,7 @@
     "description": "A modern riverside cultural fusion where a giant electric guitar sculpture rises beside traditional Peranakan shophouse rooflines along the water.",
     "hint": "Spot the colossal rock guitar towering beside the historic riverbank.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   },
@@ -1411,7 +1411,7 @@
     "description": "A quaint riverbank cafe patio with crimson Chinese lanterns glowing under timber pergolas, casting soft light onto the passing boats.",
     "hint": "Seek the riverside patio where a row of red silk lanterns hangs above outdoor wooden dining tables.",
     "difficulty": "easy",
-    "points": 80,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -1423,7 +1423,7 @@
     "description": "The Victorian-style cast iron bridge lanterns glowing with warm incandescent light, marking the historic crossing between Chinatown and the Red Square.",
     "hint": "Stand at the bridge crossing to photograph the ornate iron lamp glowing against the dusk sky.",
     "difficulty": "medium",
-    "points": 100,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -1435,7 +1435,7 @@
     "description": "A veteran street artisan carving personalized rubber stamps, name seals, and wire calligraphy by the warm glow of a portable work lamp.",
     "hint": "Find the artisan hunched over delicate wooden seals under a bright desk lamp amidst the bustling crowd.",
     "difficulty": "medium",
-    "points": 110,
+    "points": 50,
     "radiusMeters": 30,
     "zoneId": "jonker-street"
   },
@@ -1447,7 +1447,7 @@
     "description": "The spectacular grand entrance arch of Jonker Walk bathed in golden floodlights and neon scrolls, welcoming hundreds of night explorers to celebrate Melaka's living heritage.",
     "hint": "Stand beneath the grand illuminated night archway where your journey through historical Melaka began.",
     "difficulty": "easy",
-    "points": 90,
+    "points": 50,
     "radiusMeters": 35,
     "zoneId": "jonker-street"
   }
