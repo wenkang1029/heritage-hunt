@@ -97,6 +97,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
 
   const [activeTab, setActiveTab] = useState<'queue' | 'radar' | 'clues' | 'teams' | 'zones' | 'leaderboard'>('queue');
   const [rejectingSub, setRejectingSub] = useState<Submission | null>(null);
+  const [selectedRejectPreset, setSelectedRejectPreset] = useState<string>('');
+  const [customRejectNote, setCustomRejectNote] = useState<string>('');
 
   // End Game & Rally Point Modal State
   const [showRallyModal, setShowRallyModal] = useState<boolean>(false);
@@ -865,7 +867,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       const newZone: Zone = {
         id: zoneId,
         name: createZoneName.trim(),
-        localName: createZoneLocalName.trim() || undefined,
+        ...(createZoneLocalName.trim() ? { localName: createZoneLocalName.trim() } : {}),
         description: createZoneDescription.trim() || 'Custom heritage zone in Melaka',
         color: createZoneColor,
         borderColor: createZoneColor,
@@ -2725,6 +2727,98 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         subtitle={lightboxImage?.subtitle}
         badge={lightboxImage?.badge}
       />
+
+      {/* Rejection Reason Modal */}
+      {rejectingSub && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base sm:text-lg font-black text-rose-400 mb-1 flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-rose-500 shrink-0" />
+              <span>{t('gm.rejectModalTitle')}</span>
+            </h3>
+            <p className="text-xs text-slate-400 mb-3">{t('gm.rejectModalSubtitle')}</p>
+
+            {/* Target Clue & Team info */}
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 text-xs space-y-1">
+              <div className="text-slate-400">
+                {language === 'zh' ? '队伍：' : 'Team: '}<span className="font-bold text-white">{rejectingSub.teamName}</span>
+              </div>
+              <div className="text-slate-400">
+                {language === 'zh' ? '线索：' : 'Clue: '}<span className="font-bold text-amber-300">{rejectingSub.clueTitle}</span>
+              </div>
+            </div>
+
+            {/* Reason Presets */}
+            <div className="space-y-1.5 mb-3">
+              {[
+                t('gm.rejectDisrespect'),
+                t('gm.rejectNotMatching'),
+                t('gm.rejectBlurry'),
+                t('gm.rejectFarAway'),
+              ].map((reasonText) => (
+                <button
+                  key={reasonText}
+                  type="button"
+                  onClick={() => setSelectedRejectPreset(reasonText)}
+                  className={`w-full text-left p-2.5 rounded-xl border text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                    (selectedRejectPreset || t('gm.rejectDisrespect')) === reasonText
+                      ? 'bg-rose-500/15 border-rose-500/50 text-rose-200 font-bold'
+                      : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-300'
+                  }`}
+                >
+                  <span>{reasonText}</span>
+                  {(selectedRejectPreset || t('gm.rejectDisrespect')) === reasonText && (
+                    <span className="text-rose-400 font-black text-xs">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Optional Custom Reason Input */}
+            <div className="mb-4">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                {language === 'zh' ? '其他补充说明（选填）：' : 'Custom Additional Reason (Optional):'}
+              </label>
+              <textarea
+                rows={2}
+                value={customRejectNote}
+                onChange={(e) => setCustomRejectNote(e.target.value)}
+                placeholder={language === 'zh' ? '如：请靠近石碑重新拍摄清楚的队旗合照' : 'e.g. Please step closer to the stone tablet with visible team flag'}
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 resize-none transition-colors"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setRejectingSub(null);
+                  setCustomRejectNote('');
+                }}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+              >
+                {t('gm.rejectCancelBtn')}
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const defaultReason = t('gm.rejectDisrespect');
+                  const finalReason = customRejectNote.trim() || selectedRejectPreset || defaultReason;
+                  await handleReviewAction(rejectingSub, 'reject', undefined, finalReason);
+                  setRejectingSub(null);
+                  setCustomRejectNote('');
+                }}
+                disabled={isProcessingAction}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-lg cursor-pointer transition-colors flex items-center gap-1.5"
+              >
+                <XCircle className="w-4 h-4" />
+                <span>{t('gm.rejectConfirmBtn')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* End Game & Set Gathering Point Modal */}
       {showRallyModal && (

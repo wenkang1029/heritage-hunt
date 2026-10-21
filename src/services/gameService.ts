@@ -98,6 +98,28 @@ function computeStatus(): ConnectionStatus {
 
 // Every page load briefly serves cached data before the server answers; only report
 // 'offline' when it lasts, so players don't see a "connection lost" flash on each open.
+
+/**
+ * Recursively strips any undefined values from payloads before writing to Firestore.
+ * Preserves FieldValues (serverTimestamp, increment, arrayUnion) and nulls.
+ */
+function sanitizeFirestorePayload<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map((item) => (item === undefined ? null : sanitizeFirestorePayload(item))) as unknown as T;
+  }
+  if (typeof obj === 'object' && Object.getPrototypeOf(obj) === Object.prototype) {
+    const res: Record<string, any> = {};
+    for (const [key, val] of Object.entries(obj)) {
+      if (val !== undefined) {
+        res[key] = sanitizeFirestorePayload(val);
+      }
+    }
+    return res as T;
+  }
+  return obj;
+}
+
 const OFFLINE_GRACE_MS = 3000;
 let offlineTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -431,7 +453,7 @@ class UnifiedGameService implements IGameService {
       createdAt: Date.now(),
     };
 
-    await setDoc(newTeamRef, teamData);
+    await setDoc(newTeamRef, sanitizeFirestorePayload(teamData));
     return { ...teamData, id: newTeamRef.id };
   }
 
@@ -669,7 +691,7 @@ class UnifiedGameService implements IGameService {
       awardedPoints: 0,
     };
 
-    await setDoc(newSubRef, subData);
+    await setDoc(newSubRef, sanitizeFirestorePayload(subData));
     return { ...subData, id: newSubRef.id };
   }
 
@@ -822,7 +844,7 @@ class UnifiedGameService implements IGameService {
       ...clue,
       createdAt: Date.now(),
     };
-    await setDoc(newClueRef, clueData);
+    await setDoc(newClueRef, sanitizeFirestorePayload(clueData));
     return { ...clueData, id: newClueRef.id };
   }
 
@@ -1010,7 +1032,7 @@ class UnifiedGameService implements IGameService {
       createdAt: Date.now(),
     };
 
-    await setDoc(gameRef, newGame);
+    await setDoc(gameRef, sanitizeFirestorePayload(newGame));
 
     const DEFAULT_PALETTES = [
       { name: 'Team Crimson', color: '#DC2626', pin: '1001' },
