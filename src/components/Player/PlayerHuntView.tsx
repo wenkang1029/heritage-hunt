@@ -40,7 +40,6 @@ import {
   Bell,
   XCircle,
   Pause,
-  LayoutGrid,
   Filter,
   RotateCcw,
 } from 'lucide-react';
@@ -127,7 +126,6 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState<string>('all');
   const [clueStatusFilter, setClueStatusFilter] = useState<'all' | 'uncompleted' | 'completed'>('all');
-  const [clueViewMode, setClueViewMode] = useState<'grid' | 'list'>('grid');
 
   // Camera & submission state
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
@@ -269,52 +267,62 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       return [
         {
           id: 'player-welcome',
-          title: '欢迎参加马六甲寻宝大冒险！',
+          title: '欢迎参加马六甲历史寻宝大冒险！',
           description:
-            '您正在代表小队穿梭于马六甲古迹街头！请查看顶部状态栏，实时查看队伍专属颜色、个人昵称、当前积分、实时排名以及已找到地标数量。',
+            '您正在代表小队穿梭于马六甲古迹街头！请查看顶部状态栏，实时查看队伍专属颜色、个人昵称、当前总积分、实时排行榜名次以及已完成线索数。顶部还可随时接收裁判赛事广播或切换语言。',
           icon: <Trophy className="w-5 h-5 text-amber-400" />,
-          badge: '第1步：你的小队',
+          badge: '第1步：你的小队与赛况',
           tips: '您的参赛信息会自动保存在本机。即使刷新或重新打开浏览器，队伍状态依然完整保留。',
           tabKey: 'map',
         },
         {
           id: 'player-map',
-          title: '1. 寻宝地图与探险家雷达',
+          title: '1. 寻宝地图与智能环境感知雷达',
           description:
-            '彩色多边形区域划定了鸡场街、荷兰红屋等各大历史区。为保障真实寻宝乐趣，地图已开启探险家模式（隐藏所有大头针）。请锁定目标线索，跟随雷达方向与距离探索；进入 20 米搜寻圈将触发雷达高能提醒！',
+            '彩色多边形区域划定了鸡场街、荷兰红屋、圣保罗山等联合国教科文组织历史区。为保障真实寻宝乐趣，地图已开启探险家模式（完全隐藏大头针）。浮动雷达会自动锁定最近线索，配备 360° 旋转罗盘与实时距离；当步入目标 20 米内将触发高能提醒！',
           icon: <MapPin className="w-5 h-5 text-rose-500" />,
-          badge: '第2步：探险家地图',
-          tips: '保持手机 GPS 定位开启。当步入目标 20 米内，手机将震动并提示您对照照片用双眼寻找建筑细节。',
+          badge: '第2步：探险家地图与雷达',
+          tips: '保持手机 GPS 定位开启。观察雷达上的红金指南针指针（北/东/南/西），跟随距离接近目标。',
           tabKey: 'map',
         },
         {
           id: 'player-clues',
-          title: '2. 寻宝线索与目标锁定',
+          title: '2. 纯视觉找茬寻宝（每题 50分）',
           description:
-            '切换到【线索】标签页查看历史目标。点击【🎯 锁定追踪】可将目标固定到顶部雷达。每张卡片均标有积分奖励、寻找提示与参考照片。点击任意照片可查看高清无裁切大图！',
+            '切换到【线索】标签页查看全部 121 个寻宝目标。所有线索均为 50 分！为了增加寻宝乐趣，地标名称与文字介绍已被隐藏。请根据高清摄影特写，在街头观察老店屋雕花、荷兰红砖或特色门牌。点击任意照片可放大查看全尺寸无裁切大图！',
           icon: <List className="w-5 h-5 text-amber-400" />,
-          badge: '第3步：线索锁定',
-          tips: '仔细观察殖民地雕花、荷兰红砖砌块与古老巷弄壁画细节。',
+          badge: '第3步：视觉线索与锁定',
+          tips: '线索采用单行大卡片排列，点击【🎯 追踪】可立即将该线索锁定到顶部浮动雷达上。',
+          tabKey: 'clues',
+        },
+        {
+          id: 'player-filter',
+          title: '3. 区域聚焦与完成度统计横幅',
+          description:
+            '可使用顶部的【全部 / 待探索 / 已完成】状态栏快速过滤。点击任意古迹区域（如鸡场街、荷兰红屋），顶部会立刻展开该区域专属颜色的【聚焦横幅】，显示该区域的完成进度条（如 已探索 4/32）与剩余线索。点击【✕ 清除筛选】可随时返回全览。',
+          icon: <Filter className="w-5 h-5 text-rose-400" />,
+          badge: '第4步：高能聚焦筛选',
+          tips: '如果想优先完成附近的目标，还可点击“按距离从近到远”进行智能排序！',
           tabKey: 'clues',
         },
         {
           id: 'player-camera',
-          title: '3. 现场拍摄自拍并赢取积分',
+          title: '4. 身边线索与现场打卡自拍',
           description:
-            '到达地标位置后，点击“拍摄地标打卡自拍”！拍摄一张队伍与地标建筑的合影。系统将在数秒内完成极速压缩（<150KB）并提交给 GM 审核。',
+            '当你走近任何地标（<100米），顶部会自动浮现“就在身边”轮播卡片。到达建筑面前后，点击【📸 拍照】拍摄一张包含队员与建筑特写的合影！系统内置极速压缩（<150KB，零流量负担）并立即提交给 GM 审核。',
           icon: <Camera className="w-5 h-5 text-emerald-400" />,
-          badge: '第4步：相机打卡审核',
-          tips: '富有创意或有趣的合影姿势可赢取 GM 裁判额外的 +25 创意加分！',
+          badge: '第5步：相机打卡与加分',
+          tips: '基准分 50 分！若合影姿势极具幽默创意或巧妙互动，GM 裁判可直接打赏 +10 或 +30 创意加分！',
           tabKey: 'clues',
         },
         {
           id: 'player-leaderboard',
-          title: '4. 实时排行榜与积分总榜',
+          title: '5. 实时排行榜与终点集结导航',
           description:
-            '实时追踪队伍的排名与得分。与竞争对手展开角逐，寻找更多地标，登上冠军领奖台！',
+            '实时追踪所有参赛队伍的分数与排名，点击队伍可展开查看队友成员与在线状态。当比赛倒计时结束，裁判会公布终点集结地（Rally Point），地图将标出集结旗帜并提供一键 Google 地图导航！',
           icon: <Trophy className="w-5 h-5 text-amber-400" />,
-          badge: '第5步：实时排行榜',
-          tips: '随时点击顶部罗盘图标即可重新打开此操作向导。',
+          badge: '第6步：排行榜与终点集结',
+          tips: '随时点击顶部右上角的【向导】按钮，即可重新唤起这份完整的游戏教程。',
           tabKey: 'leaderboard',
         },
       ];
@@ -323,52 +331,62 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     return [
       {
         id: 'player-welcome',
-        title: 'Welcome, Heritage Explorer!',
+        title: 'Welcome to Melaka Heritage Hunt!',
         description:
-          'You are on the street representing your team in the Melaka Heritage Photo Hunt! Look at the header bar above to view your squad color, nickname, live score, leaderboard rank, and completed clues count.',
+          'You are representing your squad on the historic streets of Melaka! Check the header bar above for your squad theme color, nickname, live score, official leaderboard rank, and completed clues count. You can also view broadcasts and toggle languages anytime.',
         icon: <Trophy className="w-5 h-5 text-amber-400" />,
-        badge: 'Step 1: Your Squad',
-        tips: 'Your session is saved automatically. If you close your browser or refresh, you will remain in your team.',
+        badge: 'Step 1: Squad & Live Status',
+        tips: 'Your session is saved automatically. If you refresh or reopen your browser, your squad progress is safely preserved.',
         tabKey: 'map',
       },
       {
         id: 'player-map',
-        title: '1. Hunt Map & Explorer Radar',
+        title: '1. Hunt Map & Smart Scavenger Radar',
         description:
-          'Color-coded polygon zones outline Melaka’s historic districts. To preserve real exploration, Explorer Mode hides exact pins! Lock a target clue to activate your proximity radar with bearing direction & distance. Enter within 20m to trigger the pulse alert!',
+          'Color-coded polygon zones outline UNESCO districts (Jonker Street, Dutch Square, St. Paul’s Hill, etc.). To preserve authentic exploration, Explorer Mode hides exact pins! The floating radar tracks the nearest clue with a 360° Adventure Compass and distance. Walking within 20m triggers a pulse alert!',
         icon: <MapPin className="w-5 h-5 text-rose-500" />,
-        badge: 'Step 2: Explorer Map',
-        tips: 'Keep GPS enabled. When within 20m of your target, your phone pulses and prompts you to match the photo with your eyes.',
+        badge: 'Step 2: Map & Radar',
+        tips: 'Keep GPS enabled. Watch the red needle and distance meter to home in on your target.',
         tabKey: 'map',
       },
       {
         id: 'player-clues',
-        title: '2. Clues & Target Tracking',
+        title: '2. Pure Visual Scavenger Hunt (50 pts each)',
         description:
-          'Browse historic targets in the Clues tab. Tap [🎯 Lock & Track Clue] to engage the radar. Each card shows points, exploration hints, and a reference photo. Tap any photo to view in full resolution!',
+          'Switch to the Clues tab to browse all 121 photo clues. Every clue awards 50 points! To keep the challenge exciting, landmark names and text titles are hidden. Use your eyes to match photo teasers with real architectural carvings, tiles, and shophouses. Tap any photo to view in high resolution!',
         icon: <List className="w-5 h-5 text-amber-400" />,
-        badge: 'Step 3: Clue Tracking',
-        tips: 'Scout out distinctive colonial carvings, Dutch brickwork, and alleyway details.',
+        badge: 'Step 3: Visual Clues & 50 Pts',
+        tips: 'Clues are displayed one per row. Tap [🎯 Track] to lock any specific clue onto your floating radar.',
+        tabKey: 'clues',
+      },
+      {
+        id: 'player-filter',
+        title: '3. Smart Zone Filters & Focus Progress Banner',
+        description:
+          'Use the top segmented status bar (All / Uncompleted / Completed) to filter clues. Tapping any zone pill opens the Active Filter Hero Banner, displaying a live progress bar (e.g. 4/32 Completed) and uncompleted counts. Tap [✕ Clear] anytime to reset.',
+        icon: <Filter className="w-5 h-5 text-rose-400" />,
+        badge: 'Step 4: Zone Focus Filters',
+        tips: 'Tap "Sort by Nearest" to organize clues by direct walking distance from your current GPS position!',
         tabKey: 'clues',
       },
       {
         id: 'player-camera',
-        title: '3. Snap Selfie & Earn Points',
+        title: '4. Nearby Highlights & Selfie Submission',
         description:
-          'When you arrive at the landmark, tap "Capture Landmark Selfie"! Take a clear selfie photo with your team and the landmark. The app compresses the image in seconds (< 150KB) and uploads it for GM verification.',
+          'When you walk within 100m of clues, the "Right Beside You" carousel pops up automatically. In front of the landmark, tap [📸 Snap] to take a squad selfie! Built-in instant compression (<150KB) saves mobile data and uploads in seconds for GM review.',
         icon: <Camera className="w-5 h-5 text-emerald-400" />,
-        badge: 'Step 4: Camera Verification',
-        tips: 'Creative and fast submissions can earn +25 bonus points from the Game Master!',
+        badge: 'Step 5: Camera & Creative Bonuses',
+        tips: 'Base reward is 50 pts! Fun, creative, or humorous squad poses can earn +10 or +30 creative bonus points from the GM!',
         tabKey: 'clues',
       },
       {
         id: 'player-leaderboard',
-        title: '4. Live Leaderboard & Standings',
+        title: '5. Live Leaderboard & Final Rally Navigation',
         description:
-          'Track your team’s rank and score in real time. Compete with rival squads to find the most landmarks and take the #1 podium spot!',
+          'Track team scores and standings in real time, and tap any squad to inspect its members. When the hunt concludes, the GM broadcasts the final Rally Point with a map flag and direct Google Maps navigation button!',
         icon: <Trophy className="w-5 h-5 text-amber-400" />,
-        badge: 'Step 5: Leaderboard Tab',
-        tips: 'Tap the compass icon in the top header anytime to reopen this walkthrough.',
+        badge: 'Step 6: Standings & Rally Point',
+        tips: 'Tap the "Tour Guide" button in the top-right header anytime to reopen this walkthrough.',
         tabKey: 'leaderboard',
       },
     ];
@@ -910,10 +928,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               setTourStepIndex(0);
               setShowTour(true);
             }}
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 shadow-sm cursor-pointer transition-colors shrink-0"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer transition-all shrink-0 active:scale-95"
             title={t('player.tourTitle')}
           >
-            <Compass className="w-4 h-4" />
+            <Compass className="w-4 h-4 text-amber-400" />
+            <span className="text-[11px] font-black">{t('player.tourTitle')}</span>
           </button>
         </div>
       </header>
@@ -1204,9 +1223,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 </button>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                {/* Distance Sort Toggle */}
-                {playerCoords && (
+              {/* Distance Sort Toggle */}
+              {playerCoords && (
+                <div className="shrink-0 ml-auto">
                   <button
                     onClick={() => setSortBy((prev) => (prev === 'distance' ? 'default' : 'distance'))}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
@@ -1219,30 +1238,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     <span>📍</span>
                     <span className="text-[11px]">{sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}</span>
                   </button>
-                )}
-
-                {/* View Mode Toggle: Grid vs List */}
-                <div className="flex items-center p-0.5 rounded-xl bg-slate-900 border border-slate-800">
-                  <button
-                    onClick={() => setClueViewMode('grid')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                      clueViewMode === 'grid' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'
-                    }`}
-                    title={t('player.viewGrid')}
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setClueViewMode('list')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                      clueViewMode === 'list' ? 'bg-slate-800 text-amber-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'
-                    }`}
-                    title={t('player.viewList')}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Zone Filter Carousel */}
@@ -1438,186 +1435,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               </div>
             )}
 
-            {/* Clue Cards Grid Mode */}
-            {clueViewMode === 'grid' && filteredClues.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3.5">
-                {filteredClues.map((clue) => {
-                  const isDone = completedClueIds.has(clue.id);
-                  const isPending = pendingClueIds.has(clue.id);
-                  const latestSub = latestSubByClue.get(clue.id);
-                  const isRejected = !isDone && !isPending && latestSub?.status === 'rejected';
-                  const clueZone = game.zones.find((z) => z.id === clue.zoneId);
-                  const dist = playerCoords && clue.location ? calculateHaversineDistance(playerCoords, clue.location) : null;
-                  const clueLabel = getClueLabel(clue.id, language);
-
-                  return (
-                    <div
-                      key={clue.id}
-                      id={`clue-card-${clue.id}`}
-                      onClick={() => !isDone && handleOpenNativeCamera(clue)}
-                      className={`group rounded-2xl border transition-all duration-300 overflow-hidden flex flex-col justify-between ${
-                        isDone
-                          ? 'bg-emerald-950/20 border-emerald-800/40 opacity-80'
-                          : isPending
-                          ? 'bg-amber-950/20 border-amber-800/40'
-                          : isRejected
-                          ? 'bg-rose-950/25 border-rose-800/50'
-                          : highlightedClueId === clue.id
-                          ? 'bg-slate-900 border-amber-400 ring-4 ring-amber-400/50 shadow-2xl scale-[1.02]'
-                          : 'bg-slate-900 border-slate-800 hover:border-slate-700 cursor-pointer shadow-lg hover:shadow-xl'
-                      }`}
-                    >
-                      {/* Photo Container */}
-                      <div className="relative aspect-[4/3] w-full bg-slate-950 overflow-hidden">
-                        {clue.targetPhotoBase64 ? (
-                          <>
-                            <img
-                              src={clue.targetPhotoBase64}
-                              alt={clueLabel}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              loading="lazy"
-                            />
-                            {/* Uncropped Lightbox Zoom Button */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setLightboxImage({
-                                  url: clue.targetPhotoBase64,
-                                  title: clueLabel,
-                                  subtitle: clueZone?.name || clue.zoneId,
-                                  badge: t('common.targetLandmarkBadge'),
-                                });
-                              }}
-                              className="absolute bottom-1.5 right-1.5 p-1 rounded-lg bg-black/60 hover:bg-black/80 text-white/90 backdrop-blur-sm border border-white/20 transition-all cursor-pointer shadow"
-                              title={t('player.modalTapUncropped')}
-                            >
-                              <Maximize2 className="w-3.5 h-3.5" />
-                            </button>
-                          </>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-600">
-                            <Camera className="w-8 h-8" />
-                          </div>
-                        )}
-
-                        {/* Top Badges: Clue # & 50 Pts */}
-                        <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between gap-1 pointer-events-none">
-                          <span className="px-1.5 py-0.5 rounded-md bg-slate-950/85 backdrop-blur-sm text-amber-300 font-mono font-black text-[11px] border border-amber-500/30 shadow">
-                            {getClueNumber(clue.id)}
-                          </span>
-                          <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 backdrop-blur-sm text-amber-300 border border-amber-500/40 text-[10px] font-black shadow">
-                            50 分
-                          </span>
-                        </div>
-
-                        {/* Completed Overlay */}
-                        {isDone && (
-                          <div className="absolute inset-0 bg-emerald-950/75 backdrop-blur-[1px] flex flex-col items-center justify-center p-2 text-center">
-                            <CheckCircle2 className="w-8 h-8 text-emerald-400 mb-1 drop-shadow" />
-                            <span className="text-xs font-black text-emerald-200">
-                              {t('player.foundAndVerified')}
-                            </span>
-                            <span className="text-[10px] text-emerald-300 font-mono font-bold mt-0.5">
-                              +50 分
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Pending Review Overlay */}
-                        {isPending && (
-                          <div className="absolute inset-0 bg-amber-950/70 backdrop-blur-[1px] flex flex-col items-center justify-center p-2 text-center">
-                            <Clock className="w-7 h-7 text-amber-400 animate-pulse mb-1 drop-shadow" />
-                            <span className="text-xs font-black text-amber-200">
-                              {t('player.pendingReview')}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Card Footer / Details & Action */}
-                      <div className="p-2.5 flex-1 flex flex-col justify-between gap-2">
-                        {/* Zone pill & Distance */}
-                        <div className="flex items-center justify-between gap-1 text-[10px]">
-                          <span className="font-bold truncate flex items-center gap-1 text-slate-300">
-                            <span
-                              className="w-2 h-2 rounded-full shrink-0"
-                              style={{ background: clueZone?.color || '#cbd5e1' }}
-                            />
-                            <span className="truncate">{clueZone?.name || clue.zoneId}</span>
-                          </span>
-                          {dist !== null && (
-                            <span className="font-mono text-slate-400 shrink-0">
-                              📍 {dist}m
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Action Area */}
-                        <div>
-                          {isDone ? (
-                            <div className="w-full py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-center text-[11px] font-bold">
-                              ✓ 已完成 (+50分)
-                            </div>
-                          ) : isPending ? (
-                            <div className="w-full py-1.5 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-300 text-center text-[11px] font-bold flex items-center justify-center gap-1">
-                              <Clock className="w-3 h-3 animate-spin" />
-                              <span>{t('player.pendingReview')}</span>
-                            </div>
-                          ) : isRejected ? (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenNativeCamera(clue);
-                              }}
-                              className="w-full py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center justify-center gap-1 shadow cursor-pointer transition-colors"
-                            >
-                              <Camera className="w-3.5 h-3.5" />
-                              <span>{t('player.retakeBtn')}</span>
-                            </button>
-                          ) : (
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenNativeCamera(clue);
-                                }}
-                                className="flex-1 py-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold text-xs flex items-center justify-center gap-1 shadow cursor-pointer transition-all active:scale-95"
-                              >
-                                <Camera className="w-3.5 h-3.5" />
-                                <span>{language === 'zh' ? '拍照' : 'Snap'}</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setTrackedClueId((prev) => (prev === clue.id ? null : clue.id));
-                                }}
-                                className={`p-1.5 rounded-xl transition-all cursor-pointer border ${
-                                  trackedClueId === clue.id
-                                    ? 'bg-amber-500 text-slate-950 border-amber-400 shadow'
-                                    : isAutoTracking && trackedClue?.id === clue.id
-                                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-                                }`}
-                                title={trackedClueId === clue.id ? '取消锁定' : '雷达锁定追踪'}
-                              >
-                                <Crosshair className="w-4 h-4" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Clue Cards List Mode */}
-            {clueViewMode === 'list' && filteredClues.length > 0 && (
+            {/* Clue Cards (1 Clue Per Row) */}
+            {filteredClues.length > 0 && (
               <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                 {filteredClues.map((clue) => {
                   const isDone = completedClueIds.has(clue.id);
@@ -1658,7 +1477,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             });
                           }
                         }}
-                        className="w-20 h-20 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group"
+                        className="w-22 h-22 sm:w-26 sm:h-26 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group shadow"
                         title={t('player.modalTapUncropped')}
                       >
                         {clue.targetPhotoBase64 ? (
@@ -1677,12 +1496,17 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             <Camera className="w-6 h-6" />
                           </div>
                         )}
-                        <div className="absolute top-1 left-1 px-1 py-0.2 rounded bg-slate-950/85 text-amber-300 font-mono font-black text-[9px] border border-amber-500/30">
+                        <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-950/85 text-amber-300 font-mono font-black text-[10px] border border-amber-500/30 shadow">
                           {getClueNumber(clue.id)}
                         </div>
                         {isDone && (
                           <div className="absolute inset-0 bg-emerald-950/70 flex items-center justify-center">
                             <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+                          </div>
+                        )}
+                        {isPending && (
+                          <div className="absolute inset-0 bg-amber-950/70 flex items-center justify-center">
+                            <Clock className="w-6 h-6 text-amber-400 animate-pulse" />
                           </div>
                         )}
                       </div>

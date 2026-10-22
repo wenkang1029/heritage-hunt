@@ -7,7 +7,7 @@
  * with skip and re-trigger capabilities.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   Compass,
   ChevronRight,
@@ -51,14 +51,61 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
 }) => {
   const { t } = useLanguage();
 
+  const currentStep = steps[currentStepIndex] || steps[0];
+  const isFirstStep = currentStepIndex === 0;
+  const isLastStep = currentStepIndex === steps.length - 1;
+
+  const handleSkip = useCallback(() => {
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, 'true');
+      } catch {
+        // Ignore storage errors
+      }
+    }
+    onClose();
+  }, [storageKey, onClose]);
+
+  const handleComplete = useCallback(() => {
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, 'true');
+      } catch {
+        // Ignore storage errors
+      }
+    }
+    onClose();
+  }, [storageKey, onClose]);
+
+  const handleNext = useCallback(() => {
+    if (isLastStep) {
+      handleComplete();
+    } else {
+      const nextIdx = currentStepIndex + 1;
+      onStepChange(nextIdx);
+      if (steps[nextIdx]?.tabKey && onTabChange) {
+        onTabChange(steps[nextIdx].tabKey);
+      }
+    }
+  }, [isLastStep, handleComplete, currentStepIndex, onStepChange, steps, onTabChange]);
+
+  const handlePrev = useCallback(() => {
+    if (!isFirstStep) {
+      const prevIdx = currentStepIndex - 1;
+      onStepChange(prevIdx);
+      if (steps[prevIdx]?.tabKey && onTabChange) {
+        onTabChange(steps[prevIdx].tabKey);
+      }
+    }
+  }, [isFirstStep, currentStepIndex, onStepChange, steps, onTabChange]);
+
   // Automatically switch tab when current step changes
   useEffect(() => {
     if (!isOpen) return;
-    const currentStep = steps[currentStepIndex];
     if (currentStep?.tabKey && onTabChange) {
       onTabChange(currentStep.tabKey);
     }
-  }, [isOpen, currentStepIndex, steps, onTabChange]);
+  }, [isOpen, currentStepIndex, currentStep?.tabKey, onTabChange]);
 
   // Handle keyboard arrow navigation & Escape
   useEffect(() => {
@@ -74,57 +121,9 @@ export const InteractiveTour: React.FC<InteractiveTourProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, currentStepIndex]);
+  }, [isOpen, handleSkip, handleNext, handlePrev]);
 
   if (!isOpen || steps.length === 0) return null;
-
-  const currentStep = steps[currentStepIndex] || steps[0];
-  const isFirstStep = currentStepIndex === 0;
-  const isLastStep = currentStepIndex === steps.length - 1;
-
-  const handleNext = () => {
-    if (isLastStep) {
-      handleComplete();
-    } else {
-      const nextIdx = currentStepIndex + 1;
-      onStepChange(nextIdx);
-      if (steps[nextIdx]?.tabKey && onTabChange) {
-        onTabChange(steps[nextIdx].tabKey);
-      }
-    }
-  };
-
-  const handlePrev = () => {
-    if (!isFirstStep) {
-      const prevIdx = currentStepIndex - 1;
-      onStepChange(prevIdx);
-      if (steps[prevIdx]?.tabKey && onTabChange) {
-        onTabChange(steps[prevIdx].tabKey);
-      }
-    }
-  };
-
-  const handleSkip = () => {
-    if (storageKey) {
-      try {
-        localStorage.setItem(storageKey, 'true');
-      } catch {
-        // Ignore storage errors
-      }
-    }
-    onClose();
-  };
-
-  const handleComplete = () => {
-    if (storageKey) {
-      try {
-        localStorage.setItem(storageKey, 'true');
-      } catch {
-        // Ignore storage errors
-      }
-    }
-    onClose();
-  };
 
   return (
     <div

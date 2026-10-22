@@ -296,7 +296,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           id: 'gm-queue',
           title: '1. 实时自拍审核队列',
           description:
-            '每当有参赛小队找到地标并上传自拍，都会实时推送至此处。并排对比目标建筑与队员合影，点击【通过】计分、【+25 创意加分】或【驳回】重拍。',
+            '每当有参赛小队找到地标并上传自拍，都会实时推送至此处。并排对比目标建筑与队员合影，点击【标准 50分】通过、打赏【创意 60/80分】或【驳回】重拍。',
           icon: <CheckCircle className="w-5 h-5 text-emerald-400" />,
           badge: '标签页：审核队列',
           tips: '点击任意地标缩略图或队员自拍，均可放大查看高清无损原图。',
@@ -370,7 +370,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
         id: 'gm-queue',
         title: '1. Live Verification Queue',
         description:
-          'Whenever player squads find a landmark, their selfie photo appears here in real time. Inspect each photo and click "Approve" (green) to award points, "+Bonus" (+25 pts) for great shots, or "Reject" (red) if incorrect.',
+          'Whenever player squads find a landmark, their selfie photo appears here in real time. Inspect each photo and click "Standard (50 pts)" to approve, award "Creative (60/80 pts)" for great poses, or "Reject" if incorrect.',
         icon: <CheckCircle className="w-5 h-5 text-emerald-400" />,
         badge: 'Tab: Submissions',
         tips: 'Tap any clue thumbnail or player selfie to view the uncropped high-resolution photo.',
