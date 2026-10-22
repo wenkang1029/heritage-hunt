@@ -53,7 +53,7 @@ import {
 } from '../../utils/haversine.ts';
 import { ImageLightboxModal } from '../Common/ImageLightboxModal.tsx';
 import { useDialog } from '../../context/DialogContext.tsx';
-import { InteractiveTour, type TourStep } from '../Common/InteractiveTour.tsx';
+import Tourguide, { type TourguideStep } from 'tourguidejs';
 import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export interface PlayerHuntViewProps {
@@ -142,16 +142,6 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     subtitle?: string;
     badge?: string;
   } | null>(null);
-
-  // Interactive Onboarding Tour State for Player
-  const [showTour, setShowTour] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('melaka_hunt_seen_player_tour') !== 'true';
-    } catch {
-      return false;
-    }
-  });
-  const [tourStepIndex, setTourStepIndex] = useState<number>(0);
 
   // Leaderboard team members dropdown state
   const [expandedLeaderboardTeams, setExpandedLeaderboardTeams] = useState<Set<string>>(new Set());
@@ -262,135 +252,187 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     return index !== -1 ? index + 1 : 1;
   }, [sortedTeams, currentTeam.id]);
 
-  const playerTourSteps = useMemo<TourStep[]>(() => {
+  const tourguideSteps = useMemo<TourguideStep[]>(() => {
     if (language === 'zh') {
       return [
         {
-          id: 'player-welcome',
+          selector: '#player-squad-status',
+          step: 1,
           title: '欢迎参加马六甲历史寻宝大冒险！',
-          description:
+          content:
             '您正在代表小队穿梭于马六甲古迹街头！请查看顶部状态栏，实时查看队伍专属颜色、个人昵称、当前总积分、实时排行榜名次以及已完成线索数。顶部还可随时接收裁判赛事广播或切换语言。',
-          icon: <Trophy className="w-5 h-5 text-amber-400" />,
-          badge: '第1步：你的小队与赛况',
-          tips: '您的参赛信息会自动保存在本机。即使刷新或重新打开浏览器，队伍状态依然完整保留。',
-          tabKey: 'map',
         },
         {
-          id: 'player-map',
+          selector: '#player-map-container',
+          step: 2,
           title: '1. 寻宝地图与智能环境感知雷达',
-          description:
+          content:
             '彩色多边形区域划定了鸡场街、荷兰红屋、圣保罗山等联合国教科文组织历史区。为保障真实寻宝乐趣，地图已开启探险家模式（完全隐藏大头针）。浮动雷达会自动锁定最近线索，配备 360° 旋转罗盘与实时距离；当步入目标 20 米内将触发高能提醒！',
-          icon: <MapPin className="w-5 h-5 text-rose-500" />,
-          badge: '第2步：探险家地图与雷达',
-          tips: '保持手机 GPS 定位开启。观察雷达上的红金指南针指针（北/东/南/西），跟随距离接近目标。',
-          tabKey: 'map',
         },
         {
-          id: 'player-clues',
+          selector: '#clues-tab-nav',
+          step: 3,
           title: '2. 纯视觉找茬寻宝（每题 50分）',
-          description:
+          content:
             '切换到【线索】标签页查看全部 121 个寻宝目标。所有线索均为 50 分！为了增加寻宝乐趣，地标名称与文字介绍已被隐藏。请根据高清摄影特写，在街头观察老店屋雕花、荷兰红砖或特色门牌。点击任意照片可放大查看全尺寸无裁切大图！',
-          icon: <List className="w-5 h-5 text-amber-400" />,
-          badge: '第3步：视觉线索与锁定',
-          tips: '线索采用单行大卡片排列，点击【🎯 追踪】可立即将该线索锁定到顶部浮动雷达上。',
-          tabKey: 'clues',
         },
         {
-          id: 'player-filter',
+          selector: '#clues-status-filter',
+          step: 4,
           title: '3. 区域聚焦与完成度统计横幅',
-          description:
+          content:
             '可使用顶部的【全部 / 待探索 / 已完成】状态栏快速过滤。点击任意古迹区域（如鸡场街、荷兰红屋），顶部会立刻展开该区域专属颜色的【聚焦横幅】，显示该区域的完成进度条（如 已探索 4/32）与剩余线索。点击【✕ 清除筛选】可随时返回全览。',
-          icon: <Filter className="w-5 h-5 text-rose-400" />,
-          badge: '第4步：高能聚焦筛选',
-          tips: '如果想优先完成附近的目标，还可点击“按距离从近到远”进行智能排序！',
-          tabKey: 'clues',
         },
         {
-          id: 'player-camera',
+          selector: '#first-clue-card',
+          step: 5,
           title: '4. 身边线索与现场打卡自拍',
-          description:
+          content:
             '当你走近任何地标（<100米），顶部会自动浮现“就在身边”轮播卡片。到达建筑面前后，点击【📸 拍照】拍摄一张包含队员与建筑特写的合影！系统内置极速压缩（<150KB，零流量负担）并立即提交给 GM 审核。',
-          icon: <Camera className="w-5 h-5 text-emerald-400" />,
-          badge: '第5步：相机打卡与加分',
-          tips: '基准分 50 分！若合影姿势极具幽默创意或巧妙互动，GM 裁判可直接打赏 +10 或 +30 创意加分！',
-          tabKey: 'clues',
         },
         {
-          id: 'player-leaderboard',
+          selector: '#leaderboard-tab-nav',
+          step: 6,
           title: '5. 实时排行榜与终点集结导航',
-          description:
-            '实时追踪所有参赛队伍的分数与排名，点击队伍可展开查看队友成员与在线状态。当比赛倒计时结束，裁判会公布终点集结地（Rally Point），地图将标出集结旗帜并提供一键 Google 地图导航！',
-          icon: <Trophy className="w-5 h-5 text-amber-400" />,
-          badge: '第6步：排行榜与终点集结',
-          tips: '随时点击顶部右上角的【向导】按钮，即可重新唤起这份完整的游戏教程。',
-          tabKey: 'leaderboard',
+          content:
+            '实时追踪所有参赛队伍的分数与排名，点击队伍可展开查看队友成员与在线状态。当比赛倒计时结束，裁判会公布终点集结地（Rally Point），地图将标出集结旗帜并提供一键 Google 地图导航！随时点击右上角【向导】按钮可重新开启教程。',
         },
       ];
     }
 
     return [
       {
-        id: 'player-welcome',
+        selector: '#player-squad-status',
+        step: 1,
         title: 'Welcome to Melaka Heritage Hunt!',
-        description:
+        content:
           'You are representing your squad on the historic streets of Melaka! Check the header bar above for your squad theme color, nickname, live score, official leaderboard rank, and completed clues count. You can also view broadcasts and toggle languages anytime.',
-        icon: <Trophy className="w-5 h-5 text-amber-400" />,
-        badge: 'Step 1: Squad & Live Status',
-        tips: 'Your session is saved automatically. If you refresh or reopen your browser, your squad progress is safely preserved.',
-        tabKey: 'map',
       },
       {
-        id: 'player-map',
+        selector: '#player-map-container',
+        step: 2,
         title: '1. Hunt Map & Smart Scavenger Radar',
-        description:
+        content:
           'Color-coded polygon zones outline UNESCO districts (Jonker Street, Dutch Square, St. Paul’s Hill, etc.). To preserve authentic exploration, Explorer Mode hides exact pins! The floating radar tracks the nearest clue with a 360° Adventure Compass and distance. Walking within 20m triggers a pulse alert!',
-        icon: <MapPin className="w-5 h-5 text-rose-500" />,
-        badge: 'Step 2: Map & Radar',
-        tips: 'Keep GPS enabled. Watch the red needle and distance meter to home in on your target.',
-        tabKey: 'map',
       },
       {
-        id: 'player-clues',
+        selector: '#clues-tab-nav',
+        step: 3,
         title: '2. Pure Visual Scavenger Hunt (50 pts each)',
-        description:
+        content:
           'Switch to the Clues tab to browse all 121 photo clues. Every clue awards 50 points! To keep the challenge exciting, landmark names and text titles are hidden. Use your eyes to match photo teasers with real architectural carvings, tiles, and shophouses. Tap any photo to view in high resolution!',
-        icon: <List className="w-5 h-5 text-amber-400" />,
-        badge: 'Step 3: Visual Clues & 50 Pts',
-        tips: 'Clues are displayed one per row. Tap [🎯 Track] to lock any specific clue onto your floating radar.',
-        tabKey: 'clues',
       },
       {
-        id: 'player-filter',
+        selector: '#clues-status-filter',
+        step: 4,
         title: '3. Smart Zone Filters & Focus Progress Banner',
-        description:
+        content:
           'Use the top segmented status bar (All / Uncompleted / Completed) to filter clues. Tapping any zone pill opens the Active Filter Hero Banner, displaying a live progress bar (e.g. 4/32 Completed) and uncompleted counts. Tap [✕ Clear] anytime to reset.',
-        icon: <Filter className="w-5 h-5 text-rose-400" />,
-        badge: 'Step 4: Zone Focus Filters',
-        tips: 'Tap "Sort by Nearest" to organize clues by direct walking distance from your current GPS position!',
-        tabKey: 'clues',
       },
       {
-        id: 'player-camera',
+        selector: '#first-clue-card',
+        step: 5,
         title: '4. Nearby Highlights & Selfie Submission',
-        description:
+        content:
           'When you walk within 100m of clues, the "Right Beside You" carousel pops up automatically. In front of the landmark, tap [📸 Snap] to take a squad selfie! Built-in instant compression (<150KB) saves mobile data and uploads in seconds for GM review.',
-        icon: <Camera className="w-5 h-5 text-emerald-400" />,
-        badge: 'Step 5: Camera & Creative Bonuses',
-        tips: 'Base reward is 50 pts! Fun, creative, or humorous squad poses can earn +10 or +30 creative bonus points from the GM!',
-        tabKey: 'clues',
       },
       {
-        id: 'player-leaderboard',
+        selector: '#leaderboard-tab-nav',
+        step: 6,
         title: '5. Live Leaderboard & Final Rally Navigation',
-        description:
-          'Track team scores and standings in real time, and tap any squad to inspect its members. When the hunt concludes, the GM broadcasts the final Rally Point with a map flag and direct Google Maps navigation button!',
-        icon: <Trophy className="w-5 h-5 text-amber-400" />,
-        badge: 'Step 6: Standings & Rally Point',
-        tips: 'Tap the "Tour Guide" button in the top-right header anytime to reopen this walkthrough.',
-        tabKey: 'leaderboard',
+        content:
+          'Track team scores and standings in real time, and tap any squad to inspect its members. When the hunt concludes, the GM broadcasts the final Rally Point with a map flag and direct Google Maps navigation button! Tap the "Tour Guide" button in the top-right header anytime to reopen this walkthrough.',
       },
     ];
   }, [language]);
+
+  // Tourguide.js integration: attach startTour event listener to #tourbutton
+  useEffect(() => {
+    const tourguide = new Tourguide({
+      steps: tourguideSteps,
+      colors: {
+        overlayColor: 'rgba(15, 23, 42, 0.78)',
+        backgroundColor: '#0f172a',
+        textColor: '#f8fafc',
+        accentColor: '#f59e0b',
+        focusColor: '#f59e0b',
+        bulletColor: '#334155',
+        bulletVisitedColor: '#10b981',
+        bulletCurrentColor: '#f59e0b',
+        stepButtonCloseColor: '#94a3b8',
+        stepButtonPrevColor: '#f59e0b',
+        stepButtonNextColor: '#f59e0b',
+        stepButtonCompleteColor: '#10b981',
+      },
+      onStep: (currentStep) => {
+        const stepNum = currentStep?.index ?? 0;
+        if (stepNum <= 1) {
+          setActiveTab('map');
+        } else if (stepNum >= 2 && stepNum <= 4) {
+          setActiveTab('clues');
+        } else if (stepNum >= 5) {
+          setActiveTab('leaderboard');
+        }
+        setTimeout(() => {
+          try {
+            currentStep?.position?.();
+          } catch {
+            // ignore
+          }
+        }, 80);
+      },
+      onComplete: () => {
+        try {
+          localStorage.setItem('melaka_hunt_seen_player_tour', 'true');
+        } catch {
+          // ignore
+        }
+      },
+      onStop: () => {
+        try {
+          localStorage.setItem('melaka_hunt_seen_player_tour', 'true');
+        } catch {
+          // ignore
+        }
+      },
+    });
+
+    function startTour() {
+      tourguide.start();
+    }
+
+    // Attach the tourguide start event to the button press
+    const tourbutton = document.getElementById('tourbutton');
+    tourbutton?.addEventListener('click', startTour);
+
+    (window as any).tourguide = tourguide;
+    (window as any).startTour = startTour;
+
+    return () => {
+      tourbutton?.removeEventListener('click', startTour);
+      try {
+        tourguide.deinit();
+      } catch {
+        // ignore
+      }
+    };
+  }, [tourguideSteps]);
+
+  // Auto-launch tour on first visit
+  useEffect(() => {
+    try {
+      const hasSeen = localStorage.getItem('melaka_hunt_seen_player_tour');
+      if (!hasSeen) {
+        const timer = setTimeout(() => {
+          const btn = document.getElementById('tourbutton');
+          btn?.click();
+        }, 700);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousCompletedCountRef = useRef<number>(currentTeam.completedClueIds?.length || 0);
@@ -846,7 +888,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   return (
     <div className="flex-1 min-h-0 w-full max-w-lg mx-auto bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
       {/* 1. Mobile Header & Scoreboard */}
-      <header className="px-3 sm:px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg z-30 gap-1.5">
+      <header id="player-squad-status" className="px-3 sm:px-4 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg z-30 gap-1.5">
         <div className="flex items-center gap-2 min-w-0 pr-1">
           <span
             className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full ring-2 ring-white/40 shadow-sm shrink-0"
@@ -923,11 +965,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
           {/* Tour Guide Button */}
           <button
+            id="tourbutton"
             type="button"
-            onClick={() => {
-              setTourStepIndex(0);
-              setShowTour(true);
-            }}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:from-amber-500/30 hover:to-amber-600/20 text-amber-300 border border-amber-500/40 shadow-sm cursor-pointer transition-all shrink-0 active:scale-95"
             title={t('player.tourTitle')}
           >
@@ -1093,27 +1132,34 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       {/* 2. Main Content Area */}
       <main className="flex-1 min-h-0 w-full relative overflow-hidden pb-16">
-        {activeTab === 'map' && (
-          <div className="absolute inset-0 w-full h-full pb-16">
-            <HuntMap
-              zones={game.zones}
-              clues={clues}
-              teams={teams}
-              currentTeamId={currentTeam.id}
-              playerCoords={playerCoords}
-              completedClueIds={Array.from(completedClueIds)}
-              onSelectClue={handleOpenNativeCamera}
-              className="h-full w-full rounded-none border-none"
-              bottomOffsetClass={trackedClue ? 'bottom-40' : 'bottom-20'}
-              hideCluePins={true}
-              trackedClue={trackedClue}
-              rallyPoint={game.rallyPoint}
-            />
-          </div>
-        )}
+        <div
+          id="player-map-container"
+          className={`absolute inset-0 w-full h-full pb-16 transition-opacity duration-200 ${
+            activeTab === 'map' ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none -z-10'
+          }`}
+        >
+          <HuntMap
+            zones={game.zones}
+            clues={clues}
+            teams={teams}
+            currentTeamId={currentTeam.id}
+            playerCoords={playerCoords}
+            completedClueIds={Array.from(completedClueIds)}
+            onSelectClue={handleOpenNativeCamera}
+            className="h-full w-full rounded-none border-none"
+            bottomOffsetClass={trackedClue ? 'bottom-40' : 'bottom-20'}
+            hideCluePins={true}
+            trackedClue={trackedClue}
+            rallyPoint={game.rallyPoint}
+          />
+        </div>
 
-        {activeTab === 'clues' && (
-          <div className="h-full overflow-y-auto p-3 sm:p-4 space-y-3.5 pb-28">
+        <div
+          id="clues-panel-container"
+          className={`h-full overflow-y-auto p-3 sm:p-4 space-y-3.5 pb-28 ${
+            activeTab === 'clues' ? 'block' : 'hidden'
+          }`}
+        >
             {/* 📍 Right Beside You (<100m) Highlight Section */}
             {playerCoords && nearbyCluesUnder100m.length > 0 && (
               <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-slate-900 border border-amber-500/40 shadow-xl">
@@ -1189,7 +1235,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             )}
 
             {/* Segmented Status Bar & View Mode Switcher */}
-            <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div id="clues-status-filter" className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
                 <button
                   onClick={() => setClueStatusFilter('all')}
@@ -1243,7 +1289,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             </div>
 
             {/* Zone Filter Carousel */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <div id="clues-zone-carousel" className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setSelectedZoneFilter('all')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
@@ -1438,7 +1484,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             {/* Clue Cards (1 Clue Per Row) */}
             {filteredClues.length > 0 && (
               <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
-                {filteredClues.map((clue) => {
+                {filteredClues.map((clue, clueIdx) => {
                   const isDone = completedClueIds.has(clue.id);
                   const isPending = pendingClueIds.has(clue.id);
                   const latestSub = latestSubByClue.get(clue.id);
@@ -1450,7 +1496,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   return (
                     <div
                       key={clue.id}
-                      id={`clue-card-${clue.id}`}
+                      id={clueIdx === 0 ? 'first-clue-card' : `clue-card-${clue.id}`}
                       onClick={() => !isDone && handleOpenNativeCamera(clue)}
                       className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 relative overflow-hidden ${
                         isDone
@@ -1615,12 +1661,15 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 })}
               </div>
             )}
-          </div>
-        )}
+        </div>
 
-        {activeTab === 'leaderboard' && (
-          <div className="h-full overflow-y-auto p-3 sm:p-4 pb-28">
-            <div className="text-center mb-4">
+        <div
+          id="leaderboard-panel-container"
+          className={`h-full overflow-y-auto p-3 sm:p-4 pb-28 ${
+            activeTab === 'leaderboard' ? 'block' : 'hidden'
+          }`}
+        >
+          <div className="text-center mb-4">
               <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-1" />
               <h2 className="text-lg font-black text-white">{t('player.leaderboardTitle')}</h2>
               <p className="text-[11px] text-slate-400">
@@ -1790,8 +1839,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   );
                 })}
             </div>
-          </div>
-        )}
+        </div>
       </main>
 
       {/* Passive Radar Ping (Surprise uncompleted clue <= 20m nearby) */}
@@ -1828,7 +1876,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       {/* Floating Scavenger Radar HUD */}
       {trackedClue && (
-        <div className="fixed bottom-18 left-0 right-0 max-w-lg mx-auto px-3 z-40 pointer-events-none">
+        <div id="scavenger-radar-card" className="fixed bottom-18 left-0 right-0 max-w-lg mx-auto px-3 z-40 pointer-events-none">
           <div
             className={`pointer-events-auto p-3 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all ${
               radarStage === 'target'
@@ -2021,6 +2069,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       {/* 3. Bottom Navigation Bar - Fixed & Locked to Screen Bottom */}
       <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto z-40 h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 flex items-center justify-around px-3 shadow-[0_-4px_25px_rgba(0,0,0,0.6)]">
         <button
+          id="map-tab-nav"
           onClick={() => handleNavigateTab('map')}
           className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl ${
             activeTab === 'map'
@@ -2033,6 +2082,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         </button>
 
         <button
+          id="clues-tab-nav"
           onClick={() => handleNavigateTab('clues')}
           className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl relative ${
             activeTab === 'clues'
@@ -2052,6 +2102,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         </button>
 
         <button
+          id="leaderboard-tab-nav"
           onClick={() => handleNavigateTab('leaderboard')}
           className={`flex-1 py-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer rounded-xl ${
             activeTab === 'leaderboard'
@@ -2413,18 +2464,6 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         title={lightboxImage?.title}
         subtitle={lightboxImage?.subtitle}
         badge={lightboxImage?.badge}
-      />
-
-      {/* Interactive Onboarding Tour Guide for Player */}
-      <InteractiveTour
-        isOpen={showTour}
-        onClose={() => setShowTour(false)}
-        tourName={language === 'zh' ? '马六甲寻宝向导' : 'Player Scavenger Hunt'}
-        steps={playerTourSteps}
-        currentStepIndex={tourStepIndex}
-        onStepChange={setTourStepIndex}
-        onTabChange={(tabKey) => setActiveTab(tabKey)}
-        storageKey="melaka_hunt_seen_player_tour"
       />
     </div>
   );
