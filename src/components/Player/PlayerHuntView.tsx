@@ -258,42 +258,42 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         {
           selector: '#player-squad-status',
           step: 1,
-          title: '欢迎参加马六甲历史寻宝大冒险！',
+          title: '📍 第 1/6 步 · 欢迎参加马六甲寻宝！',
           content:
             '您正在代表小队穿梭于马六甲古迹街头！请查看顶部状态栏，实时查看队伍专属颜色、个人昵称、当前总积分、实时排行榜名次以及已完成线索数。顶部还可随时接收裁判赛事广播或切换语言。',
         },
         {
-          selector: '#player-map-container',
+          selector: '#scavenger-radar-card',
           step: 2,
-          title: '1. 寻宝地图与智能环境感知雷达',
+          title: '🧭 第 2/6 步 · 探险家地图与智能雷达',
           content:
-            '彩色多边形区域划定了鸡场街、荷兰红屋、圣保罗山等联合国教科文组织历史区。为保障真实寻宝乐趣，地图已开启探险家模式（完全隐藏大头针）。浮动雷达会自动锁定最近线索，配备 360° 旋转罗盘与实时距离；当步入目标 20 米内将触发高能提醒！',
+            '彩色多边形区域划定了鸡场街、荷兰红屋等古迹区。探险家模式隐藏大头针；浮动雷达会自动锁定最近线索，配备 360° 旋转罗盘与实时距离；当步入目标 20 米内将触发高能提醒！',
         },
         {
           selector: '#clues-tab-nav',
           step: 3,
-          title: '2. 纯视觉找茬寻宝（每题 50分）',
+          title: '🔍 第 3/6 步 · 纯视觉找茬寻宝（每题 50分）',
           content:
-            '切换到【线索】标签页查看全部 121 个寻宝目标。所有线索均为 50 分！为了增加寻宝乐趣，地标名称与文字介绍已被隐藏。请根据高清摄影特写，在街头观察老店屋雕花、荷兰红砖或特色门牌。点击任意照片可放大查看全尺寸无裁切大图！',
+            '切换到【线索】浏览全部 121 个寻宝目标，所有线索均为 50 分！地标名称与文字介绍已被隐藏，请用双眼比对摄影特写与老店屋砖瓦雕花。线索单行排列，点击【📸 拍照】可直接打卡！',
         },
         {
           selector: '#clues-status-filter',
           step: 4,
-          title: '3. 区域聚焦与完成度统计横幅',
+          title: '🎯 第 4/6 步 · 区域聚焦与完成度横幅',
           content:
             '可使用顶部的【全部 / 待探索 / 已完成】状态栏快速过滤。点击任意古迹区域（如鸡场街、荷兰红屋），顶部会立刻展开该区域专属颜色的【聚焦横幅】，显示该区域的完成进度条（如 已探索 4/32）与剩余线索。点击【✕ 清除筛选】可随时返回全览。',
         },
         {
           selector: '#first-clue-card',
           step: 5,
-          title: '4. 身边线索与现场打卡自拍',
+          title: '📸 第 5/6 步 · 身边线索与现场打卡自拍',
           content:
             '当你走近任何地标（<100米），顶部会自动浮现“就在身边”轮播卡片。到达建筑面前后，点击【📸 拍照】拍摄一张包含队员与建筑特写的合影！系统内置极速压缩（<150KB，零流量负担）并立即提交给 GM 审核。',
         },
         {
           selector: '#leaderboard-tab-nav',
           step: 6,
-          title: '5. 实时排行榜与终点集结导航',
+          title: '🏆 第 6/6 步 · 实时排行榜与终点集结导航',
           content:
             '实时追踪所有参赛队伍的分数与排名，点击队伍可展开查看队友成员与在线状态。当比赛倒计时结束，裁判会公布终点集结地（Rally Point），地图将标出集结旗帜并提供一键 Google 地图导航！随时点击右上角【向导】按钮可重新开启教程。',
         },
@@ -304,42 +304,42 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       {
         selector: '#player-squad-status',
         step: 1,
-        title: 'Welcome to Melaka Heritage Hunt!',
+        title: '📍 Step 1/6 · Welcome to Heritage Hunt!',
         content:
           'You are representing your squad on the historic streets of Melaka! Check the header bar above for your squad theme color, nickname, live score, official leaderboard rank, and completed clues count. You can also view broadcasts and toggle languages anytime.',
       },
       {
-        selector: '#player-map-container',
+        selector: '#scavenger-radar-card',
         step: 2,
-        title: '1. Hunt Map & Smart Scavenger Radar',
+        title: '🧭 Step 2/6 · Hunt Map & Explorer Radar',
         content:
-          'Color-coded polygon zones outline UNESCO districts (Jonker Street, Dutch Square, St. Paul’s Hill, etc.). To preserve authentic exploration, Explorer Mode hides exact pins! The floating radar tracks the nearest clue with a 360° Adventure Compass and distance. Walking within 20m triggers a pulse alert!',
+          'Color-coded polygon zones outline UNESCO districts. Explorer Mode hides exact pins! The floating radar tracks the nearest clue with a 360° Adventure Compass and distance. Walking within 20m triggers a pulse alert!',
       },
       {
         selector: '#clues-tab-nav',
         step: 3,
-        title: '2. Pure Visual Scavenger Hunt (50 pts each)',
+        title: '🔍 Step 3/6 · Pure Visual Scavenger Hunt (50 pts)',
         content:
           'Switch to the Clues tab to browse all 121 photo clues. Every clue awards 50 points! To keep the challenge exciting, landmark names and text titles are hidden. Use your eyes to match photo teasers with real architectural carvings, tiles, and shophouses. Tap any photo to view in high resolution!',
       },
       {
         selector: '#clues-status-filter',
         step: 4,
-        title: '3. Smart Zone Filters & Focus Progress Banner',
+        title: '🎯 Step 4/6 · Smart Zone Filters & Focus Progress Banner',
         content:
           'Use the top segmented status bar (All / Uncompleted / Completed) to filter clues. Tapping any zone pill opens the Active Filter Hero Banner, displaying a live progress bar (e.g. 4/32 Completed) and uncompleted counts. Tap [✕ Clear] anytime to reset.',
       },
       {
         selector: '#first-clue-card',
         step: 5,
-        title: '4. Nearby Highlights & Selfie Submission',
+        title: '📸 Step 5/6 · Nearby Highlights & Squad Selfie',
         content:
           'When you walk within 100m of clues, the "Right Beside You" carousel pops up automatically. In front of the landmark, tap [📸 Snap] to take a squad selfie! Built-in instant compression (<150KB) saves mobile data and uploads in seconds for GM review.',
       },
       {
         selector: '#leaderboard-tab-nav',
         step: 6,
-        title: '5. Live Leaderboard & Final Rally Navigation',
+        title: '🏆 Step 6/6 · Live Standings & Rally Point',
         content:
           'Track team scores and standings in real time, and tap any squad to inspect its members. When the hunt concludes, the GM broadcasts the final Rally Point with a map flag and direct Google Maps navigation button! Tap the "Tour Guide" button in the top-right header anytime to reopen this walkthrough.',
       },
@@ -350,19 +350,20 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   useEffect(() => {
     const tourguide = new Tourguide({
       steps: tourguideSteps,
+      padding: 10,
       colors: {
-        overlayColor: 'rgba(15, 23, 42, 0.78)',
-        backgroundColor: '#0f172a',
-        textColor: '#f8fafc',
+        overlayColor: 'rgba(0, 0, 0, 0.85)',
+        backgroundColor: '#ffffff',
+        textColor: '#0f172a',
         accentColor: '#f59e0b',
         focusColor: '#f59e0b',
-        bulletColor: '#334155',
+        bulletColor: '#cbd5e1',
         bulletVisitedColor: '#10b981',
         bulletCurrentColor: '#f59e0b',
-        stepButtonCloseColor: '#94a3b8',
-        stepButtonPrevColor: '#f59e0b',
-        stepButtonNextColor: '#f59e0b',
-        stepButtonCompleteColor: '#10b981',
+        stepButtonCloseColor: '#64748b',
+        stepButtonPrevColor: '#334155',
+        stepButtonNextColor: '#ffffff',
+        stepButtonCompleteColor: '#ffffff',
       },
       onStep: (currentStep) => {
         const stepNum = currentStep?.index ?? 0;
@@ -396,6 +397,147 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         }
       },
     });
+
+    // Inject high-contrast custom styles directly into Tourguide Shadow DOM
+    const shadowRoot = (tourguide as any)._shadowRoot as ShadowRoot | undefined;
+    if (shadowRoot) {
+      const customStyle = document.createElement('style');
+      customStyle.textContent = `
+        /* 1. Ultra-visible Target Highlight Box with Glowing Golden Pulse */
+        .guided-tour-step.active .guided-tour-step-highlight {
+          border: 3.5px solid #f59e0b !important;
+          border-radius: 14px !important;
+          box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 25px rgba(245, 158, 11, 0.95), inset 0 0 15px rgba(245, 158, 11, 0.3) !important;
+          animation: tourGlowPulse 1.8s ease-in-out infinite alternate !important;
+          pointer-events: none !important;
+        }
+
+        @keyframes tourGlowPulse {
+          0% {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 15px rgba(245, 158, 11, 0.7);
+          }
+          100% {
+            border-color: #fde047;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85), 0 0 35px rgba(253, 224, 71, 1), inset 0 0 20px rgba(245, 158, 11, 0.45);
+          }
+        }
+
+        /* 2. High-contrast, Crisp White Tour Card with Golden Amber Rim */
+        .guided-tour-step.active .guided-tour-step-tooltip {
+          background-color: #ffffff !important;
+          color: #0f172a !important;
+          border: 2.5px solid #f59e0b !important;
+          border-radius: 20px !important;
+          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(245, 158, 11, 0.35) !important;
+          padding: 8px !important;
+          overflow: visible !important;
+        }
+
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner {
+          background-color: #ffffff !important;
+          border-radius: 16px !important;
+          position: relative !important;
+          z-index: 2 !important;
+        }
+
+        /* 3. Bold, High-Legibility Title */
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-title {
+          color: #0f172a !important;
+          font-weight: 900 !important;
+          font-size: 1.15rem !important;
+          line-height: 1.35 !important;
+          border-bottom: 2px solid #f1f5f9 !important;
+          padding-bottom: 10px !important;
+          margin-bottom: 10px !important;
+          letter-spacing: -0.01em !important;
+        }
+
+        /* 4. Slate-700 Description Text (100% readable in sunlight) */
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-content {
+          color: #334155 !important;
+          font-size: 0.925rem !important;
+          line-height: 1.6 !important;
+          font-weight: 500 !important;
+        }
+
+        /* 5. Crystal-Clear Pointer Arrow with Matching Border */
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-arrow {
+          background: #ffffff !important;
+          border: 2.5px solid #f59e0b !important;
+          width: 14px !important;
+          height: 14px !important;
+          z-index: 1 !important;
+        }
+
+        /* 6. Navigation Buttons */
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-close {
+          color: #64748b !important;
+          top: 10px !important;
+          right: 10px !important;
+          width: 28px !important;
+          height: 28px !important;
+          transition: color 0.15s ease, transform 0.15s ease !important;
+        }
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-close:hover {
+          color: #0f172a !important;
+          transform: scale(1.15) !important;
+        }
+
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-next,
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-complete {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+          color: #ffffff !important;
+          border: 2px solid #fbbf24 !important;
+          box-shadow: 0 4px 14px rgba(245, 158, 11, 0.5) !important;
+          width: 38px !important;
+          height: 38px !important;
+          margin-top: -19px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          transition: transform 0.15s ease !important;
+        }
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-next:hover,
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-complete:hover {
+          transform: translateY(-50%) scale(1.12) !important;
+        }
+
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-prev {
+          background: #f1f5f9 !important;
+          color: #334155 !important;
+          border: 1.5px solid #cbd5e1 !important;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15) !important;
+          width: 38px !important;
+          height: 38px !important;
+          margin-top: -19px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          transition: transform 0.15s ease !important;
+        }
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-button-prev:hover {
+          transform: translateY(-50%) scale(1.12) !important;
+        }
+
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-bullets ul li button {
+          background-color: #cbd5e1 !important;
+          border: 3px solid #ffffff !important;
+          width: 10px !important;
+          height: 10px !important;
+        }
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-bullets ul li button.current {
+          background-color: #f59e0b !important;
+          transform: scale(1.3) !important;
+        }
+        .guided-tour-step.active .guided-tour-step-tooltip .guided-tour-step-tooltip-inner .guided-tour-step-bullets ul li button.complete {
+          background-color: #10b981 !important;
+        }
+      `;
+      shadowRoot.append(customStyle);
+    }
 
     function startTour() {
       tourguide.start();
@@ -1235,8 +1377,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             )}
 
             {/* Segmented Status Bar & View Mode Switcher */}
-            <div id="clues-status-filter" className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div id="clues-status-filter" className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
                 <button
                   onClick={() => setClueStatusFilter('all')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -1876,8 +2018,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       {/* Floating Scavenger Radar HUD */}
       {trackedClue && (
-        <div id="scavenger-radar-card" className="fixed bottom-18 left-0 right-0 max-w-lg mx-auto px-3 z-40 pointer-events-none">
+        <div className="fixed bottom-18 left-0 right-0 max-w-lg mx-auto px-3 z-40 pointer-events-none">
           <div
+            id="scavenger-radar-card"
             className={`pointer-events-auto p-3 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all ${
               radarStage === 'target'
                 ? 'bg-emerald-950/95 border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/50 animate-pulse'
