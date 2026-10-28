@@ -17,6 +17,7 @@ import type {
 } from '../../types/index.ts';
 import { HuntMap } from '../Map/HuntMap.tsx';
 import { compressPhoto, formatBytes } from '../../services/imageCompression.ts';
+import { uploadPhotoToNas } from '../../services/nasPhotoService.ts';
 import { gameService } from '../../services/gameService.ts';
 import {
   MapPin,
@@ -130,6 +131,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   // Camera & submission state
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
   const [capturedPreview, setCapturedPreview] = useState<string | null>(null);
+  const [capturedRawFile, setCapturedRawFile] = useState<File | null>(null);
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [compressionStats, setCompressionStats] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -950,6 +952,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
     setSelectedClue(clue);
     setCapturedPreview(null);
+    setCapturedRawFile(null);
     setCompressionStats(null);
     setIsCapturing(true);
   };
@@ -960,14 +963,15 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
     try {
       setIsCompressing(true);
+      setCapturedRawFile(file);
       const originalSize = formatBytes(file.size);
 
-      // Perform instant client-side compression (< 150KB Base64)
+      // Perform instant client-side compression (< 150KB Base64) for instant preview & offline fallback
       const compressed = await compressPhoto(file);
       const compressedSize = formatBytes(compressed.sizeBytes);
 
       setCapturedPreview(compressed.base64);
-      setCompressionStats(`Compressed: ${originalSize} ➔ ${compressedSize} (< 150 KB)`);
+      setCompressionStats(`Original: ${originalSize} ➔ Full Quality NAS Ready (${compressedSize} preview)`);
     } catch (err: any) {
       await showAlert({
         title: 'Compression Error',
@@ -990,6 +994,27 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
       const clueDisplayTitle = selectedClue.title || getClueLabel(selectedClue.id, language);
 
+      let uploadedPhotoUrl: string | undefined;
+      let uploadedFileId: number | undefined;
+
+      // Try uploading full uncompressed photo to NAS via secure backend proxy
+      if (capturedRawFile) {
+        try {
+          setSubmissionFeedback('Uploading full-resolution photo to Heritage NAS...');
+          const nasRes = await uploadPhotoToNas(capturedRawFile, {
+            gameId: game.id,
+            teamId: currentTeam.id,
+            clueId: selectedClue.id,
+          });
+          if (nasRes.success && nasRes.photoUrl) {
+            uploadedPhotoUrl = nasRes.photoUrl;
+            uploadedFileId = nasRes.fileId;
+          }
+        } catch (nasErr: any) {
+          console.warn('NAS upload unavailable, submitting local compressed copy:', nasErr);
+        }
+      }
+
       await gameService.submitCluePhoto(game.id, {
         gameId: game.id,
         teamId: currentTeam.id,
@@ -998,6 +1023,8 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         clueId: selectedClue.id,
         clueTitle: clueDisplayTitle,
         selfieBase64: capturedPreview,
+        photoUrl: uploadedPhotoUrl,
+        fileId: uploadedFileId,
         submittedBy: nickname,
         submissionCoords: coords,
         captureCoords: coords,
@@ -1008,6 +1035,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       setIsCapturing(false);
       setSelectedClue(null);
       setCapturedPreview(null);
+      setCapturedRawFile(null);
 
       await showAlert({
         title: 'Selfie Submitted!',

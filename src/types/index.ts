@@ -141,7 +141,9 @@ export interface Submission {
   teamColor: string;
   clueId: string;
   clueTitle: string;
-  selfieBase64: string; // Compressed selfie <= 150KB Base64 data URL
+  selfieBase64: string; // Compressed selfie <= 150KB Base64 data URL (or fallback)
+  photoUrl?: string; // High-resolution uncompressed photo URL from NAS
+  fileId?: number; // xinya database album_files.id
   submittedBy: string; // Nickname or player UID
   submissionCoords: GeoCoordinate; // Location where selfie was snapped
   captureCoords?: GeoCoordinate; // Interop alias for submissionCoords

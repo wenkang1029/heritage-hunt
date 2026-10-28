@@ -1401,17 +1401,17 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                             <div
                               onClick={() => {
                                 setLightboxImage({
-                                  url: sub.selfieBase64,
+                                  url: sub.photoUrl || sub.selfieBase64,
                                   title: `${sub.teamName} Submission Selfie`,
                                   subtitle: sub.clueTitle || getClueLabel(sub.clueId, language),
-                                  badge: t('common.teamSelfieBadge'),
+                                  badge: sub.photoUrl ? 'NAS High-Res Photo' : t('common.teamSelfieBadge'),
                                 });
                               }}
                               className="w-full h-36 rounded-xl overflow-hidden bg-slate-950 border-2 border-emerald-500/50 relative cursor-pointer group flex items-center justify-center"
                               title={t('common.viewFullUncropped')}
                             >
                               <img
-                                src={sub.selfieBase64}
+                                src={sub.photoUrl || sub.selfieBase64}
                                 alt="Selfie"
                                 className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform"
                               />

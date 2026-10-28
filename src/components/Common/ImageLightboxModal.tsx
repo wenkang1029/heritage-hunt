@@ -7,8 +7,9 @@
  */
 
 import React, { useEffect } from 'react';
-import { X, ZoomIn } from 'lucide-react';
+import { X, ZoomIn, Download } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.tsx';
+import { downloadPhoto } from '../../services/nasPhotoService.ts';
 
 export interface ImageLightboxModalProps {
   isOpen: boolean;
@@ -41,6 +42,12 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
 
   if (!isOpen || !imageUrl) return null;
 
+  const handleDownload = () => {
+    if (!imageUrl) return;
+    const cleanTitle = (title || 'heritage_photo').replace(/[^a-zA-Z0-9_-]/g, '_');
+    downloadPhoto(imageUrl, `${cleanTitle}.jpg`);
+  };
+
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-200"
@@ -70,14 +77,25 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
             )}
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer border border-slate-700 shrink-0"
-            aria-label="Close original photo"
-            title="Close (Esc)"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleDownload}
+              className="px-3 py-1.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white transition-all cursor-pointer border border-emerald-500/50 flex items-center gap-1.5 text-xs font-semibold shadow-md active:scale-95"
+              aria-label="Download photo"
+              title="Download full resolution photo"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Download</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer border border-slate-700 shrink-0"
+              aria-label="Close original photo"
+              title="Close (Esc)"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Uncropped Full Image Container */}
