@@ -88,7 +88,9 @@ flowchart TD
                      ├── teamColor: string
                      ├── clueId: string
                      ├── clueTitle: string
-                     ├── selfieBase64: string (Compressed Base64 Data URL <= 150KB)
+                     ├── selfieBase64: string (Compressed Base64 Data URL <= 150KB fallback)
+                     ├── photoUrl?: string (High-resolution uncompressed photo URL from NAS)
+                     ├── fileId?: number (xinya album_files.id)
                      ├── status: "pending" | "approved" | "rejected"
                      ├── rejectionReason?: string
                      ├── awardedPoints: number
@@ -98,16 +100,25 @@ flowchart TD
 
 ---
 
-## 4. Image Storage Architecture: Base64 in Firestore
+## 4. Image Storage Architecture: Dual-Mode NAS & Firestore
 
-### Why Direct Base64 in Firestore?
-1. **$0.00 Cost Guarantee:** Google Firebase requires the paid Blaze tier (credit card) to activate Cloud Storage buckets. Storing compressed Base64 strings directly in Firestore documents remains **100% free** under the Spark plan.
-2. **Document Size Compliance:**
-   * Maximum Firestore document limit: **1,048,576 bytes (1.0 MB)**.
-   * Target compressed selfie size: **~100 KB – 150 KB** (1024×768 resolution, JPEG 65% quality).
-   * Margin of safety: Well below the 1 MB document threshold.
-3. **Atomic Consistency:** The team ID, timestamp, GPS metadata, and selfie image exist in a single Firestore document. No broken image links or dangling file pointers.
-4. **Instant GM Queue:** When a submission arrives via `onSnapshot`, the GM queue receives both the metadata and the preview image instantly in one atomic network packet.
+The application implements a **Dual-Mode Image Pipeline** providing high visual fidelity while preserving 100% free hosting and offline resilience:
+
+### A. Primary Mode: Uncompressed NAS Upload
+1. **Full Photographic Quality:** Players capture photos using native camera resolution. The raw file is uploaded via `/api/upload-photo` directly to the organization's NAS through the Xinya API.
+2. **Lightweight Document State:** Rather than stuffing large binaries into Firestore, Firestore documents store the resulting `photoUrl` (`https://utba.my/UTBA/media_file/NAS/UTBA/event_photo/...`) and `fileId`, keeping Firestore documents ultra-lightweight (< 2 KB).
+3. **One-Click Uncropped Download:** GMs and players can inspect uncropped photos in the Image Lightbox and download the original file via `/api/download-photo` without cross-origin blocks.
+4. **Strict Security Defenses:**
+   * Magic bytes header inspection (JPEG, PNG, WebP, HEIC).
+   * Stored XSS defense (SVG and script rejection).
+   * 20 MB payload ceiling.
+   * Server-controlled UUID filenames (eliminates file overwrites and path traversal).
+   * SSRF protection on proxy downloads.
+
+### B. Resilient Fallback Mode: Client-Side Base64 in Firestore
+1. **Zero-Configuration Fallback:** If NAS credentials are not provided (e.g. initial demo testing) or mobile network connection drops in the field, the app automatically falls back to client-side compression (`<= 150 KB` Base64) saved into `selfieBase64`.
+2. **Document Size Compliance:** Target compressed selfie size is ~100 KB – 150 KB, staying well below the 1 MB Firestore document limit.
+3. **Continuous Gameplay:** Players never experience submission failures due to external storage downtime.
 
 ---
 

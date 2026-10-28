@@ -13,5 +13,5 @@ Welcome, Agent. This workspace contains the full-stack codebase for the Melaka H
 ### Key Architectural Invariants
 1. **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS v4 + Leaflet.
 2. **Backend:** Firebase Firestore (Realtime `onSnapshot`), Anonymous Auth.
-3. **Storage Strategy:** Zero paid storage. Photos are compressed client-side to <= 150KB Base64 and stored directly inside Firestore documents.
+3. **Storage Strategy:** Dual-mode storage. Photos upload uncompressed to the UTBA NAS via secure backend proxy (`/api/upload-photo`) with strict security filters (magic bytes, SSRF, UUID filenames). If NAS is unconfigured or offline, automatically falls back to client-side <=150KB Base64 in Firestore documents.
 4. **GPS Strategy:** Throttled to 15s intervals to protect player battery life and mobile network data.

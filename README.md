@@ -20,8 +20,9 @@ This project follows software development life cycle (SDLC) best practices. Deta
 * **Frontend:** React 19, TypeScript, Vite 8, Tailwind CSS v4, Lucide Icons
 * **Mapping Engine:** Leaflet, `react-leaflet`, OpenStreetMap
 * **Backend & Realtime:** Firebase (Cloud Firestore with real-time `onSnapshot` listeners & Anonymous Auth)
-* **Image Processing:** `browser-image-compression` (client-side compression <= 150KB Base64), `exifr` (EXIF GPS extractor)
-* **Hosting & CI/CD:** Vercel (100% Free Hobby Tier with global CDN)
+* **Photo Storage & NAS Pipeline:** Xinya / UTBA NAS integration with uncompressed original upload (`/api/upload-photo`), secure SSRF-protected download proxy (`/api/download-photo`), and automatic client-side fallback compression (<= 150KB Base64 via `browser-image-compression`)
+* **Metadata & GPS:** `exifr` (EXIF GPS extractor)
+* **Hosting & CI/CD:** Vercel (Hobby Tier with global CDN and serverless API endpoints)
 
 ---
 
@@ -44,6 +45,26 @@ npm run dev
 ```
 
 Visit `http://localhost:5173` in your browser.
+
+---
+
+## 📸 High-Resolution NAS Photo Upload & Security
+
+The app supports uploading full uncompressed original camera photos directly to the organization's NAS via the Xinya API:
+
+1. **Uncompressed High-Res Uploads:** Photos captured by players retain full camera quality and upload through `/api/upload-photo` directly to the NAS.
+2. **One-Click Downloads:** Game Masters and players can download crystal-clear original photos directly from the Image Lightbox via the secure download proxy.
+3. **Resilient Offline Fallback:** If NAS credentials are not configured or mobile connection drops, the app automatically falls back to client-compressed Base64 in Firestore without interrupting gameplay.
+4. **Security Guardrails:**
+   * Magic byte verification (strictly accepts JPEG, PNG, WebP, HEIC; blocks SVG and script payloads).
+   * 20 MB payload ceiling.
+   * Server-controlled UUID filenames to prevent path traversal and file overwrites.
+   * SSRF protection on proxy downloads.
+
+### Running Security & Integration Tests
+```powershell
+node scripts/test_nas_security_and_upload.mjs
+```
 
 ---
 
