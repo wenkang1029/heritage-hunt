@@ -30,6 +30,7 @@ import { MELAKA_MAP_CENTER } from '../../data/melakaZones.ts';
 import { calculateHaversineDistance, calculateBearing } from '../../utils/haversine.ts';
 import {
   MapPin,
+  Camera,
   Navigation,
   Crosshair,
   Undo2,
@@ -40,7 +41,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext.tsx';
-import { getClueLabel } from '../../data/cluesZh.ts';
+import { getClueLabel, getClueNumber } from '../../data/cluesZh.ts';
 
 // ============================================================================
 // Custom Leaflet DivIcons (No broken image asset URLs)
@@ -48,12 +49,25 @@ import { getClueLabel } from '../../data/cluesZh.ts';
 
 import { createRallyFlagIcon } from './mapIcons.ts';
 
-function createClueIcon(isCompleted: boolean, points: number): L.DivIcon {
-  const bgColor = isCompleted ? '#10B981' : '#F59E0B';
-  const borderColor = isCompleted ? '#059669' : '#D97706';
+function createClueIcon(
+  isCompleted: boolean,
+  points: number,
+  isTracked: boolean = false,
+  clueNum?: string
+): L.DivIcon {
+  const bgColor = isCompleted ? '#10B981' : isTracked ? '#F59E0B' : '#F59E0B';
+  const borderColor = isCompleted ? '#059669' : isTracked ? '#FBBF24' : '#D97706';
   const iconSvg = isCompleted
     ? `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>`
+    : isTracked
+    ? `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2v4m0 12v4m10-10h-4M6 12H2m14 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>`
     : `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
+
+  const pulseStyle = isTracked
+    ? `box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.45), 0 0 16px rgba(245, 158, 11, 0.9); transform: scale(1.15); z-index: 1000;`
+    : `box-shadow: 0 3px 8px rgba(0,0,0,0.35);`;
+
+  const badgeText = clueNum ? `#${parseInt(clueNum, 10)}` : points || 50;
 
   return L.divIcon({
     className: 'custom-clue-marker',
@@ -61,34 +75,35 @@ function createClueIcon(isCompleted: boolean, points: number): L.DivIcon {
       <div style="
         background: ${bgColor};
         border: 2px solid ${borderColor};
-        width: 34px;
-        height: 34px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         position: relative;
         cursor: pointer;
         transition: transform 0.2s ease;
+        ${pulseStyle}
       ">
         ${iconSvg}
         <span style="
           position: absolute;
-          bottom: -6px;
-          right: -8px;
-          background: #1e293b;
-          color: #f8fafc;
-          font-size: 10px;
-          font-weight: 700;
+          bottom: -5px;
+          right: -7px;
+          background: #0f172a;
+          color: ${isCompleted ? '#34d399' : '#fbbf24'};
+          font-size: 9px;
+          font-weight: 800;
           padding: 1px 4px;
           border-radius: 9999px;
           border: 1px solid ${borderColor};
-        ">${points}</span>
+          box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        ">${badgeText}</span>
       </div>
     `,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
     popupAnchor: [0, -18],
   });
 }
@@ -278,6 +293,7 @@ export interface HuntMapProps {
   playerCoords?: GeoCoordinate | null;
   completedClueIds?: string[];
   onSelectClue?: (clue: Clue) => void;
+  onTrackClue?: (clue: Clue) => void;
   className?: string;
 
   // Visual Zone Plotting Mode Props
@@ -309,6 +325,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   playerCoords,
   completedClueIds = [],
   onSelectClue,
+  onTrackClue,
   className = 'h-full w-full',
   isPlottingZone = false,
   plottingZoneId = null,
@@ -536,57 +553,94 @@ export const HuntMap: React.FC<HuntMapProps> = ({
           </>
         )}
 
-        {/* 3. Clue Pins / Radar Guidance */}
+        {/* 3. Clue Pins */}
         {!hideCluePins &&
           clues.map((clue) => {
             if (!clue.location) return null;
             const isDone = completedSet.has(clue.id);
+            const isTracked = trackedClue?.id === clue.id;
+            const clueZone = zones.find((z) => z.id === clue.zoneId);
+            const clueNum = getClueNumber(clue.id);
 
             return (
               <Marker
                 key={clue.id}
                 position={[clue.location.latitude, clue.location.longitude]}
-                icon={createClueIcon(isDone, clue.points)}
+                icon={createClueIcon(isDone, clue.points || 50, isTracked, clueNum)}
                 interactive={!isPlottingZone}
+                zIndexOffset={isTracked ? 1000 : isDone ? 100 : 200}
               >
                 {!isPlottingZone && (
                   <Popup>
-                    <div className="w-56 p-1">
+                    <div className="w-56 p-1 text-slate-100 font-sans">
                       {clue.targetPhotoBase64 && (
-                        <div className="w-full h-28 overflow-hidden rounded-md mb-2 bg-slate-800">
+                        <div className="w-full h-32 overflow-hidden rounded-xl mb-2 bg-slate-900 border border-slate-700 relative">
                           <img
                             src={clue.targetPhotoBase64}
-                            alt={clue.title || getClueLabel(clue.id, language)}
+                            alt={`Clue #${clueNum}`}
                             className="w-full h-full object-cover"
                           />
+                          <div className="absolute top-1.5 left-1.5 bg-slate-950/80 backdrop-blur-sm text-amber-300 font-mono font-black text-[10px] px-1.5 py-0.5 rounded border border-amber-500/30">
+                            #{clueNum}
+                          </div>
+                          <div className="absolute top-1.5 right-1.5 bg-amber-500/20 backdrop-blur-sm text-amber-300 font-black text-[10px] px-1.5 py-0.5 rounded border border-amber-500/40">
+                            50 {language === 'zh' ? '分' : 'pts'}
+                          </div>
                         </div>
                       )}
+
                       <div className="flex items-center justify-between gap-1 mb-1">
-                        <h4 className="font-bold text-sm text-slate-100 leading-tight">
-                          {clue.title || getClueLabel(clue.id, language)}
-                        </h4>
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                          +{clue.points || 50} pts
-                        </span>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="font-mono font-black text-sm text-amber-400">
+                            #{clueNum}
+                          </span>
+                          {clueZone && (
+                            <span
+                              className="text-[10px] font-bold px-1.5 py-0.2 rounded text-white truncate max-w-[100px]"
+                              style={{ backgroundColor: clueZone.color || '#64748b' }}
+                            >
+                              {clueZone.name}
+                            </span>
+                          )}
+                        </div>
+                        {isTracked && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                            🎯 {language === 'zh' ? '追踪中' : 'Tracking'}
+                          </span>
+                        )}
                       </div>
 
-                      <p className="text-xs text-slate-300 mb-2 line-clamp-2">
-                        {clue.hint || clue.description || 'Locate this landmark detail and take a team selfie!'}
-                      </p>
-
                       {isDone ? (
-                        <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-950/60 py-1.5 rounded-lg border border-emerald-600/40">
-                          ✓ Completed!
+                        <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-950/60 py-1.5 rounded-lg border border-emerald-600/40 mt-2">
+                          ✓ {language === 'zh' ? '已完成！' : 'Completed!'}
                         </div>
-                      ) : onSelectClue ? (
-                        <button
-                          onClick={() => onSelectClue(clue)}
-                          className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors shadow-lg cursor-pointer"
-                        >
-                          <MapPin className="w-3.5 h-3.5" />
-                          View Clue & Submit Selfie
-                        </button>
-                      ) : null}
+                      ) : (
+                        <div className="flex gap-1.5 mt-2">
+                          {onSelectClue && (
+                            <button
+                              onClick={() => onSelectClue(clue)}
+                              className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 px-2 rounded-lg text-xs flex items-center justify-center gap-1 transition-colors shadow cursor-pointer active:scale-95"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>{language === 'zh' ? '📸 拍照打卡' : '📸 Snap Photo'}</span>
+                            </button>
+                          )}
+                          {onTrackClue && (
+                            <button
+                              onClick={() => onTrackClue(clue)}
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 border transition-colors cursor-pointer active:scale-95 shrink-0 ${
+                                isTracked
+                                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                              }`}
+                              title={language === 'zh' ? '锁定雷达追踪' : 'Track on Radar'}
+                            >
+                              <Crosshair className="w-3.5 h-3.5 text-amber-400" />
+                              <span>{language === 'zh' ? '🎯 追踪' : '🎯 Track'}</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </Popup>
                 )}
@@ -791,6 +845,22 @@ export const HuntMap: React.FC<HuntMapProps> = ({
               />
             )}
           </>
+        )}
+
+        {/* Navigation line from player to tracked clue */}
+        {!hideCluePins && playerCoords && trackedClue?.location && (
+          <Polyline
+            positions={[
+              [playerCoords.latitude, playerCoords.longitude],
+              [trackedClue.location.latitude, trackedClue.location.longitude],
+            ]}
+            pathOptions={{
+              color: '#F59E0B',
+              weight: 3,
+              opacity: 0.75,
+              dashArray: '6, 8',
+            }}
+          />
         )}
 
         {/* Explorer Mode: Directional Ray from player towards tracked target when > 20m */}

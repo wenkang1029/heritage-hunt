@@ -265,9 +265,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         {
           selector: '#scavenger-radar-card',
           step: 2,
-          title: '🧭 第 2/6 步 · 探险家地图与智能雷达',
+          title: '🧭 第 2/6 步 · 寻宝地图与智能雷达',
           content:
-            '彩色多边形区域划定了鸡场街、荷兰红屋等古迹区。探险家模式隐藏大头针；浮动雷达会自动锁定最近线索，配备 360° 旋转罗盘与实时距离；当步入目标 20 米内将触发高能提醒！',
+            '彩色多边形区域划定了鸡场街、荷兰红屋等古迹区。地图上已标出全部 121 个寻宝点位图钉；浮动雷达会自动锁定最近线索，配备 360° 旋转罗盘与实时距离；当步入目标 20 米内将触发高能提醒！',
         },
         {
           selector: '#clues-tab-nav',
@@ -313,7 +313,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         step: 2,
         title: '🧭 Step 2/6 · Hunt Map & Explorer Radar',
         content:
-          'Color-coded polygon zones outline UNESCO districts. Explorer Mode hides exact pins! The floating radar tracks the nearest clue with a 360° Adventure Compass and distance. Walking within 20m triggers a pulse alert!',
+          'Color-coded polygon zones outline UNESCO districts. All 121 photo clue pins are displayed directly on your map! The floating radar tracks the nearest clue with a 360° Adventure Compass and distance. Walking within 20m triggers a pulse alert!',
       },
       {
         selector: '#clues-tab-nav',
@@ -1288,9 +1288,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             playerCoords={playerCoords}
             completedClueIds={Array.from(completedClueIds)}
             onSelectClue={handleOpenNativeCamera}
+            onTrackClue={(clue) => setTrackedClueId(clue.id)}
             className="h-full w-full rounded-none border-none"
             bottomOffsetClass={trackedClue ? 'bottom-40' : 'bottom-20'}
-            hideCluePins={true}
+            hideCluePins={false}
             trackedClue={trackedClue}
             rallyPoint={game.rallyPoint}
           />
