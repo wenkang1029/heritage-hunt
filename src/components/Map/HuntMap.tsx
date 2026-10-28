@@ -51,9 +51,7 @@ import { createRallyFlagIcon } from './mapIcons.ts';
 
 function createClueIcon(
   isCompleted: boolean,
-  points: number,
-  isTracked: boolean = false,
-  clueNum?: string
+  isTracked: boolean = false
 ): L.DivIcon {
   const bgColor = isCompleted ? '#10B981' : isTracked ? '#F59E0B' : '#F59E0B';
   const borderColor = isCompleted ? '#059669' : isTracked ? '#FBBF24' : '#D97706';
@@ -67,16 +65,14 @@ function createClueIcon(
     ? `box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.45), 0 0 16px rgba(245, 158, 11, 0.9); transform: scale(1.15); z-index: 1000;`
     : `box-shadow: 0 3px 8px rgba(0,0,0,0.35);`;
 
-  const badgeText = clueNum ? `#${parseInt(clueNum, 10)}` : points || 50;
-
   return L.divIcon({
     className: 'custom-clue-marker',
     html: `
       <div style="
         background: ${bgColor};
         border: 2px solid ${borderColor};
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -87,24 +83,11 @@ function createClueIcon(
         ${pulseStyle}
       ">
         ${iconSvg}
-        <span style="
-          position: absolute;
-          bottom: -5px;
-          right: -7px;
-          background: #0f172a;
-          color: ${isCompleted ? '#34d399' : '#fbbf24'};
-          font-size: 9px;
-          font-weight: 800;
-          padding: 1px 4px;
-          border-radius: 9999px;
-          border: 1px solid ${borderColor};
-          box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        ">${badgeText}</span>
       </div>
     `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -18],
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -16],
   });
 }
 
@@ -566,7 +549,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
               <Marker
                 key={clue.id}
                 position={[clue.location.latitude, clue.location.longitude]}
-                icon={createClueIcon(isDone, clue.points || 50, isTracked, clueNum)}
+                icon={createClueIcon(isDone, isTracked)}
                 interactive={!isPlottingZone}
                 zIndexOffset={isTracked ? 1000 : isDone ? 100 : 200}
               >
@@ -577,11 +560,11 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                         <div className="w-full h-32 overflow-hidden rounded-xl mb-2 bg-slate-900 border border-slate-700 relative">
                           <img
                             src={clue.targetPhotoBase64}
-                            alt={`Clue #${clueNum}`}
+                            alt={`Clue ${clueNum}`}
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute top-1.5 left-1.5 bg-slate-950/80 backdrop-blur-sm text-amber-300 font-mono font-black text-[10px] px-1.5 py-0.5 rounded border border-amber-500/30">
-                            #{clueNum}
+                            {clueNum}
                           </div>
                           <div className="absolute top-1.5 right-1.5 bg-amber-500/20 backdrop-blur-sm text-amber-300 font-black text-[10px] px-1.5 py-0.5 rounded border border-amber-500/40">
                             50 {language === 'zh' ? '分' : 'pts'}
@@ -592,7 +575,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                       <div className="flex items-center justify-between gap-1 mb-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="font-mono font-black text-sm text-amber-400">
-                            #{clueNum}
+                            {clueNum}
                           </span>
                           {clueZone && (
                             <span
@@ -710,7 +693,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                 />
                 <Marker
                   position={[clue.location.latitude, clue.location.longitude]}
-                  icon={createClueIcon(false, clue.points)}
+                  icon={createClueIcon(false)}
                 >
                   <Popup>
                     <div className="w-56 p-1">
@@ -753,7 +736,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
               <Marker
                 key={`completed-exact-${clue.id}`}
                 position={[clue.location.latitude, clue.location.longitude]}
-                icon={createClueIcon(true, clue.points)}
+                icon={createClueIcon(true)}
                 interactive={!isPlottingZone}
               >
                 {!isPlottingZone && (
