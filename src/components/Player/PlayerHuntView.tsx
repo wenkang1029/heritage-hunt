@@ -17,7 +17,7 @@ import type {
 } from '../../types/index.ts';
 import { HuntMap } from '../Map/HuntMap.tsx';
 import { compressPhoto, formatBytes } from '../../services/imageCompression.ts';
-import { uploadPhotoToNas } from '../../services/nasPhotoService.ts';
+import { uploadPhotoToNas, downloadPhoto } from '../../services/nasPhotoService.ts';
 import { gameService } from '../../services/gameService.ts';
 import {
   MapPin,
@@ -127,7 +127,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   const [activeTab, setActiveTab] = useState<'map' | 'clues' | 'leaderboard'>('map');
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
   const [selectedZoneFilter, setSelectedZoneFilter] = useState<string>('all');
-  const [clueStatusFilter, setClueStatusFilter] = useState<'all' | 'uncompleted' | 'completed'>('all');
+  const [clueStatusFilter, setClueStatusFilter] = useState<'all' | 'uncompleted' | 'pending' | 'completed'>('all');
 
   // Camera & submission state
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
@@ -775,7 +775,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         : clues.filter((c) => c.zoneId === selectedZoneFilter);
 
     if (clueStatusFilter === 'uncompleted') {
-      list = list.filter((c) => !completedClueIds.has(c.id));
+      list = list.filter((c) => !completedClueIds.has(c.id) && !pendingClueIds.has(c.id));
+    } else if (clueStatusFilter === 'pending') {
+      list = list.filter((c) => pendingClueIds.has(c.id));
     } else if (clueStatusFilter === 'completed') {
       list = list.filter((c) => completedClueIds.has(c.id));
     }
@@ -793,7 +795,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       });
     }
     return list;
-  }, [clues, selectedZoneFilter, clueStatusFilter, sortBy, playerCoords, completedClueIds]);
+  }, [clues, selectedZoneFilter, clueStatusFilter, sortBy, playerCoords, completedClueIds, pendingClueIds]);
 
   // Radar Proximity for Tracked Clue
   const trackedDistance = useMemo(() => {
@@ -1408,10 +1410,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
             {/* Segmented Status Bar & View Mode Switcher */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div id="clues-status-filter" className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 shrink-0">
+              <div id="clues-status-filter" className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 shrink-0 gap-1 flex-wrap">
                 <button
                   onClick={() => setClueStatusFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     clueStatusFilter === 'all'
                       ? 'bg-rose-600 text-white shadow-md'
                       : 'text-slate-400 hover:text-white'
@@ -1421,17 +1423,31 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 </button>
                 <button
                   onClick={() => setClueStatusFilter('uncompleted')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     clueStatusFilter === 'uncompleted'
-                      ? 'bg-amber-600 text-white shadow-md'
+                      ? 'bg-blue-600 text-white shadow-md'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {t('player.filterUncompleted')} ({Math.max(0, clues.length - completedClueIds.size)})
+                  {t('player.filterUncompleted')} ({Math.max(0, clues.length - completedClueIds.size - pendingClueIds.size)})
+                </button>
+                <button
+                  onClick={() => setClueStatusFilter('pending')}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    clueStatusFilter === 'pending'
+                      ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                      : 'text-slate-400 hover:text-amber-300'
+                  }`}
+                >
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span>{language === 'zh' ? '审核中' : 'In Review'}</span>
+                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${clueStatusFilter === 'pending' ? 'bg-slate-950 text-amber-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                    {pendingClueIds.size}
+                  </span>
                 </button>
                 <button
                   onClick={() => setClueStatusFilter('completed')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     clueStatusFilter === 'completed'
                       ? 'bg-emerald-600 text-white shadow-md'
                       : 'text-slate-400 hover:text-white'
@@ -1546,12 +1562,16 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                         <span
                           className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${
                             clueStatusFilter === 'uncompleted'
+                              ? 'bg-blue-500/20 border-blue-500/30 text-blue-300'
+                              : clueStatusFilter === 'pending'
                               ? 'bg-amber-500/20 border-amber-500/30 text-amber-300'
                               : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
                           }`}
                         >
                           {clueStatusFilter === 'uncompleted'
                             ? t('player.filterUncompleted')
+                            : clueStatusFilter === 'pending'
+                            ? (language === 'zh' ? '审核中' : 'In Review')
                             : t('player.filterCompleted')}
                         </span>
                       )}
@@ -1660,6 +1680,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   const isDone = completedClueIds.has(clue.id);
                   const isPending = pendingClueIds.has(clue.id);
                   const latestSub = latestSubByClue.get(clue.id);
+                  const submittedPhoto = latestSub?.photoUrl || latestSub?.selfieBase64;
                   const isRejected = !isDone && !isPending && latestSub?.status === 'rejected';
                   const clueZone = game.zones.find((z) => z.id === clue.zoneId);
                   const dist = playerCoords && clue.location ? calculateHaversineDistance(playerCoords, clue.location) : null;
@@ -1670,24 +1691,22 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                       key={clue.id}
                       id={clueIdx === 0 ? 'first-clue-card' : `clue-card-${clue.id}`}
                       onClick={() => {
-                        if (isDone) {
-                          if (latestSub && (latestSub.photoUrl || latestSub.selfieBase64)) {
-                            setLightboxImage({
-                              url: latestSub.photoUrl || latestSub.selfieBase64,
-                              title: `${currentTeam.name} - ${clueLabel}`,
-                              subtitle: clueZone?.name || clue.zoneId,
-                              badge: latestSub.photoUrl ? 'NAS High-Res' : t('common.teamSelfieBadge'),
-                            });
-                          }
+                        if (submittedPhoto) {
+                          setLightboxImage({
+                            url: submittedPhoto,
+                            title: `${currentTeam.name} - ${clueLabel} (${isDone ? '已核准合照' : '审核中合照'})`,
+                            subtitle: clueZone?.name || clue.zoneId,
+                            badge: isDone ? '已核准合照' : '审核中合照',
+                          });
                         } else {
                           handleOpenNativeCamera(clue);
                         }
                       }}
                       className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 relative overflow-hidden ${
                         isDone
-                          ? 'bg-emerald-950/20 border-emerald-800/40 opacity-85 hover:border-emerald-600 cursor-pointer'
+                          ? 'bg-emerald-950/20 border-emerald-800/40 opacity-90 hover:border-emerald-600 cursor-pointer'
                           : isPending
-                          ? 'bg-amber-950/20 border-amber-800/40'
+                          ? 'bg-amber-950/20 border-amber-800/50 hover:border-amber-500 cursor-pointer'
                           : isRejected
                           ? 'bg-rose-950/25 border-rose-800/50'
                           : highlightedClueId === clue.id
@@ -1695,11 +1714,18 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           : 'bg-slate-900 border-slate-800 hover:border-slate-700 cursor-pointer shadow-lg'
                       }`}
                     >
-                      {/* Clue Target Photo Thumbnail */}
+                      {/* Photo Thumbnail: Shows team's submitted selfie if submitted, otherwise landmark target */}
                       <div
                         onClick={(e) => {
-                          if (clue.targetPhotoBase64) {
-                            e.stopPropagation();
+                          e.stopPropagation();
+                          if (submittedPhoto) {
+                            setLightboxImage({
+                              url: submittedPhoto,
+                              title: `${currentTeam.name} - ${clueLabel} (${isDone ? '已核准合照' : '审核中合照'})`,
+                              subtitle: clueZone?.name || clue.zoneId,
+                              badge: isDone ? '已核准合照' : '审核中合照',
+                            });
+                          } else if (clue.targetPhotoBase64) {
                             setLightboxImage({
                               url: clue.targetPhotoBase64,
                               title: clueLabel,
@@ -1709,9 +1735,23 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           }
                         }}
                         className="w-22 h-22 sm:w-26 sm:h-26 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group shadow"
-                        title={t('player.modalTapUncropped')}
+                        title={submittedPhoto ? (language === 'zh' ? '点击查看团队合照' : 'View Team Photo') : t('player.modalTapUncropped')}
                       >
-                        {clue.targetPhotoBase64 ? (
+                        {submittedPhoto ? (
+                          <>
+                            <img
+                              src={submittedPhoto}
+                              alt="Team Submission"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                            </div>
+                            <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-slate-950/85 text-[9px] font-bold text-emerald-300 border border-emerald-500/40 shadow">
+                              {language === 'zh' ? '合照' : 'Selfie'}
+                            </div>
+                          </>
+                        ) : clue.targetPhotoBase64 ? (
                           <>
                             <img
                               src={clue.targetPhotoBase64}
@@ -1731,13 +1771,13 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           {getClueNumber(clue.id)}
                         </div>
                         {isDone && (
-                          <div className="absolute inset-0 bg-emerald-950/70 flex items-center justify-center">
-                            <CheckCircle2 className="w-7 h-7 text-emerald-400" />
+                          <div className="absolute inset-0 bg-emerald-950/40 flex items-center justify-center pointer-events-none">
+                            <CheckCircle2 className="w-7 h-7 text-emerald-400 drop-shadow-md" />
                           </div>
                         )}
                         {isPending && (
-                          <div className="absolute inset-0 bg-amber-950/70 flex items-center justify-center">
-                            <Clock className="w-6 h-6 text-amber-400 animate-pulse" />
+                          <div className="absolute inset-0 bg-amber-950/40 flex items-center justify-center pointer-events-none">
+                            <Clock className="w-6 h-6 text-amber-400 animate-pulse drop-shadow-md" />
                           </div>
                         )}
                       </div>
@@ -1760,60 +1800,92 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           {clueLabel}
                         </h3>
 
-                        {/* Status indicator & Track Button */}
+                        {/* Status indicator & Action Buttons */}
                         <div className="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-2 flex-wrap w-full">
                             {isDone ? (
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex items-center gap-2 flex-wrap w-full">
                                 <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
                                   <CheckCircle2 className="w-3.5 h-3.5" /> {t('player.foundAndVerified')}
                                 </span>
                                 <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-1.5 py-0.5 rounded font-black">
                                   +50 分
                                 </span>
-                                {latestSub && (latestSub.photoUrl || latestSub.selfieBase64) && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setLightboxImage({
-                                        url: latestSub.photoUrl || latestSub.selfieBase64,
-                                        title: `${currentTeam.name} - ${clueLabel}`,
-                                        subtitle: clueZone?.name || clue.zoneId,
-                                        badge: latestSub.photoUrl ? 'NAS High-Res' : t('common.teamSelfieBadge'),
-                                      });
-                                    }}
-                                    className="text-[10px] bg-emerald-950/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-500/40 px-2 py-0.5 rounded-md font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer active:scale-95"
-                                    title="View & Download Team Selfie"
-                                  >
-                                    <Download className="w-3 h-3 text-emerald-400" />
-                                    <span>{language === 'zh' ? '查看与下载合照' : 'View & Download'}</span>
-                                  </button>
+                                {submittedPhoto && (
+                                  <div className="flex items-center gap-1.5 ml-auto">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadPhoto(submittedPhoto, `${currentTeam.name}_${clueLabel}.jpg`);
+                                      }}
+                                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow-md transition-all active:scale-95 cursor-pointer"
+                                      title={language === 'zh' ? '下载合照到手机' : 'Download Photo to phone'}
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                      <span>{language === 'zh' ? '下载合照' : 'Download Photo'}</span>
+                                    </button>
+                                    {clue.targetPhotoBase64 && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setLightboxImage({
+                                            url: clue.targetPhotoBase64,
+                                            title: clueLabel,
+                                            subtitle: clueZone?.name || clue.zoneId,
+                                            badge: t('common.targetLandmarkBadge'),
+                                          });
+                                        }}
+                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                                        title={language === 'zh' ? '查看原题目地标图' : 'View Target Landmark'}
+                                      >
+                                        <Camera className="w-3 h-3 text-amber-400" />
+                                        <span>{language === 'zh' ? '地标原图' : 'Target'}</span>
+                                      </button>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             ) : isPending ? (
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex items-center gap-2 flex-wrap w-full">
                                 <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
                                 </span>
-                                {latestSub && (latestSub.photoUrl || latestSub.selfieBase64) && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setLightboxImage({
-                                        url: latestSub.photoUrl || latestSub.selfieBase64,
-                                        title: `${currentTeam.name} - ${clueLabel}`,
-                                        subtitle: clueZone?.name || clue.zoneId,
-                                        badge: latestSub.photoUrl ? 'NAS High-Res' : t('common.teamSelfieBadge'),
-                                      });
-                                    }}
-                                    className="text-[10px] bg-amber-950/60 hover:bg-amber-800 text-amber-200 border border-amber-500/40 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
-                                    title="View submitted selfie"
-                                  >
-                                    <Download className="w-3 h-3 text-amber-400" />
-                                    <span>{language === 'zh' ? '查看合照' : 'View Photo'}</span>
-                                  </button>
+                                {submittedPhoto && (
+                                  <div className="flex items-center gap-1.5 ml-auto">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadPhoto(submittedPhoto, `${currentTeam.name}_${clueLabel}.jpg`);
+                                      }}
+                                      className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1 shadow-md transition-all active:scale-95 cursor-pointer"
+                                      title={language === 'zh' ? '下载拍摄的合照' : 'Download Photo to phone'}
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                      <span>{language === 'zh' ? '下载合照' : 'Download Photo'}</span>
+                                    </button>
+                                    {clue.targetPhotoBase64 && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setLightboxImage({
+                                            url: clue.targetPhotoBase64,
+                                            title: clueLabel,
+                                            subtitle: clueZone?.name || clue.zoneId,
+                                            badge: t('common.targetLandmarkBadge'),
+                                          });
+                                        }}
+                                        className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                                        title={language === 'zh' ? '查看原题目地标图' : 'View Target Landmark'}
+                                      >
+                                        <Camera className="w-3 h-3 text-amber-400" />
+                                        <span>{language === 'zh' ? '地标原图' : 'Target'}</span>
+                                      </button>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             ) : isRejected ? (
