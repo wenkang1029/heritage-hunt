@@ -43,6 +43,7 @@ import {
   Pause,
   Filter,
   RotateCcw,
+  Download,
 } from 'lucide-react';
 import { getClueNumber, getClueLabel } from '../../data/cluesZh.ts';
 import {
@@ -1668,10 +1669,23 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                     <div
                       key={clue.id}
                       id={clueIdx === 0 ? 'first-clue-card' : `clue-card-${clue.id}`}
-                      onClick={() => !isDone && handleOpenNativeCamera(clue)}
+                      onClick={() => {
+                        if (isDone) {
+                          if (latestSub && (latestSub.photoUrl || latestSub.selfieBase64)) {
+                            setLightboxImage({
+                              url: latestSub.photoUrl || latestSub.selfieBase64,
+                              title: `${currentTeam.name} - ${clueLabel}`,
+                              subtitle: clueZone?.name || clue.zoneId,
+                              badge: latestSub.photoUrl ? 'NAS High-Res' : t('common.teamSelfieBadge'),
+                            });
+                          }
+                        } else {
+                          handleOpenNativeCamera(clue);
+                        }
+                      }}
                       className={`p-3 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 relative overflow-hidden ${
                         isDone
-                          ? 'bg-emerald-950/20 border-emerald-800/40 opacity-85'
+                          ? 'bg-emerald-950/20 border-emerald-800/40 opacity-85 hover:border-emerald-600 cursor-pointer'
                           : isPending
                           ? 'bg-amber-950/20 border-amber-800/40'
                           : isRejected
@@ -1757,11 +1771,51 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                                 <span className="text-[10px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-1.5 py-0.5 rounded font-black">
                                   +50 分
                                 </span>
+                                {latestSub && (latestSub.photoUrl || latestSub.selfieBase64) && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setLightboxImage({
+                                        url: latestSub.photoUrl || latestSub.selfieBase64,
+                                        title: `${currentTeam.name} - ${clueLabel}`,
+                                        subtitle: clueZone?.name || clue.zoneId,
+                                        badge: latestSub.photoUrl ? 'NAS High-Res' : t('common.teamSelfieBadge'),
+                                      });
+                                    }}
+                                    className="text-[10px] bg-emerald-950/80 hover:bg-emerald-800 text-emerald-200 border border-emerald-500/40 px-2 py-0.5 rounded-md font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer active:scale-95"
+                                    title="View & Download Team Selfie"
+                                  >
+                                    <Download className="w-3 h-3 text-emerald-400" />
+                                    <span>{language === 'zh' ? '查看与下载合照' : 'View & Download'}</span>
+                                  </button>
+                                )}
                               </div>
                             ) : isPending ? (
-                              <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5 animate-pulse" /> {t('player.pendingReview')}
+                                </span>
+                                {latestSub && (latestSub.photoUrl || latestSub.selfieBase64) && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setLightboxImage({
+                                        url: latestSub.photoUrl || latestSub.selfieBase64,
+                                        title: `${currentTeam.name} - ${clueLabel}`,
+                                        subtitle: clueZone?.name || clue.zoneId,
+                                        badge: latestSub.photoUrl ? 'NAS High-Res' : t('common.teamSelfieBadge'),
+                                      });
+                                    }}
+                                    className="text-[10px] bg-amber-950/60 hover:bg-amber-800 text-amber-200 border border-amber-500/40 px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                                    title="View submitted selfie"
+                                  >
+                                    <Download className="w-3 h-3 text-amber-400" />
+                                    <span>{language === 'zh' ? '查看合照' : 'View Photo'}</span>
+                                  </button>
+                                )}
+                              </div>
                             ) : isRejected ? (
                               <div className="flex flex-col gap-1 w-full">
                                 <span className="text-[11px] font-bold text-rose-400 flex items-center gap-1">
