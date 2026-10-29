@@ -36,7 +36,6 @@ import {
   ChevronDown,
   Users,
   Crosshair,
-  Flame,
   Megaphone,
   Bell,
   XCircle,
@@ -700,6 +699,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   });
 
   const [autoRadarIndex, setAutoRadarIndex] = useState<number>(0);
+  const [isRadarDismissed, setIsRadarDismissed] = useState<boolean>(false);
 
   useEffect(() => {
     try {
@@ -1319,9 +1319,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             playerCoords={playerCoords}
             completedClueIds={Array.from(completedClueIds)}
             onSelectClue={handleOpenNativeCamera}
-            onTrackClue={(clue) => setTrackedClueId(clue.id)}
+            onTrackClue={(clue) => {
+              setTrackedClueId(clue.id);
+              setIsRadarDismissed(false);
+            }}
             className="h-full w-full rounded-none border-none"
-            bottomOffsetClass={trackedClue ? 'bottom-40' : 'bottom-20'}
+            bottomOffsetClass={trackedClue && !isRadarDismissed ? 'bottom-40' : 'bottom-20'}
             hideCluePins={false}
             trackedClue={trackedClue}
             rallyPoint={game.rallyPoint}
@@ -1334,6 +1337,92 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             activeTab === 'clues' ? 'block' : 'hidden'
           }`}
         >
+          {/* 🌟 1. Top Sticky Clue Status Filters (全部 / 未完成 / 审核中 / 已完成) */}
+          <div className="sticky -top-3 sm:-top-4 z-20 bg-slate-950/95 backdrop-blur-md -mx-3 px-3 sm:-mx-4 sm:px-4 pt-1 pb-2.5 border-b border-slate-800/80 shadow-md">
+            <div className="flex items-center justify-between gap-1.5">
+              <div id="clues-status-filter" className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 gap-1 flex-1 overflow-x-auto scrollbar-none">
+                <button
+                  type="button"
+                  onClick={() => setClueStatusFilter('all')}
+                  className={`flex-1 min-w-[58px] py-1.5 px-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all text-center cursor-pointer ${
+                    clueStatusFilter === 'all'
+                      ? 'bg-rose-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t('player.filterAll')} ({clues.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClueStatusFilter('uncompleted')}
+                  className={`flex-1 min-w-[68px] py-1.5 px-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all text-center cursor-pointer ${
+                    clueStatusFilter === 'uncompleted'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t('player.filterUncompleted')} ({Math.max(0, clues.length - completedClueIds.size - pendingClueIds.size)})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClueStatusFilter('pending')}
+                  className={`flex-1 min-w-[76px] py-1.5 px-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all text-center cursor-pointer flex items-center justify-center gap-1 ${
+                    clueStatusFilter === 'pending'
+                      ? 'bg-amber-500 text-slate-950 font-black shadow-md ring-1 ring-amber-300'
+                      : pendingClueIds.size > 0
+                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 hover:bg-amber-500/25'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Clock className={`w-3.5 h-3.5 shrink-0 ${clueStatusFilter === 'pending' ? 'text-slate-950' : 'text-amber-400'}`} />
+                  <span>{language === 'zh' ? '审核中' : 'In Review'}</span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                      clueStatusFilter === 'pending'
+                        ? 'bg-slate-950 text-amber-300'
+                        : pendingClueIds.size > 0
+                        ? 'bg-amber-400 text-slate-950 font-black animate-pulse'
+                        : 'bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    {pendingClueIds.size}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClueStatusFilter('completed')}
+                  className={`flex-1 min-w-[66px] py-1.5 px-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all text-center cursor-pointer ${
+                    clueStatusFilter === 'completed'
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t('player.filterCompleted')} ({completedClueIds.size})
+                </button>
+              </div>
+
+              {/* Distance Sort Toggle */}
+              {playerCoords && (
+                <div className="shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setSortBy((prev) => (prev === 'distance' ? 'default' : 'distance'))}
+                    className={`p-2 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 ${
+                      sortBy === 'distance'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                    }`}
+                    title={sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}
+                  >
+                    <span>📍</span>
+                    <span className="hidden sm:inline text-[11px]">
+                      {sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
             {/* 📍 Right Beside You (<100m) Highlight Section */}
             {playerCoords && nearbyCluesUnder100m.length > 0 && (
               <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-950/70 via-slate-900 to-slate-900 border border-amber-500/40 shadow-xl">
@@ -1407,74 +1496,6 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 </div>
               </div>
             )}
-
-            {/* Segmented Status Bar & View Mode Switcher */}
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div id="clues-status-filter" className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 shrink-0 gap-1 flex-wrap">
-                <button
-                  onClick={() => setClueStatusFilter('all')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    clueStatusFilter === 'all'
-                      ? 'bg-rose-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {t('player.filterAll')} ({clues.length})
-                </button>
-                <button
-                  onClick={() => setClueStatusFilter('uncompleted')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    clueStatusFilter === 'uncompleted'
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {t('player.filterUncompleted')} ({Math.max(0, clues.length - completedClueIds.size - pendingClueIds.size)})
-                </button>
-                <button
-                  onClick={() => setClueStatusFilter('pending')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    clueStatusFilter === 'pending'
-                      ? 'bg-amber-500 text-slate-950 font-black shadow-md'
-                      : 'text-slate-400 hover:text-amber-300'
-                  }`}
-                >
-                  <Clock className="w-3 h-3 text-amber-400" />
-                  <span>{language === 'zh' ? '审核中' : 'In Review'}</span>
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${clueStatusFilter === 'pending' ? 'bg-slate-950 text-amber-300' : 'bg-amber-500/20 text-amber-300'}`}>
-                    {pendingClueIds.size}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setClueStatusFilter('completed')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    clueStatusFilter === 'completed'
-                      ? 'bg-emerald-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {t('player.filterCompleted')} ({completedClueIds.size})
-                </button>
-              </div>
-
-              {/* Distance Sort Toggle */}
-              {playerCoords && (
-                <div className="shrink-0 ml-auto">
-                  <button
-                    onClick={() => setSortBy((prev) => (prev === 'distance' ? 'default' : 'distance'))}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
-                      sortBy === 'distance'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
-                    }`}
-                    title={sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}
-                  >
-                    <span>📍</span>
-                    <span className="text-[11px]">{sortBy === 'distance' ? t('player.sortByDistance') : t('player.sortByZone')}</span>
-                  </button>
-                </div>
-              )}
-            </div>
 
             {/* Zone Filter Carousel */}
             <div id="clues-zone-carousel" className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -1928,7 +1949,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setTrackedClueId((prev) => (prev === clue.id ? null : clue.id));
+                                  setTrackedClueId((prev) => {
+                                    const next = prev === clue.id ? null : clue.id;
+                                    if (next) setIsRadarDismissed(false);
+                                    return next;
+                                  });
                                 }}
                                 className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
                                   trackedClueId === clue.id
@@ -2161,6 +2186,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               type="button"
               onClick={() => {
                 setTrackedClueId(nearbyPassiveClue.clue.id);
+                setIsRadarDismissed(false);
                 handleOpenNativeCamera(nearbyPassiveClue.clue);
               }}
               className="bg-slate-950 hover:bg-slate-900 text-amber-300 font-black px-3 py-1.5 rounded-xl text-xs shrink-0 cursor-pointer transition-all shadow"
@@ -2171,14 +2197,35 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         </div>
       )}
 
-      {/* Floating Scavenger Radar HUD */}
-      {trackedClue && (
+      {/* 🧭 Minimized Radar Pill (shown when player dismissed the radar HUD) */}
+      {trackedClue && isRadarDismissed && (
+        <div className="fixed bottom-18 right-3 z-40 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => setIsRadarDismissed(false)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/95 hover:bg-slate-800 text-amber-300 font-bold text-xs border border-amber-500/50 shadow-2xl backdrop-blur-md cursor-pointer transition-all active:scale-95 group"
+            title={language === 'zh' ? '展开雷达导航' : 'Open Radar HUD'}
+          >
+            <Compass className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform" />
+            <span className="font-mono text-[11px] text-amber-200">{getClueNumber(trackedClue.id)}</span>
+            {trackedDistance !== null && (
+              <span className="text-[10px] text-slate-300 font-mono">
+                {trackedDistance < 1000 ? `${trackedDistance}m` : `${(trackedDistance / 1000).toFixed(1)}km`}
+              </span>
+            )}
+            <span className="text-[10px] text-amber-400/80 font-bold">展开 ➔</span>
+          </button>
+        </div>
+      )}
+
+      {/* Floating Scavenger Radar HUD (Compact Redesign) */}
+      {trackedClue && !isRadarDismissed && (
         <div className="fixed bottom-18 left-0 right-0 max-w-lg mx-auto px-3 z-40 pointer-events-none">
           <div
             id="scavenger-radar-card"
-            className={`pointer-events-auto p-3 rounded-2xl backdrop-blur-xl border shadow-2xl transition-all ${
+            className={`pointer-events-auto p-2 sm:p-2.5 rounded-2xl backdrop-blur-xl border shadow-xl transition-all ${
               radarStage === 'target'
-                ? 'bg-emerald-950/95 border-emerald-500 shadow-emerald-500/20 ring-2 ring-emerald-500/50 animate-pulse'
+                ? 'bg-emerald-950/95 border-emerald-500 shadow-emerald-500/25 ring-2 ring-emerald-500/50 animate-pulse'
                 : radarStage === 'near'
                 ? 'bg-slate-900/95 border-orange-500/80 shadow-orange-500/20'
                 : radarStage === 'medium'
@@ -2186,177 +2233,132 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 : 'bg-slate-900/95 border-slate-700/80 shadow-slate-950/60'
             }`}
           >
-            {/* Header: Target Title + Points Badge + Target Switcher / Reset Button */}
-            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-800/80">
+            <div className="flex items-center gap-2">
+              {/* Mini Adventure Compass or Status Indicator */}
               <div
                 onClick={() => handleJumpToClueInList(trackedClue)}
-                className="flex items-center gap-1.5 min-w-0 cursor-pointer group"
+                className="shrink-0 cursor-pointer"
                 title={language === 'zh' ? '点击在线索列表中查看' : 'Click to view in Clues list'}
               >
-                <span
-                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                    radarStage === 'target'
-                      ? 'bg-emerald-400 animate-ping'
-                      : radarStage === 'near'
-                      ? 'bg-orange-400 animate-pulse'
-                      : radarStage === 'medium'
-                      ? 'bg-amber-400'
-                      : 'bg-blue-400'
-                  }`}
-                />
-                <h4 className="font-bold text-xs sm:text-sm text-white group-hover:text-amber-300 transition-colors truncate leading-tight">
-                  {getClueLabel(trackedClue.id, language)}
-                </h4>
-                <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-                  +50 分
-                </span>
-                {radarStage === 'target' && (
-                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 animate-bounce shrink-0">
-                    &lt; 20m
-                  </span>
+                {trackedBearing !== null && compassHeading ? (
+                  <AdventureCompass
+                    bearing={compassHeading.bearingDeg}
+                    directionZh={compassHeading.directionZh}
+                    className="w-8 h-8"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+                    <Compass className="w-4 h-4 text-amber-400" />
+                  </div>
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
+              {/* Center Info: Single clean block with Clue label + Distance guidance */}
+              <div
+                onClick={() => handleJumpToClueInList(trackedClue)}
+                className="flex-1 min-w-0 cursor-pointer group"
+                title={language === 'zh' ? '点击在线索列表中查看' : 'Click to view in Clues list'}
+              >
+                {/* Top line: Clue Number & Label + Points */}
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[10px] font-mono font-black text-amber-400 shrink-0">
+                    {getClueNumber(trackedClue.id)}
+                  </span>
+                  <h4 className="font-bold text-xs text-white group-hover:text-amber-300 transition-colors truncate">
+                    {getClueLabel(trackedClue.id, language)}
+                  </h4>
+                  <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                    +50分
+                  </span>
+                </div>
+
+                {/* Bottom line: Direction & Distance */}
+                <div className="flex items-center gap-1.5 text-[11px] truncate mt-0.5">
+                  {trackedDistance !== null && compassHeading ? (
+                    radarStage === 'target' ? (
+                      <span className="text-emerald-400 font-black flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 shrink-0" />
+                        <span>{language === 'zh' ? '目标就在身边！(<20m)' : 'Target in Range (<20m)!'}</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-300 font-medium truncate">
+                        {language === 'zh' ? (
+                          <>
+                            朝<span className="font-bold text-amber-300">【{compassHeading.directionZh}】</span>前行 · 约{' '}
+                            <span className="font-mono font-bold text-amber-300">{trackedDistance}米</span> ({compassHeading.bearingDeg}°)
+                          </>
+                        ) : (
+                          <>
+                            Head <span className="font-bold text-amber-300">{compassHeading.code}</span> · ~
+                            <span className="font-mono font-bold text-amber-300">{trackedDistance}m</span> ({compassHeading.bearingDeg}°)
+                          </>
+                        )}
+                      </span>
+                    )
+                  ) : (
+                    <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                      <Clock className="w-3 h-3 animate-spin shrink-0" />
+                      <span>{language === 'zh' ? '获取 GPS 中...' : 'Acquiring GPS...'}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Action Buttons: Switcher / Camera / Hide [X] */}
+              <div className="flex items-center gap-1 shrink-0">
                 {isAutoTracking && nearestUncompletedClues.length > 1 && (
                   <button
                     type="button"
                     onClick={handleSwitchNextRadarTarget}
-                    className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
+                    className="p-1 px-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 cursor-pointer transition-colors"
                     title={t('player.nextNearbyClue')}
                   >
-                    <span>{autoRadarIndex % Math.min(nearestUncompletedClues.length, 5) + 1}/{Math.min(nearestUncompletedClues.length, 5)}</span>
-                    <span className="text-[9px]">切换 ➔</span>
+                    <span>{autoRadarIndex % Math.min(nearestUncompletedClues.length, 5) + 1}/{Math.min(nearestUncompletedClues.length, 5)} ➔</span>
                   </button>
                 )}
                 {!isAutoTracking && (
                   <button
                     type="button"
                     onClick={handleResetAutoRadar}
-                    className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 flex items-center gap-1 cursor-pointer transition-colors"
-                    title="恢复自动感知"
+                    className="p-1 px-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 border border-slate-700 cursor-pointer transition-colors"
+                    title={language === 'zh' ? '恢复自动雷达' : 'Reset Auto Radar'}
                   >
-                    <X className="w-3 h-3 text-slate-400" />
-                    <span>恢复自动</span>
+                    <span>{language === 'zh' ? '自动' : 'Auto'}</span>
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenNativeCamera(trackedClue)}
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 shadow cursor-pointer transition-all ${
+                    radarStage === 'target'
+                      ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black animate-bounce shadow-emerald-500/30'
+                      : 'bg-rose-600 hover:bg-rose-500 text-white'
+                  }`}
+                  title={t('player.snapNowBtn')}
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span className="text-[11px] font-bold">{t('player.snapNowBtn')}</span>
+                </button>
+
+                {/* Hide / Dismiss Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsRadarDismissed(true);
+                  }}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 cursor-pointer transition-colors"
+                  title={language === 'zh' ? '隐藏雷达' : 'Hide Radar'}
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            {/* Target Info: Clue Thumbnail + Adventure Compass & Chinese Direction Guidance + Action Button */}
-            <div className="flex items-center gap-3">
-              {/* Clue Thumbnail */}
-              <div
-                onClick={() => {
-                  if (trackedClue.targetPhotoBase64) {
-                    setLightboxImage({
-                      url: trackedClue.targetPhotoBase64,
-                      title: getClueLabel(trackedClue.id, language),
-                      subtitle: game.zones.find((z) => z.id === trackedClue.zoneId)?.name || trackedClue.zoneId,
-                      badge: t('common.targetLandmarkBadge'),
-                    });
-                  }
-                }}
-                className="w-13 h-13 rounded-xl overflow-hidden bg-slate-800 shrink-0 border border-slate-700 relative cursor-pointer group shadow"
-                title={t('player.modalTapUncropped')}
-              >
-                {trackedClue.targetPhotoBase64 ? (
-                  <>
-                    <img
-                      src={trackedClue.targetPhotoBase64}
-                      alt={getClueLabel(trackedClue.id, language)}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                  </>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-500">
-                    <Camera className="w-5 h-5" />
-                  </div>
-                )}
-              </div>
-
-              {/* Real Adventure Compass + Chinese Direction Guidance */}
-              <div
-                onClick={() => handleJumpToClueInList(trackedClue)}
-                className="flex-1 min-w-0 cursor-pointer group"
-                title={language === 'zh' ? '点击在线索列表中查看' : 'Click to view in Clues list'}
-              >
-                <div className="flex items-center gap-2.5">
-                  {trackedBearing !== null && compassHeading && (
-                    <AdventureCompass
-                      bearing={compassHeading.bearingDeg}
-                      directionZh={compassHeading.directionZh}
-                      className="w-9 h-9 group-hover:scale-105 transition-transform"
-                    />
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    {trackedDistance !== null && compassHeading ? (
-                      <>
-                        {radarStage === 'target' ? (
-                          <div className="text-xs font-black text-emerald-400 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                            <span>{language === 'zh' ? '目标就在身边！(<20m)' : 'Target in Range (<20m)!'}</span>
-                          </div>
-                        ) : radarStage === 'near' ? (
-                          <div>
-                            <div className="text-xs font-black text-orange-400 group-hover:text-amber-300 transition-colors flex items-center gap-1 truncate">
-                              <Flame className="w-3.5 h-3.5 shrink-0 text-orange-400" />
-                              <span>{language === 'zh' ? `正在接近！朝${compassHeading.label}` : `Closing in! Head ${compassHeading.code}`}</span>
-                            </div>
-                            <div className="text-[11px] text-amber-300 font-mono font-medium mt-0.5">
-                              {language === 'zh' ? `约 ${trackedDistance} 米 (${compassHeading.bearingDeg}°)` : `~${trackedDistance} m (${compassHeading.bearingDeg}°)`}
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="text-xs font-black text-white group-hover:text-amber-300 transition-colors truncate">
-                              {language === 'zh' ? `朝【${compassHeading.directionZh}】前行` : `Head ${compassHeading.code} (${compassHeading.label})`}
-                            </div>
-                            <div className="text-[11px] text-amber-300 font-mono font-medium mt-0.5">
-                              {language === 'zh' ? `约 ${trackedDistance} 米 (${compassHeading.bearingDeg}°)` : `~${trackedDistance} m (${compassHeading.bearingDeg}°)`}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-xs text-slate-400 flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 animate-spin" />
-                        <span>{language === 'zh' ? '正在获取 GPS 定位...' : 'Acquiring GPS...'}</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <div className="shrink-0">
-                {radarStage === 'target' ? (
-                  <button
-                    type="button"
-                    onClick={() => handleOpenNativeCamera(trackedClue)}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 cursor-pointer transition-all animate-bounce"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>{t('player.snapNowBtn')}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleOpenNativeCamera(trackedClue)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold p-2.5 rounded-xl text-xs flex items-center justify-center cursor-pointer transition-colors border border-slate-700 shadow"
-                    title={t('player.modalOpenCamBtn')}
-                  >
-                    <Camera className="w-4 h-4 text-amber-400" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Prompt for Target Stage */}
+            {/* Target Proximity Notice (<20m) */}
             {radarStage === 'target' && (
-              <p className="text-[11px] text-emerald-300/90 font-medium mt-2 pt-2 border-t border-emerald-800/40 leading-snug">
+              <p className="text-[10px] text-emerald-300/90 font-medium mt-1.5 pt-1.5 border-t border-emerald-800/40 leading-tight">
                 {t('player.radarLookAroundNotice')}
               </p>
             )}
@@ -2394,6 +2396,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               <span className="absolute -top-1.5 -right-3.5 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-sm">
                 {clues.length - completedClueIds.size}
               </span>
+            )}
+            {pendingClueIds.size > 0 && (
+              <span
+                className="absolute -bottom-1 -left-1.5 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-slate-900 animate-pulse"
+                title={`${pendingClueIds.size} 线索等待审核`}
+              />
             )}
           </div>
           <span className="text-[11px] leading-tight">{t('player.navClues')}</span>
@@ -2509,7 +2517,11 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setTrackedClueId((prev) => (prev === selectedClue.id ? null : selectedClue.id));
+                  setTrackedClueId((prev) => {
+                    const next = prev === selectedClue.id ? null : selectedClue.id;
+                    if (next) setIsRadarDismissed(false);
+                    return next;
+                  });
                 }}
                 className={`w-full mb-4 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   trackedClueId === selectedClue.id
