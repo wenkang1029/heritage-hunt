@@ -144,8 +144,8 @@ export function validateDownloadTarget(inputUrl: string): {
       return { valid: false, error: 'Target must use HTTPS protocol.' };
     }
 
-    // Path must match: /UTBA/media_file/NAS/UTBA/event_photo/<event_code>/<filename>
-    const pathRegex = /^\/UTBA\/media_file\/NAS\/UTBA\/event_photo\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_\-\.]+\.(jpg|jpeg|png|webp|heic)$/i;
+    // Path must match: /UTBA/media_file/(NAS|CACHE)/UTBA/event_photo/<event_code>/<filename>
+    const pathRegex = /^\/UTBA\/media_file\/(NAS|CACHE)\/UTBA\/event_photo\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_\-\.]+\.(jpg|jpeg|png|webp|heic)$/i;
     if (!pathRegex.test(parsed.pathname)) {
       return {
         valid: false,
