@@ -594,7 +594,16 @@ export class MockAdapterService {
   }
 
   async createClue(_gameId: string, clue: Omit<Clue, 'id' | 'createdAt'>): Promise<Clue> {
-    const clueId = `clue_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    let maxNum = 0;
+    for (const id of Object.keys(this.state.clues)) {
+      const m = id.match(/\d+/);
+      if (m) {
+        const n = parseInt(m[0], 10);
+        if (n > maxNum && n < 9000) maxNum = n;
+      }
+    }
+    const nextNum = maxNum + 1;
+    const clueId = 'clue-' + String(nextNum).padStart(3, '0');
     const newClue: Clue = {
       ...clue,
       id: clueId,

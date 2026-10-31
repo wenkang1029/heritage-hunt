@@ -172,6 +172,9 @@ export const translations = {
       modalSubmitBtn: 'Submit Landmark Selfie',
       modalSubmittingBtn: 'Uploading & Submitting...',
       modalCloseBtn: 'Close',
+      photoReminder: 'Tip: Take a creative selfie with your team in front of the landmark. Keep safety in mind!',
+      alreadySubmittedNotice: 'Your photo has been submitted and is awaiting GM verification. Please do not resubmit!',
+      pendingReviewNotice: 'This clue has been submitted and is waiting for Game Master review.',
       // Radar & Explorer Mode
       trackClueBtn: 'Lock & Track Clue',
       trackingBadge: 'Tracking',
@@ -300,6 +303,9 @@ export const translations = {
       processingPhotos: 'Processing Photos...',
       viewFullImage: 'View Full Image',
       noHintSpecified: 'No hint specified',
+      deleteClueBtn: 'Delete',
+      confirmDeleteClue: 'Are you sure you want to delete clue {num}? This action cannot be undone.',
+      clueDeletedSuccess: 'Clue {num} deleted successfully.',
       noImage: 'No Image',
       // Teams Tab
       teamsTitle: 'Teams & QR Join Codes',
@@ -562,6 +568,9 @@ export const translations = {
       modalSubmitBtn: '提交地标合影审核',
       modalSubmittingBtn: '正在压缩并提交...',
       modalCloseBtn: '关闭',
+      photoReminder: '拍照提示：请与队伍成员在目标地标前同框合影，注意安全。',
+      alreadySubmittedNotice: '您的照片已提交，正在等待裁判（GM）审核，请勿重复提交！',
+      pendingReviewNotice: '此线索已提交审核中，等待裁判审核。',
       // Radar & Explorer Mode
       trackClueBtn: '🎯 锁定追踪此线索',
       trackingBadge: '🎯 追踪中',
@@ -691,6 +700,9 @@ export const translations = {
       viewFullImage: '查看无损原图',
       noHintSpecified: '未填写提示',
       noImage: '无图片',
+      deleteClueBtn: '删除线索',
+      confirmDeleteClue: '确定要删除线索 {num} 吗？此操作无法撤销。',
+      clueDeletedSuccess: '线索 {num} 已成功删除。',
       // Teams Tab
       teamsTitle: '队伍管理与加入二维码',
       teamsDesc: '队员可直接扫描下方专属二维码或手动输入4位 PIN 码快速加入队伍。',

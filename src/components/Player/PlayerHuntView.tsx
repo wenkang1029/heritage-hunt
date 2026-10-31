@@ -29,7 +29,6 @@ import {
   ChevronRight,
   X,
   UploadCloud,
-  HelpCircle,
   Maximize2,
   Compass,
   ExternalLink,
@@ -714,17 +713,17 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     }
   }, [trackedClueId]);
 
-  // Uncompleted clues with coordinates sorted by distance to player
+  // Uncompleted & unsubmitted clues with coordinates sorted by distance to player
   const nearestUncompletedClues = useMemo(() => {
     if (!playerCoords) return [];
     return clues
-      .filter((c) => !completedClueIds.has(c.id) && c.location)
+      .filter((c) => !completedClueIds.has(c.id) && !pendingClueIds.has(c.id) && c.location)
       .map((c) => ({
         clue: c,
         distance: calculateHaversineDistance(playerCoords, c.location!),
       }))
       .sort((a, b) => a.distance - b.distance);
-  }, [clues, completedClueIds, playerCoords]);
+  }, [clues, completedClueIds, pendingClueIds, playerCoords]);
 
   // Clues within <= 100m for the highlight banner on the Clues tab
   const nearbyCluesUnder100m = useMemo(() => {
@@ -738,12 +737,15 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   const isAutoTracking = !trackedClueId;
   const trackedClue = useMemo(() => {
     if (trackedClueId) {
+      if (completedClueIds.has(trackedClueId) || pendingClueIds.has(trackedClueId)) {
+        return null;
+      }
       return clues.find((c) => c.id === trackedClueId) || null;
     }
     if (nearestUncompletedClues.length === 0) return null;
     const safeIdx = autoRadarIndex % Math.min(nearestUncompletedClues.length, 5);
     return nearestUncompletedClues[safeIdx]?.clue || null;
-  }, [trackedClueId, clues, nearestUncompletedClues, autoRadarIndex]);
+  }, [trackedClueId, clues, nearestUncompletedClues, autoRadarIndex, completedClueIds, pendingClueIds]);
 
   // Zone Progress Statistics for Filtering
   const zoneStatsMap = useMemo(() => {
@@ -840,7 +842,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     let closest: { clue: Clue; distance: number } | null = null;
 
     for (const c of clues) {
-      if (completedClueIds.has(c.id) || c.id === trackedClue?.id || !c.location) continue;
+      if (completedClueIds.has(c.id) || pendingClueIds.has(c.id) || c.id === trackedClue?.id || !c.location) continue;
       const d = calculateHaversineDistance(playerCoords, c.location);
       if (d <= 20) {
         if (!closest || d < closest.distance) {
@@ -849,7 +851,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       }
     }
     return closest;
-  }, [playerCoords, clues, completedClueIds, trackedClue?.id]);
+  }, [playerCoords, clues, completedClueIds, pendingClueIds, trackedClue?.id]);
 
   // Highlight state for auto-scrolled clue card in the Clues tab
   const [highlightedClueId, setHighlightedClueId] = useState<string | null>(null);
@@ -953,6 +955,22 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       });
       return;
     }
+    if (completedClueIds.has(clue.id)) {
+      showAlert({
+        title: language === 'zh' ? '已完成打卡' : 'Already Completed',
+        message: language === 'zh' ? '该线索已打卡完成，无需重复提交！' : 'This clue has already been completed and scored!',
+        variant: 'info',
+      });
+      return;
+    }
+    if (pendingClueIds.has(clue.id)) {
+      showAlert({
+        title: language === 'zh' ? '正在审核中' : 'Under Review',
+        message: language === 'zh' ? '该线索已提交并正在等待裁判审核，请勿重复打卡！' : 'This clue has been submitted and is awaiting GM review!',
+        variant: 'info',
+      });
+      return;
+    }
 
     setSelectedClue(clue);
     setCapturedPreview(null);
@@ -1023,6 +1041,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       setCapturedPreview(null);
       setCapturedRawFile(null);
       setIsSubmitting(false);
+      setTrackedClueId((prev) => (prev === targetClueId ? null : prev));
 
       confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
       setSubmissionFeedback(
@@ -1333,8 +1352,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
             currentTeamId={currentTeam.id}
             playerCoords={playerCoords}
             completedClueIds={Array.from(completedClueIds)}
+            pendingClueIds={Array.from(pendingClueIds)}
             onSelectClue={handleOpenNativeCamera}
             onTrackClue={(clue) => {
+              if (completedClueIds.has(clue.id) || pendingClueIds.has(clue.id)) return;
               setTrackedClueId(clue.id);
               setIsRadarDismissed(false);
             }}
@@ -1734,6 +1755,15 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             subtitle: clueZone?.name || clue.zoneId,
                             badge: isDone ? '已核准合照' : '审核中合照',
                           });
+                        } else if (isDone || isPending) {
+                          if (clue.targetPhotoBase64) {
+                            setLightboxImage({
+                              url: clue.targetPhotoBase64,
+                              title: clueLabel,
+                              subtitle: clueZone?.name || clue.zoneId,
+                              badge: isDone ? '已完成' : '审核中',
+                            });
+                          }
                         } else {
                           handleOpenNativeCamera(clue);
                         }
@@ -1953,7 +1983,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             )}
                           </div>
 
-                          {!isDone && (
+                          {!isDone && !isPending && (
                             <div className="flex items-center gap-1.5 shrink-0">
                               {dist !== null && (
                                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
@@ -2480,17 +2510,12 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               </span>
             </div>
 
-            {/* Cultural & Religious Respect Notice */}
-            <div className="mb-3.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex items-start gap-2 shadow-sm">
-              <span className="text-base shrink-0 select-none">🕌</span>
-              <div className="leading-tight">
-                <strong className="block text-amber-300 font-bold mb-0.5">
-                  {t('player.respectNoticeTitle')}
-                </strong>
-                <p className="text-[11px] text-amber-200/90 leading-snug">
-                  {t('player.respectNoticeDesc')}
-                </p>
-              </div>
+            {/* Shortened Photo Reminder */}
+            <div className="mb-3.5 p-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex items-center gap-2 shadow-sm">
+              <span className="text-sm shrink-0">📸</span>
+              <p className="text-[11px] text-amber-200/90 leading-snug font-medium">
+                {t('player.photoReminder')}
+              </p>
             </div>
 
             {/* Target Clue Photo */}
@@ -2537,39 +2562,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   </div>
                 )}
               </div>
-              {selectedClue.hint && (
-                <p className="text-xs text-amber-300/80 mt-1.5 flex items-center gap-1.5 bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
-                  <HelpCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                  <span>{t('player.hint')} {selectedClue.hint}</span>
-                </p>
-              )}
+
             </div>
 
-            {/* Clue Tracking Quick Action Button inside Modal */}
-            {!completedClueIds.has(selectedClue.id) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setTrackedClueId((prev) => {
-                    const next = prev === selectedClue.id ? null : selectedClue.id;
-                    if (next) setIsRadarDismissed(false);
-                    return next;
-                  });
-                }}
-                className={`w-full mb-4 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  trackedClueId === selectedClue.id
-                    ? 'bg-amber-500 text-slate-950 shadow-md ring-1 ring-amber-400 font-black'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
-                }`}
-              >
-                <Crosshair className="w-4 h-4 text-amber-400" />
-                <span>
-                  {trackedClueId === selectedClue.id
-                    ? `${t('player.trackingBadge')} (${t('player.stopTrackingBtn')})`
-                    : t('player.trackClueBtn')}
-                </span>
-              </button>
-            )}
+
 
             {/* Captured Selfie Preview or Shutter Trigger */}
             <div className="mb-5">

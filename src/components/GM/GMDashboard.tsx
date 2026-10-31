@@ -26,6 +26,7 @@ import { HuntMap } from '../Map/HuntMap.tsx';
 import { RallyMapPicker } from './RallyMapPicker.tsx';
 import { gameService } from '../../services/gameService.ts';
 import { compressPhoto, extractExifGps } from '../../services/imageCompression.ts';
+import { calculateHaversineDistance } from '../../utils/haversine.ts';
 import {
   Radio,
   CheckCircle,
@@ -722,19 +723,51 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     if (!files || files.length === 0) return;
 
     setIsUploadingClues(true);
-    setUploadFeedback(`Processing ${files.length} clue photos...`);
+    setUploadFeedback(language === 'zh' ? `正在处理 ${files.length} 张地标照片...` : `Processing ${files.length} clue photos...`);
 
     let addedCount = 0;
     try {
+      // 1. Try to obtain real-time device GPS coordinates upfront (for when mobile camera strips EXIF)
+      let deviceGps: GeoCoordinate | null = null;
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        deviceGps = await new Promise<GeoCoordinate | null>((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+            () => resolve(null),
+            { enableHighAccuracy: true, timeout: 6000, maximumAge: 30000 }
+          );
+        });
+      }
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const compressed = await compressPhoto(file);
-        const gps = await extractExifGps(file);
+        let gps = await extractExifGps(file);
 
-        const location = gps || {
-          latitude: 2.1944 + (Math.random() - 0.5) * 0.005,
-          longitude: 102.2491 + (Math.random() - 0.5) * 0.005,
+        // If photo taken directly by camera in browser (where browser strips EXIF),
+        // fallback to the GM device's live GPS coordinates!
+        if (!gps && deviceGps) {
+          gps = deviceGps;
+        }
+
+        const defaultZone = game.zones[0];
+        const location: GeoCoordinate = gps || defaultZone?.center || {
+          latitude: 2.1944,
+          longitude: 102.2491,
         };
+
+        // Automatically assign closest zone based on coordinates
+        let assignedZoneId = defaultZone?.id || 'dutch-square';
+        if (gps && game.zones.length > 0) {
+          let closestDist = Infinity;
+          for (const z of game.zones) {
+            const d = calculateHaversineDistance(location, z.center);
+            if (d < closestDist) {
+              closestDist = d;
+              assignedZoneId = z.id;
+            }
+          }
+        }
 
         const title = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
 
@@ -742,15 +775,19 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           gameId: game.id,
           title,
           landmarkName: '马六甲历史地标',
-          zoneId: game.zones[0]?.id || 'dutch-square',
+          zoneId: assignedZoneId,
           points: 50,
           targetPhotoBase64: compressed.base64,
           location,
-          hint: '仔细观察店屋外观与建筑细节。',
+          hint: '',
         });
         addedCount++;
       }
-      setUploadFeedback(`✓ Successfully added ${addedCount} clue photos with GPS pins!`);
+      setUploadFeedback(
+        language === 'zh'
+          ? `✓ 成功导入 ${addedCount} 张地标线索，已自动绑定 GPS 与区域！`
+          : `✓ Successfully added ${addedCount} clue photos with GPS pins!`
+      );
       setTimeout(() => setUploadFeedback(null), 5000);
     } catch (err: any) {
       await showAlert({
@@ -760,6 +797,34 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       });
     } finally {
       setIsUploadingClues(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleDeleteClue = async (clue: Clue) => {
+    const clueNum = getClueNumber(clue.id);
+    const confirmed = window.confirm(
+      language === 'zh'
+        ? `确定要删除线索 ${clueNum} 吗？此操作将永久移除该线索。`
+        : `Are you sure you want to delete clue ${clueNum}? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      if (gameService.deleteClue) {
+        await gameService.deleteClue(game.id, clue.id);
+      }
+      await showAlert({
+        title: language === 'zh' ? '删除成功' : 'Clue Deleted',
+        message: language === 'zh' ? `线索 ${clueNum} 已成功删除。` : `Clue ${clueNum} deleted successfully.`,
+        variant: 'success',
+      });
+    } catch (err: any) {
+      await showAlert({
+        title: 'Delete Failed',
+        message: err.message || 'Failed to delete clue.',
+        variant: 'danger',
+      });
     }
   };
 
@@ -1616,9 +1681,18 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                         <span className="truncate">
                           📍 {clue.location.latitude.toFixed(4)}, {clue.location.longitude.toFixed(4)}
                         </span>
-                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0">
-                          15m
-                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClue(clue);
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-[10px] font-bold cursor-pointer transition-colors flex items-center gap-1 shrink-0"
+                          title={language === 'zh' ? '删除此线索' : 'Delete this clue'}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>{t('gm.deleteClueBtn')}</span>
+                        </button>
                       </div>
                     </div>
                   </div>

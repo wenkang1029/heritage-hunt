@@ -857,13 +857,29 @@ class UnifiedGameService implements IGameService {
     }
 
     const cluesCol = collection(firestore, 'games', gameId, 'clues');
-    const newClueRef = doc(cluesCol);
+    let maxNum = 0;
+    try {
+      const existingSnap = await getDocs(cluesCol);
+      for (const d of existingSnap.docs) {
+        const m = d.id.match(/\d+/);
+        if (m) {
+          const n = parseInt(m[0], 10);
+          if (n > maxNum && n < 9000) maxNum = n;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    const nextNum = maxNum + 1;
+    const clueId = 'clue-' + String(nextNum).padStart(3, '0');
+    const newClueRef = doc(cluesCol, clueId);
     const clueData = {
       ...clue,
+      id: clueId,
       createdAt: Date.now(),
     };
     await setDoc(newClueRef, sanitizeFirestorePayload(clueData));
-    return { ...clueData, id: newClueRef.id };
+    return { ...clueData, id: clueId };
   }
 
   async deleteClue(gameId: string, clueId: string): Promise<void> {

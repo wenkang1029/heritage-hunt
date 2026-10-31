@@ -51,12 +51,15 @@ import { createRallyFlagIcon } from './mapIcons.ts';
 
 function createClueIcon(
   isCompleted: boolean,
-  isTracked: boolean = false
+  isTracked: boolean = false,
+  isPending: boolean = false
 ): L.DivIcon {
-  const bgColor = isCompleted ? '#10B981' : isTracked ? '#F59E0B' : '#F59E0B';
-  const borderColor = isCompleted ? '#059669' : isTracked ? '#FBBF24' : '#D97706';
+  const bgColor = isCompleted ? '#10B981' : isPending ? '#D97706' : '#F59E0B';
+  const borderColor = isCompleted ? '#059669' : isPending ? '#B45309' : '#D97706';
   const iconSvg = isCompleted
     ? `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>`
+    : isPending
+    ? `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="9" stroke-width="2" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3" /></svg>`
     : isTracked
     ? `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 2v4m0 12v4m10-10h-4M6 12H2m14 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>`
     : `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
@@ -275,6 +278,7 @@ export interface HuntMapProps {
   currentTeamId?: string;
   playerCoords?: GeoCoordinate | null;
   completedClueIds?: string[];
+  pendingClueIds?: string[];
   onSelectClue?: (clue: Clue) => void;
   onTrackClue?: (clue: Clue) => void;
   className?: string;
@@ -307,6 +311,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   currentTeamId,
   playerCoords,
   completedClueIds = [],
+  pendingClueIds = [],
   onSelectClue,
   onTrackClue,
   className = 'h-full w-full',
@@ -330,6 +335,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   const [targetRecenter, setTargetRecenter] = React.useState<GeoCoordinate | null>(null);
 
   const completedSet = useMemo(() => new Set(completedClueIds), [completedClueIds]);
+  const pendingSet = useMemo(() => new Set(pendingClueIds), [pendingClueIds]);
 
   // Direction ray calculation from player towards tracked clue (when not yet in 20m range)
   const trackedRay = useMemo(() => {
@@ -371,8 +377,8 @@ export const HuntMap: React.FC<HuntMapProps> = ({
   const { t, language } = useLanguage();
 
   const uncompletedClues = useMemo(() => {
-    return clues.filter((c) => !completedSet.has(c.id) && c.location);
-  }, [clues, completedSet]);
+    return clues.filter((c) => !completedSet.has(c.id) && !pendingSet.has(c.id) && c.location);
+  }, [clues, completedSet, pendingSet]);
 
   const completedClues = useMemo(() => {
     return clues.filter((c) => completedSet.has(c.id) && c.location);
@@ -541,6 +547,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
           clues.map((clue) => {
             if (!clue.location) return null;
             const isDone = completedSet.has(clue.id);
+            const isPending = pendingSet.has(clue.id);
             const isTracked = trackedClue?.id === clue.id;
             const clueZone = zones.find((z) => z.id === clue.zoneId);
             const clueNum = getClueNumber(clue.id);
@@ -549,9 +556,9 @@ export const HuntMap: React.FC<HuntMapProps> = ({
               <Marker
                 key={clue.id}
                 position={[clue.location.latitude, clue.location.longitude]}
-                icon={createClueIcon(isDone, isTracked)}
+                icon={createClueIcon(isDone, isTracked, isPending)}
                 interactive={!isPlottingZone}
-                zIndexOffset={isTracked ? 1000 : isDone ? 100 : 200}
+                zIndexOffset={isTracked ? 1000 : isDone ? 100 : isPending ? 150 : 200}
               >
                 {!isPlottingZone && (
                   <Popup>
@@ -596,6 +603,10 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                       {isDone ? (
                         <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-950/60 py-1.5 rounded-lg border border-emerald-600/40 mt-2">
                           ✓ {language === 'zh' ? '已完成！' : 'Completed!'}
+                        </div>
+                      ) : isPending ? (
+                        <div className="text-center text-xs font-bold text-amber-400 bg-amber-950/60 py-1.5 rounded-lg border border-amber-600/40 mt-2">
+                          ⏳ {language === 'zh' ? '审核中...' : 'Pending Review...'}
                         </div>
                       ) : (
                         <div className="flex gap-1.5 mt-2">
