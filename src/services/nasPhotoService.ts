@@ -46,7 +46,8 @@ export async function uploadPhotoToNas(
     clueId: string;
     eventId?: number;
     eventCode?: string;
-  }
+  },
+  timeoutMs: number = 25000
 ): Promise<NasUploadResult> {
   const formData = new FormData();
   formData.append('file', file);
@@ -56,23 +57,36 @@ export async function uploadPhotoToNas(
   if (metadata.eventId) formData.append('eventId', String(metadata.eventId));
   if (metadata.eventCode) formData.append('eventCode', metadata.eventCode);
 
-  const response = await fetch('/api/upload-photo', {
-    method: 'POST',
-    body: formData,
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!response.ok) {
-    let errorMsg = `Upload failed with HTTP ${response.status}`;
-    try {
-      const errJson = await response.json();
-      if (errJson.error) errorMsg = errJson.error;
-    } catch {
-      // ignore
+  try {
+    const response = await fetch('/api/upload-photo', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      let errorMsg = `Upload failed with HTTP ${response.status}`;
+      try {
+        const errJson = await response.json();
+        if (errJson.error) errorMsg = errJson.error;
+      } catch {
+        // ignore
+      }
+      throw new Error(errorMsg);
     }
-    throw new Error(errorMsg);
-  }
 
-  return await response.json();
+    return await response.json();
+  } catch (err: any) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') {
+      throw new Error(`NAS upload timed out after ${Math.round(timeoutMs / 1000)} seconds.`);
+    }
+    throw err;
+  }
 }
 
 /**

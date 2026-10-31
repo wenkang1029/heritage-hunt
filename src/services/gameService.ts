@@ -245,6 +245,7 @@ export interface IGameService {
   joinTeamByPin(gameId: string, pin: string, nickname: string): Promise<{ team: Team; playerId: string }>;
   updateTeamGps(gameId: string, teamId: string, coords: GeoCoordinate): Promise<void>;
   submitCluePhoto(gameId: string, submission: Omit<Submission, 'id' | 'status' | 'submittedAt'>): Promise<Submission>;
+  updateSubmissionNasPhoto?(gameId: string, submissionId: string, photoUrl: string, fileId?: number): Promise<void>;
   verifySubmission(
     gameId: string,
     submissionId: string,
@@ -693,6 +694,23 @@ class UnifiedGameService implements IGameService {
 
     await setDoc(newSubRef, sanitizeFirestorePayload(subData));
     return { ...subData, id: newSubRef.id };
+  }
+
+  async updateSubmissionNasPhoto(
+    gameId: string,
+    submissionId: string,
+    photoUrl: string,
+    fileId?: number
+  ): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return mockAdapter.updateSubmissionNasPhoto(gameId, submissionId, photoUrl, fileId);
+    }
+    await ensureAnonymousAuth();
+    const subRef = doc(firestore, 'games', gameId, 'submissions', submissionId);
+    const updates: Record<string, any> = { photoUrl };
+    if (fileId !== undefined) updates.fileId = fileId;
+    await updateDoc(subRef, updates);
   }
 
   async verifySubmission(

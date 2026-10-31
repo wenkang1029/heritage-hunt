@@ -473,6 +473,20 @@ export class MockAdapterService {
     return newSubmission;
   }
 
+  async updateSubmissionNasPhoto(
+    _gameId: string,
+    submissionId: string,
+    photoUrl: string,
+    fileId?: number
+  ): Promise<void> {
+    const sub = this.state.submissions[submissionId];
+    if (sub) {
+      sub.photoUrl = photoUrl;
+      if (fileId !== undefined) sub.fileId = fileId;
+      this.broadcastMutation();
+    }
+  }
+
   async verifySubmission(
     _gameId: string,
     submissionId: string,
