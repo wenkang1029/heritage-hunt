@@ -74,6 +74,20 @@ export interface GMDashboardProps {
   onLogout?: () => void;
 }
 
+function isPointInPolygon(point: GeoCoordinate, polygon: GeoCoordinate[]): boolean {
+  if (!polygon || polygon.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].latitude, yi = polygon[i].longitude;
+    const xj = polygon[j].latitude, yj = polygon[j].longitude;
+    const intersect =
+      yi > point.longitude !== yj > point.longitude &&
+      point.latitude < ((xj - xi) * (point.longitude - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
 export const GMDashboard: React.FC<GMDashboardProps> = ({
   game,
   teams,
@@ -750,23 +764,32 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           gps = deviceGps;
         }
 
-        const defaultZone = game.zones[0];
-        const location: GeoCoordinate = gps || defaultZone?.center || {
-          latitude: 2.1944,
-          longitude: 102.2491,
-        };
+        // Preserve authentic location; do not simply force inside a zone area
+        let location: GeoCoordinate;
+        let assignedZoneId = 'outside-zone';
 
-        // Automatically assign closest zone based on coordinates
-        let assignedZoneId = defaultZone?.id || 'dutch-square';
-        if (gps && game.zones.length > 0) {
-          let closestDist = Infinity;
-          for (const z of game.zones) {
-            const d = calculateHaversineDistance(location, z.center);
-            if (d < closestDist) {
-              closestDist = d;
-              assignedZoneId = z.id;
+        if (gps) {
+          location = gps;
+          // Check if coordinate is actually inside any defined zone polygon or active radius (<=120m)
+          if (game.zones && game.zones.length > 0) {
+            for (const z of game.zones) {
+              if (z.polygon && z.polygon.length >= 3 && isPointInPolygon(location, z.polygon)) {
+                assignedZoneId = z.id;
+                break;
+              }
+              if (z.center && calculateHaversineDistance(location, z.center) <= 120) {
+                assignedZoneId = z.id;
+                break;
+              }
             }
           }
+        } else {
+          // If no GPS is available, default to Melaka Map Center as an unassigned/outside-zone clue
+          location = {
+            latitude: 2.1944,
+            longitude: 102.2491,
+          };
+          assignedZoneId = 'outside-zone';
         }
 
         const title = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
@@ -791,8 +814,8 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       setTimeout(() => setUploadFeedback(null), 5000);
     } catch (err: any) {
       await showAlert({
-        title: 'Bulk Upload Failed',
-        message: 'Bulk upload error: ' + err.message,
+        title: language === 'zh' ? '批量导入失败' : 'Bulk Upload Failed',
+        message: (language === 'zh' ? '批量导入错误：' : 'Bulk upload error: ') + (err.message || ''),
         variant: 'danger',
       });
     } finally {
@@ -1614,7 +1637,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                           setLightboxImage({
                             url: clue.targetPhotoBase64,
                             title: clueTitle,
-                            subtitle: clueZone?.name || clue.zoneId,
+                            subtitle: clueZone?.name || (clue.zoneId === 'outside-zone' ? (language === 'zh' ? '未分区' : 'Outside Zone') : clue.zoneId),
                             badge: t('common.targetLandmarkBadge'),
                           });
                         }
@@ -1666,7 +1689,7 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                               className="w-2 h-2 rounded-full shrink-0"
                               style={{ backgroundColor: clueZone?.color || '#94a3b8' }}
                             />
-                            <span className="truncate max-w-[100px]">{clueZone?.name || clue.zoneId}</span>
+                            <span className="truncate max-w-[100px]">{clueZone?.name || (clue.zoneId === 'outside-zone' ? (language === 'zh' ? '未分区' : 'Outside Zone') : clue.zoneId)}</span>
                           </span>
                         </div>
 

@@ -7,10 +7,10 @@ import { LanguageProvider } from './context/LanguageContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <DialogProvider>
-      <LanguageProvider>
+    <LanguageProvider>
+      <DialogProvider>
         <App />
-      </LanguageProvider>
-    </DialogProvider>
+      </DialogProvider>
+    </LanguageProvider>
   </StrictMode>,
 )

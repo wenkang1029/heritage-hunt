@@ -15,6 +15,7 @@ import {
   X,
   Trash2,
 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext.tsx';
 
 export type ActionModalVariant = 'danger' | 'warning' | 'info' | 'success';
 
@@ -37,12 +38,15 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   title,
   message,
   variant = 'info',
-  confirmText = 'OK',
+  confirmText,
   cancelText,
   onConfirm,
   onCancel,
   isLoading = false,
 }) => {
+  const { language } = useLanguage();
+  const isZh = language === 'zh';
+
   // Dismiss on Escape key
   useEffect(() => {
     if (!isOpen) return;
@@ -59,28 +63,31 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   if (!isOpen) return null;
 
   const isConfirmMode = Boolean(cancelText);
+  const resolvedConfirmText = confirmText || (isZh ? '知道了' : 'OK');
 
   // Variant Styling & Icons
   let iconNode: React.ReactNode = <Info className="w-6 h-6" />;
   let iconWrapperClass = 'bg-sky-500/15 text-sky-400 border-sky-500/30';
-  let defaultTitle = 'Information';
+  let defaultTitle = isZh ? '系统提示' : 'Information';
   let confirmBtnClass =
     'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50';
 
   if (variant === 'danger') {
     iconNode = isConfirmMode ? <Trash2 className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />;
     iconWrapperClass = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
-    defaultTitle = isConfirmMode ? 'Confirm Action' : 'Action Failed';
+    defaultTitle = isConfirmMode
+      ? (isZh ? '请确认操作' : 'Confirm Action')
+      : (isZh ? '操作失败' : 'Action Failed');
     confirmBtnClass = 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50';
   } else if (variant === 'warning') {
     iconNode = <AlertTriangle className="w-6 h-6" />;
     iconWrapperClass = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-    defaultTitle = 'Warning';
+    defaultTitle = isZh ? '重要提醒' : 'Warning';
     confirmBtnClass = 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-amber-950/50';
   } else if (variant === 'success') {
     iconNode = <CheckCircle2 className="w-6 h-6" />;
     iconWrapperClass = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
-    defaultTitle = 'Success';
+    defaultTitle = isZh ? '操作成功' : 'Success';
     confirmBtnClass = 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/50';
   }
 
@@ -122,7 +129,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           onClick={handleCancelClick}
           disabled={isLoading}
           className="absolute top-4 right-4 p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
-          title="Close dialog"
+          title={isZh ? '关闭对话框' : 'Close dialog'}
         >
           <X className="w-4 h-4" />
         </button>
@@ -140,7 +147,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             </h3>
             {variant === 'danger' && isConfirmMode && (
               <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider block mt-0.5">
-                Careful: Irreversible Action
+                {isZh ? '注意：此操作不可撤销' : 'Careful: Irreversible Action'}
               </span>
             )}
           </div>
@@ -170,7 +177,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             disabled={isLoading}
             className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg transition-all cursor-pointer disabled:opacity-50 text-center ${confirmBtnClass}`}
           >
-            {isLoading ? 'Processing...' : confirmText}
+            {isLoading ? (isZh ? '处理中...' : 'Processing...') : resolvedConfirmText}
           </button>
         </div>
       </div>

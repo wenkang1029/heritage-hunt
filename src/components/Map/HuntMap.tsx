@@ -54,8 +54,8 @@ function createClueIcon(
   isTracked: boolean = false,
   isPending: boolean = false
 ): L.DivIcon {
-  const bgColor = isCompleted ? '#10B981' : isPending ? '#D97706' : '#F59E0B';
-  const borderColor = isCompleted ? '#059669' : isPending ? '#B45309' : '#D97706';
+  const bgColor = isCompleted ? '#10B981' : isPending ? '#0EA5E9' : '#F59E0B';
+  const borderColor = isCompleted ? '#059669' : isPending ? '#38BDF8' : '#D97706';
   const iconSvg = isCompleted
     ? `<svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>`
     : isPending
@@ -66,6 +66,8 @@ function createClueIcon(
 
   const pulseStyle = isTracked
     ? `box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.45), 0 0 16px rgba(245, 158, 11, 0.9); transform: scale(1.15); z-index: 1000;`
+    : isPending
+    ? `box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.5), 0 3px 10px rgba(14, 165, 233, 0.5);`
     : `box-shadow: 0 3px 8px rgba(0,0,0,0.35);`;
 
   return L.divIcon({
@@ -605,7 +607,7 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                           ✓ {language === 'zh' ? '已完成！' : 'Completed!'}
                         </div>
                       ) : isPending ? (
-                        <div className="text-center text-xs font-bold text-amber-400 bg-amber-950/60 py-1.5 rounded-lg border border-amber-600/40 mt-2">
+                        <div className="text-center text-xs font-bold text-sky-300 bg-sky-950/70 py-1.5 rounded-lg border border-sky-500/40 mt-2">
                           ⏳ {language === 'zh' ? '审核中...' : 'Pending Review...'}
                         </div>
                       ) : (
@@ -895,9 +897,9 @@ export const HuntMap: React.FC<HuntMapProps> = ({
                       />
                       {team.name}
                     </div>
-                    <div className="text-slate-300 mt-1">Score: <strong className="text-amber-400">{team.score} pts</strong></div>
+                    <div className="text-slate-300 mt-1">{language === 'zh' ? '当前得分：' : 'Score: '}<strong className="text-amber-400">{team.score} {language === 'zh' ? '分' : 'pts'}</strong></div>
                     <div className="text-slate-400 text-[10px]">
-                      Clues Found: {team.completedClueIds?.length || 0}
+                      {language === 'zh' ? '已完成线索：' : 'Clues Found: '}{team.completedClueIds?.length || 0}
                     </div>
                   </div>
                 </Popup>

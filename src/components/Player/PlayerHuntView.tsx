@@ -767,8 +767,13 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
   const activeZone = useMemo(() => {
     if (selectedZoneFilter === 'all') return null;
-    return game.zones.find((z) => z.id === selectedZoneFilter) || null;
-  }, [selectedZoneFilter, game.zones]);
+    return (
+      game.zones.find((z) => z.id === selectedZoneFilter) ||
+      (selectedZoneFilter === 'outside-zone'
+        ? ({ id: 'outside-zone', name: language === 'zh' ? '未分区' : 'Outside Zone', color: '#F59E0B' } as any)
+        : null)
+    );
+  }, [selectedZoneFilter, game.zones, language]);
 
   // Filtered and Sorted clues for the Clues Tab
   const filteredClues = useMemo(() => {
@@ -960,6 +965,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         title: language === 'zh' ? '已完成打卡' : 'Already Completed',
         message: language === 'zh' ? '该线索已打卡完成，无需重复提交！' : 'This clue has already been completed and scored!',
         variant: 'info',
+        confirmText: language === 'zh' ? '知道了' : 'OK',
       });
       return;
     }
@@ -968,6 +974,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
         title: language === 'zh' ? '正在审核中' : 'Under Review',
         message: language === 'zh' ? '该线索已提交并正在等待裁判审核，请勿重复打卡！' : 'This clue has been submitted and is awaiting GM review!',
         variant: 'info',
+        confirmText: language === 'zh' ? '知道了' : 'OK',
       });
       return;
     }
@@ -996,9 +1003,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       setCompressionStats(`Original: ${originalSize} ➔ 4K Ultra-HD NAS Ready (${compressedSize} preview)`);
     } catch (err: any) {
       await showAlert({
-        title: 'Compression Error',
-        message: 'Photo compression error: ' + (err.message || 'Unknown error'),
+        title: language === 'zh' ? '照片压缩失败' : 'Compression Error',
+        message: (language === 'zh' ? '照片压缩错误：' : 'Photo compression error: ') + (err.message || (language === 'zh' ? '未知错误' : 'Unknown error')),
         variant: 'danger',
+        confirmText: language === 'zh' ? '知道了' : 'OK',
       });
     } finally {
       setIsCompressing(false);
@@ -1084,9 +1092,10 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
       }
     } catch (err: any) {
       await showAlert({
-        title: 'Submission Failed',
-        message: 'Submission failed: ' + (err.message || 'Please try again.'),
+        title: language === 'zh' ? '打卡提交失败' : 'Submission Failed',
+        message: (language === 'zh' ? '打卡提交失败：' : 'Submission failed: ') + (err.message || (language === 'zh' ? '请稍后重试。' : 'Please try again.')),
         variant: 'danger',
+        confirmText: language === 'zh' ? '知道了' : 'OK',
       });
       setIsSubmitting(false);
     }
@@ -1300,7 +1309,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   {game.activeBroadcast.type}
                 </span>
                 <span className="text-[10px] text-slate-300 font-bold truncate">
-                  {game.activeBroadcast.sender || 'Game Master'}
+                  {game.activeBroadcast.sender || (language === 'zh' ? '裁判组' : 'Game Master')}
                 </span>
               </div>
               <p className="text-white font-semibold text-xs truncate mt-0.5">
@@ -1590,6 +1599,22 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   </button>
                 );
               })}
+              {zoneStatsMap['outside-zone'] && zoneStatsMap['outside-zone'].total > 0 && (
+                <button
+                  onClick={() => setSelectedZoneFilter('outside-zone')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                    selectedZoneFilter === 'outside-zone'
+                      ? 'bg-amber-600 text-white shadow-lg ring-2 ring-white/30'
+                      : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                  <span>{language === 'zh' ? '未分区' : 'Outside Zone'}</span>
+                  <span className="text-[10px] opacity-80 font-mono">
+                    ({zoneStatsMap['outside-zone'].completed}/{zoneStatsMap['outside-zone'].total})
+                  </span>
+                </button>
+              )}
             </div>
 
             {/* 🔥 High-Impact Active Filter Focus Hero Banner */}
@@ -1740,6 +1765,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                   const submittedPhoto = latestSub?.photoUrl || latestSub?.selfieBase64;
                   const isRejected = !isDone && !isPending && latestSub?.status === 'rejected';
                   const clueZone = game.zones.find((z) => z.id === clue.zoneId);
+                  const zoneDisplayName = clueZone?.name || (clue.zoneId === 'outside-zone' ? (language === 'zh' ? '未分区' : 'Outside Zone') : clue.zoneId);
                   const dist = playerCoords && clue.location ? calculateHaversineDistance(playerCoords, clue.location) : null;
                   const clueLabel = getClueLabel(clue.id, language);
 
@@ -1752,7 +1778,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           setLightboxImage({
                             url: submittedPhoto,
                             title: `${currentTeam.name} - ${clueLabel} (${isDone ? '已核准合照' : '审核中合照'})`,
-                            subtitle: clueZone?.name || clue.zoneId,
+                            subtitle: zoneDisplayName,
                             badge: isDone ? '已核准合照' : '审核中合照',
                           });
                         } else if (isDone || isPending) {
@@ -1760,7 +1786,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             setLightboxImage({
                               url: clue.targetPhotoBase64,
                               title: clueLabel,
-                              subtitle: clueZone?.name || clue.zoneId,
+                              subtitle: zoneDisplayName,
                               badge: isDone ? '已完成' : '审核中',
                             });
                           }
@@ -1795,7 +1821,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                             setLightboxImage({
                               url: clue.targetPhotoBase64,
                               title: clueLabel,
-                              subtitle: clueZone?.name || clue.zoneId,
+                              subtitle: zoneDisplayName,
                               badge: t('common.targetLandmarkBadge'),
                             });
                           }
@@ -1807,7 +1833,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                           <>
                             <img
                               src={submittedPhoto}
-                              alt="Team Submission"
+                              alt={language === 'zh' ? '队伍打卡照片' : 'Team Submission'}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -1856,7 +1882,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                               className="w-2 h-2 rounded-full shrink-0"
                               style={{ background: clueZone?.color || '#94a3b8' }}
                             />
-                            <span className="truncate">{clueZone?.name || clue.zoneId}</span>
+                            <span className="truncate">{zoneDisplayName}</span>
                           </span>
                           <span className="text-xs font-black text-amber-400 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 shrink-0">
                             +50 分
@@ -2121,7 +2147,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                                 : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border-slate-700'
                             }`}
-                            title={isExpanded ? 'Hide members' : 'View members'}
+                            title={isExpanded ? (language === 'zh' ? '收起队员' : 'Hide members') : (language === 'zh' ? '查看队员' : 'View members')}
                           >
                             <Users className="w-3 h-3 text-amber-400" />
                             <span className="font-mono">{memberCount}</span>
@@ -2567,26 +2593,24 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
 
 
 
-            {/* Captured Selfie Preview or Shutter Trigger */}
-            <div className="mb-5">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  {t('player.modalSelfieLabel')}
-                </label>
-                {capturedPreview && (
-                  <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+            {/* Captured Selfie Preview (Shown only after snapping photo) */}
+            {capturedPreview && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{t('player.modalReadySubmit')}</span>
+                  </span>
+                  <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-1 cursor-pointer">
                     <Maximize2 className="w-3 h-3" />
                     <span>{t('player.modalTapUncropped')}</span>
                   </span>
-                )}
-              </div>
-
-              {capturedPreview ? (
+                </div>
                 <div
                   onClick={() => {
                     setLightboxImage({
                       url: capturedPreview,
-                      title: 'Your Team Submission Selfie',
+                      title: language === 'zh' ? '小队打卡照片' : 'Your Team Submission Selfie',
                       subtitle: getClueLabel(selectedClue.id, language),
                       badge: t('common.capturedSelfieBadge'),
                     });
@@ -2596,35 +2620,22 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                 >
                   <img
                     src={capturedPreview}
-                    alt="Captured selfie"
+                    alt={language === 'zh' ? '打卡照片预览' : 'Captured selfie'}
                     className="w-full h-full object-contain p-1 group-hover:scale-[1.02] transition-transform"
                   />
                   <div className="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-sm p-1.5 rounded-lg border border-slate-700 text-emerald-300 shadow">
                     <Maximize2 className="w-4 h-4" />
                   </div>
-                  <div className="absolute bottom-2 left-2 right-2 bg-slate-950/80 backdrop-blur-md p-2 rounded-lg text-center">
-                    <span className="text-[11px] font-mono text-emerald-400 block font-bold">
-                      {t('player.modalReadySubmit')}
-                    </span>
-                    {compressionStats && (
-                      <span className="text-[10px] text-slate-300 block">
+                  {compressionStats && (
+                    <div className="absolute bottom-2 left-2 right-2 bg-slate-950/85 backdrop-blur-md p-1.5 rounded-lg text-center">
+                      <span className="text-[10px] font-mono text-slate-300 block">
                         {compressionStats}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="border-2 border-dashed border-slate-700 rounded-xl p-5 sm:p-6 text-center hover:border-rose-500 transition-colors">
-                  <Camera className="w-10 h-10 text-rose-500 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-slate-200">
-                    {t('player.modalCapturePrompt')}
-                  </p>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    {t('player.modalDirectCamera')}
-                  </p>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Hidden Native Camera File Input */}
             <input
@@ -2636,17 +2647,17 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               className="hidden"
             />
 
-            {/* Action Buttons */}
+            {/* Action Buttons: Minimalist Shutter Trigger */}
             <div className="space-y-2">
               {!capturedPreview ? (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isCompressing}
-                  className="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  className="w-full bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
                 >
                   <Camera className="w-5 h-5" />
-                  <span>{isCompressing ? 'Compressing Photo...' : t('player.modalOpenCamBtn')}</span>
+                  <span>{isCompressing ? (language === 'zh' ? '正在处理照片...' : 'Compressing Photo...') : t('player.modalOpenCamBtn')}</span>
                 </button>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
@@ -2735,7 +2746,7 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
                       {game.activeBroadcast.type}
                     </span>
                     <span className="text-[10px] text-slate-400">
-                      {game.activeBroadcast.sender || 'Game Master'}
+                      {game.activeBroadcast.sender || (language === 'zh' ? '裁判组' : 'Game Master')}
                     </span>
                   </div>
                   {game.activeBroadcast.message}

@@ -8,6 +8,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import { ActionModal, type ActionModalVariant } from '../components/Common/ActionModal.tsx';
+import { useLanguage } from './LanguageContext.tsx';
 
 export interface DialogAlertOptions {
   title?: string;
@@ -43,32 +44,41 @@ interface ActiveDialogState {
 
 export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeDialog, setActiveDialog] = useState<ActiveDialogState | null>(null);
+  const { language } = useLanguage();
+
+  const isZh = language === 'zh';
 
   const showAlert = useCallback((options: string | DialogAlertOptions): Promise<void> => {
     return new Promise((resolve) => {
-      let title = 'Notice';
+      let title = isZh ? '系统提示' : 'Notice';
       let message: string | React.ReactNode = '';
       let variant: ActionModalVariant = 'info';
-      let confirmText = 'OK';
+      let confirmText = isZh ? '知道了' : 'OK';
 
       if (typeof options === 'string') {
         message = options;
         const lower = options.toLowerCase();
-        if (lower.includes('error') || lower.includes('fail')) {
+        if (lower.includes('error') || lower.includes('fail') || lower.includes('失败') || lower.includes('错误')) {
           variant = 'danger';
-          title = 'Action Failed';
-        } else if (lower.includes('success') || lower.includes('created') || lower.includes('approved')) {
+          title = isZh ? '操作失败' : 'Action Failed';
+        } else if (lower.includes('success') || lower.includes('created') || lower.includes('approved') || lower.includes('成功')) {
           variant = 'success';
-          title = 'Success';
-        } else if (lower.includes('warning') || lower.includes('must') || lower.includes('cannot') || lower.includes('please')) {
+          title = isZh ? '操作成功' : 'Success';
+        } else if (lower.includes('warning') || lower.includes('must') || lower.includes('cannot') || lower.includes('please') || lower.includes('警告') || lower.includes('请')) {
           variant = 'warning';
-          title = 'Notice';
+          title = isZh ? '特别提醒' : 'Notice';
         }
       } else {
         message = options.message;
-        title = options.title || (options.variant === 'danger' ? 'Error' : options.variant === 'success' ? 'Success' : 'Notice');
+        title = options.title || (
+          options.variant === 'danger'
+            ? (isZh ? '操作失败' : 'Error')
+            : options.variant === 'success'
+            ? (isZh ? '操作成功' : 'Success')
+            : (isZh ? '系统提示' : 'Notice')
+        );
         variant = options.variant || 'info';
-        confirmText = options.confirmText || 'OK';
+        confirmText = options.confirmText || (isZh ? '知道了' : 'OK');
       }
 
       setActiveDialog({
@@ -81,21 +91,21 @@ export const DialogProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         resolve: () => resolve(),
       });
     });
-  }, []);
+  }, [isZh]);
 
   const showConfirm = useCallback((options: DialogConfirmOptions): Promise<boolean> => {
     return new Promise((resolve) => {
       setActiveDialog({
         isOpen: true,
-        title: options.title || 'Please Confirm',
+        title: options.title || (isZh ? '请确认操作' : 'Please Confirm'),
         message: options.message,
         variant: options.variant || 'warning',
-        confirmText: options.confirmText || 'Confirm',
-        cancelText: options.cancelText || 'Cancel',
+        confirmText: options.confirmText || (isZh ? '确定' : 'Confirm'),
+        cancelText: options.cancelText || (isZh ? '取消' : 'Cancel'),
         resolve: (confirmed: boolean) => resolve(confirmed),
       });
     });
-  }, []);
+  }, [isZh]);
 
   // Intercept window.alert as a global fallback so native browser popups never show
   useEffect(() => {
