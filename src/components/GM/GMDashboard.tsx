@@ -296,6 +296,37 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     }
   };
 
+  const handleDeleteGame = async (targetGameId: string, targetGameName: string) => {
+    const confirmed = await showConfirm({
+      title: language === 'zh' ? '删除比赛房间？' : 'Delete Game Room?',
+      message:
+        language === 'zh'
+          ? `确定要永久删除房间 "${targetGameName}" (${targetGameId}) 吗？此操作无法撤销。`
+          : `Are you sure you want to permanently delete "${targetGameName}" (${targetGameId})? This cannot be undone.`,
+      confirmText: language === 'zh' ? '删除' : 'Delete',
+      cancelText: language === 'zh' ? '取消' : 'Cancel',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
+    try {
+      if (gameService.deleteGame) {
+        await gameService.deleteGame(targetGameId);
+      }
+      await showAlert({
+        title: language === 'zh' ? '比赛房间已删除' : 'Game Deleted',
+        message: `Game "${targetGameName}" (${targetGameId}) removed successfully.`,
+        variant: 'success',
+      });
+    } catch (err: any) {
+      await showAlert({
+        title: 'Error Deleting Game',
+        message: err?.message || 'Failed to delete game',
+        variant: 'danger',
+      });
+    }
+  };
+
   const handleSendBroadcast = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!broadcastText.trim()) return;
@@ -2333,6 +2364,16 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
                       </div>
 
                       <div className="mt-3 flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
+                        {!isCurrentViewing && availableGames.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteGame(g.id, g.name)}
+                            className="text-xs p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/30 cursor-pointer transition-colors mr-auto"
+                            title={language === 'zh' ? '删除房间' : 'Delete Room'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                         {!isGlobalActive && (
                           <button
                             type="button"

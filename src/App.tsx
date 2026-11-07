@@ -127,10 +127,11 @@ export const App: React.FC = () => {
         localStorage.setItem(LS_ACTIVE_GAME_ID, loadedGame.id);
 
         // Determine view role without losing state on refresh
-        if (urlMode === 'gm' || isGmAuthed) {
+        // Only open GM if ?mode=gm is explicitly requested in URL
+        if (urlMode === 'gm') {
           setRole('gm');
           updateUrlParams({ game: loadedGame.id, mode: 'gm' });
-        } else if (urlGameId || savedPlayerSession || urlPin) {
+        } else if (urlGameId || urlPin || (savedPlayerSession && savedPlayerSession.gameId === loadedGame.id)) {
           setRole('player');
           updateUrlParams({ game: loadedGame.id, pin: urlPin || undefined });
         } else {

@@ -1335,6 +1335,18 @@ class UnifiedGameService implements IGameService {
     );
   }
 
+  async deleteGame(gameId: string): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) return;
+    try {
+      await ensureAnonymousAuth();
+      await deleteDoc(doc(firestore, 'games', gameId));
+    } catch (e) {
+      console.warn('Failed to delete game:', e);
+      throw e;
+    }
+  }
+
   async clearActiveBroadcast(gameId: string): Promise<void> {
     const firestore = this.getFirestoreDb();
     if (!firestore) {
