@@ -20,6 +20,7 @@ import {
   updateDoc,
   deleteDoc,
   runTransaction,
+  writeBatch,
   serverTimestamp,
   increment,
   arrayUnion,
@@ -257,6 +258,11 @@ export interface IGameService {
   updateGameTimer(gameId: string, timeRemainingSeconds: number, status?: GameStatus, rallyPoint?: RallyPoint | null): Promise<void>;
   createClue?(gameId: string, clue: Omit<Clue, 'id' | 'createdAt'>): Promise<Clue>;
   deleteClue?(gameId: string, clueId: string): Promise<void>;
+  getActiveGameId?(): Promise<string | null>;
+  setActiveGameId?(gameId: string): Promise<void>;
+  subscribeToActiveGameId?(callback: (activeGameId: string | null) => void): Unsubscribe;
+  listAllGames?(): Promise<Game[]>;
+  subscribeToGamesList?(callback: (games: Game[]) => void): Unsubscribe;
 }
 
 class UnifiedGameService implements IGameService {
@@ -1066,7 +1072,8 @@ class UnifiedGameService implements IGameService {
       createdAt: Date.now(),
     };
 
-    await setDoc(gameRef, sanitizeFirestorePayload(newGame));
+    const batch = writeBatch(firestore);
+    batch.set(gameRef, sanitizeFirestorePayload(newGame));
 
     const DEFAULT_PALETTES = [
       { name: 'Team Crimson', color: '#DC2626', pin: '1001' },
@@ -1086,7 +1093,7 @@ class UnifiedGameService implements IGameService {
       const palette = DEFAULT_PALETTES[i];
       const teamId = `team_${i + 1}`;
       const teamRef = doc(firestore, 'games', gameId, 'teams', teamId);
-      await setDoc(teamRef, {
+      batch.set(teamRef, {
         id: teamId,
         gameId,
         name: palette.name,
@@ -1111,13 +1118,18 @@ class UnifiedGameService implements IGameService {
         for (const clueDoc of srcCluesSnap.docs) {
           const clueRef = doc(firestore, 'games', gameId, 'clues', clueDoc.id);
           const normalizedData = normalizeClueZh({ id: clueDoc.id, ...clueDoc.data() } as Clue);
-          await setDoc(clueRef, { ...normalizedData, gameId });
+          batch.set(clueRef, { ...normalizedData, gameId });
         }
       }
     } catch (e) {
       console.warn('Could not copy clue bank to new game:', e);
     }
 
+    // Commit game, teams, and clues in ONE single atomic network roundtrip
+    await batch.commit();
+
+    // Automatically set the newly created game as the global active game
+    await this.setActiveGameId(gameId);
     return newGame;
   }
 
@@ -1232,6 +1244,95 @@ class UnifiedGameService implements IGameService {
     });
 
     return broadcastMsg;
+  }
+
+  async getActiveGameId(): Promise<string | null> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) return null;
+    try {
+      await ensureAnonymousAuth();
+      const snap = await getDoc(doc(firestore, 'settings', 'activeGame'));
+      if (snap.exists() && snap.data()?.activeGameId) {
+        return snap.data().activeGameId as string;
+      }
+    } catch (e) {
+      console.warn('Could not read settings/activeGame:', e);
+    }
+    return null;
+  }
+
+  async setActiveGameId(gameId: string): Promise<void> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) return;
+    try {
+      await ensureAnonymousAuth();
+      await setDoc(
+        doc(firestore, 'settings', 'activeGame'),
+        { activeGameId: gameId, updatedAt: Date.now() },
+        { merge: true }
+      );
+    } catch (e) {
+      console.warn('Could not set settings/activeGame:', e);
+    }
+  }
+
+  subscribeToActiveGameId(callback: (activeGameId: string | null) => void): Unsubscribe {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return () => {};
+    }
+    ensureAnonymousAuth().catch(() => {});
+    return onSnapshot(
+      doc(firestore, 'settings', 'activeGame'),
+      (snapshot) => {
+        if (snapshot.exists() && snapshot.data()?.activeGameId) {
+          callback(snapshot.data().activeGameId);
+        } else {
+          callback(null);
+        }
+      },
+      (error) => {
+        console.warn('Could not subscribe to activeGame:', error);
+      }
+    );
+  }
+
+  async listAllGames(): Promise<Game[]> {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      return [mockAdapter.getGame()];
+    }
+    try {
+      await ensureAnonymousAuth();
+      const snap = await getDocs(collection(firestore, 'games'));
+      const games = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Game));
+      games.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+      return games;
+    } catch (e) {
+      console.warn('Could not list games:', e);
+      return [];
+    }
+  }
+
+  subscribeToGamesList(callback: (games: Game[]) => void): Unsubscribe {
+    const firestore = this.getFirestoreDb();
+    if (!firestore) {
+      callback([mockAdapter.getGame()]);
+      return () => {};
+    }
+    ensureAnonymousAuth().catch(() => {});
+    const gamesQuery = query(collection(firestore, 'games'));
+    return onSnapshot(
+      gamesQuery,
+      (snapshot) => {
+        const games = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as Game));
+        games.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        callback(games);
+      },
+      (error) => {
+        console.warn('Could not subscribe to games collection:', error);
+      }
+    );
   }
 
   async clearActiveBroadcast(gameId: string): Promise<void> {

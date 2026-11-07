@@ -162,6 +162,10 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
   const [newGameNumTeams, setNewGameNumTeams] = useState<number>(5);
   const [newGameDuration, setNewGameDuration] = useState<number>(120);
   const [isCreatingGame, setIsCreatingGame] = useState<boolean>(false);
+  const [showGameSwitchModal, setShowGameSwitchModal] = useState<boolean>(false);
+  const [availableGames, setAvailableGames] = useState<Game[]>([]);
+  const [globalActiveGameId, setGlobalActiveGameId] = useState<string | null>(null);
+  const [isSwitchingGame, setIsSwitchingGame] = useState<boolean>(false);
 
   // Edit Team Modal
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -232,6 +236,65 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
     });
     return () => unsub();
   }, [game.id]);
+
+  React.useEffect(() => {
+    const unsubGames = gameService.subscribeToGamesList?.((list) => {
+      setAvailableGames(list);
+    });
+    const unsubActive = gameService.subscribeToActiveGameId?.((activeId) => {
+      setGlobalActiveGameId(activeId);
+    });
+    return () => {
+      if (unsubGames) unsubGames();
+      if (unsubActive) unsubActive();
+    };
+  }, []);
+
+  const handleSelectGame = async (selectedGame: Game) => {
+    try {
+      setIsSwitchingGame(true);
+      if (gameService.setActiveGameId) {
+        await gameService.setActiveGameId(selectedGame.id);
+      }
+      if (onGameChange) {
+        onGameChange(selectedGame);
+      }
+      setShowGameSwitchModal(false);
+      await showAlert({
+        title: t('gm.gameSwitchedTitle') || 'Game Switched',
+        message: `Switched to "${selectedGame.name}" (${selectedGame.id}). This is now the global active game.`,
+        variant: 'success',
+      });
+    } catch (err: any) {
+      await showAlert({
+        title: 'Error Switching Game',
+        message: err?.message || 'Failed to switch game',
+        variant: 'danger',
+      });
+    } finally {
+      setIsSwitchingGame(false);
+    }
+  };
+
+  const handleSetGlobalActive = async (targetGameId: string) => {
+    try {
+      if (gameService.setActiveGameId) {
+        await gameService.setActiveGameId(targetGameId);
+      }
+      setGlobalActiveGameId(targetGameId);
+      await showAlert({
+        title: 'Global Active Game Updated',
+        message: `Game ID ${targetGameId} is now the global active game for all players and devices.`,
+        variant: 'success',
+      });
+    } catch (err: any) {
+      await showAlert({
+        title: 'Error Setting Active Game',
+        message: err?.message || 'Failed to update active game',
+        variant: 'danger',
+      });
+    }
+  };
 
   const handleSendBroadcast = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -1091,12 +1154,20 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
               <Radio className="w-5 h-5 animate-pulse" />
             </div>
             <div className="min-w-0">
-              <h1 className="font-black text-sm sm:text-base text-white flex items-center gap-1.5 truncate">
-                <span className="truncate">{game.name}</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h1 className="font-black text-sm sm:text-base text-white truncate">
+                  {game.name}
+                </h1>
                 <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-full border border-slate-700 font-mono shrink-0">
                   {game.status.toUpperCase()}
                 </span>
-              </h1>
+                {globalActiveGameId === game.id && (
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-full border border-emerald-500/30 font-semibold shrink-0 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {t('gm.currentlyActive')}
+                  </span>
+                )}
+              </div>
               <p className="text-[11px] text-slate-400 font-mono truncate">
                 ID: <strong className="text-amber-400">{game.id}</strong>
               </p>
@@ -1123,6 +1194,22 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>{t('gm.newGameBtn')}</span>
+          </button>
+
+          {/* Switch Game Room Trigger */}
+          <button
+            type="button"
+            onClick={() => setShowGameSwitchModal(true)}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shadow-md transition-colors shrink-0"
+            title={t('gm.switchGameBtn')}
+          >
+            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+            <span>{t('gm.switchGameBtn')}</span>
+            {availableGames.length > 0 && (
+              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.2 rounded-full font-mono">
+                {availableGames.length}
+              </span>
+            )}
           </button>
 
           {/* GM Live Broadcast Modal Trigger */}
@@ -2163,10 +2250,149 @@ export const GMDashboard: React.FC<GMDashboardProps> = ({
       </main>
 
       {/* ========================================================================= */}
+      {/* MODAL: Switch Game Room */}
+      {/* ========================================================================= */}
+      {showGameSwitchModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[90dvh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div>
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-indigo-400" />
+                  {t('gm.allGamesModalTitle')}
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {t('gm.allGamesModalDesc')}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGameSwitchModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-3 space-y-2.5 min-h-[160px] max-h-[50vh]">
+              {availableGames.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs">
+                  {t('gm.noGamesFound')}
+                </div>
+              ) : (
+                availableGames.map((g) => {
+                  const isCurrentViewing = g.id === game.id;
+                  const isGlobalActive = g.id === globalActiveGameId;
+                  const createdDate = g.createdAt
+                    ? new Date(g.createdAt).toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '—';
+
+                  return (
+                    <div
+                      key={g.id}
+                      className={`p-3.5 rounded-xl border transition-all ${
+                        isCurrentViewing
+                          ? 'bg-indigo-950/40 border-indigo-500/50 shadow-sm'
+                          : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-sm text-white truncate">{g.name}</span>
+                            <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-full border border-slate-700 font-mono">
+                              {g.status.toUpperCase()}
+                            </span>
+                            {isGlobalActive && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                {t('gm.currentlyActive')}
+                              </span>
+                            )}
+                            {isCurrentViewing && (
+                              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded-full font-bold">
+                                {t('gm.currentViewing')}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-1 font-mono">
+                            <span>
+                              ID: <strong className="text-amber-400">{g.id}</strong>
+                            </span>
+                            <span>•</span>
+                            <span>{createdDate}</span>
+                            <span>•</span>
+                            <span>{g.durationMinutes || 120}m</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
+                        {!isGlobalActive && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetGlobalActive(g.id)}
+                            className="text-xs px-2.5 py-1 rounded-lg font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition-colors"
+                          >
+                            {t('gm.makeGlobalActiveBtn')}
+                          </button>
+                        )}
+                        {!isCurrentViewing ? (
+                          <button
+                            type="button"
+                            disabled={isSwitchingGame}
+                            onClick={() => handleSelectGame(g)}
+                            className="text-xs px-3 py-1.5 rounded-lg font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer shadow-sm transition-colors flex items-center gap-1 disabled:opacity-50"
+                          >
+                            <ArrowRight className="w-3.5 h-3.5" />
+                            {t('gm.switchToGameBtn')}
+                          </button>
+                        ) : (
+                          <span className="text-xs text-indigo-400 font-bold px-2 py-1 flex items-center gap-1">
+                            <Check className="w-3.5 h-3.5" />
+                            {t('gm.currentViewing')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowGameSwitchModal(false);
+                  setShowCreateGameModal(true);
+                }}
+                className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 cursor-pointer py-1"
+              >
+                <PlusCircle className="w-4 h-4" />
+                {t('gm.newGameBtn')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowGameSwitchModal(false)}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
+              >
+                {t('common.close') || 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* MODAL: Create New Game */}
       {/* ========================================================================= */}
-      {/* ========================================================================= */}
-      {/* MODAL: Create New Game */}
+            {/* MODAL: Create New Game */}
       {/* ========================================================================= */}
       {showCreateGameModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">

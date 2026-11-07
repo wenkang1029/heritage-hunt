@@ -42,6 +42,7 @@ import {
   Filter,
   RotateCcw,
   Download,
+  LogOut,
 } from 'lucide-react';
 import { getClueNumber, getClueLabel } from '../../data/cluesZh.ts';
 import {
@@ -65,6 +66,7 @@ export interface PlayerHuntViewProps {
   playerCoords: GeoCoordinate | null;
   nickname: string;
   playerId?: string;
+  onLeaveTeam?: () => void;
 }
 
 interface AdventureCompassProps {
@@ -119,8 +121,9 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
   playerCoords,
   nickname,
   playerId,
+  onLeaveTeam,
 }) => {
-  const { showAlert } = useDialog();
+  const { showAlert, showConfirm } = useDialog();
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'map' | 'clues' | 'leaderboard'>('map');
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
@@ -1101,6 +1104,22 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
     }
   };
 
+  const handleConfirmLeaveTeam = async () => {
+    const confirmed = await showConfirm({
+      title: language === 'zh' ? '退出当前队伍？' : 'Leave Current Team?',
+      message:
+        language === 'zh'
+          ? '确定要退出队伍吗？退出后可重新选择队伍或修改玩家昵称。'
+          : 'Are you sure you want to leave this squad? You will be able to select a new squad or enter a new nickname.',
+      confirmText: language === 'zh' ? '确定退出' : 'Leave Squad',
+      cancelText: language === 'zh' ? '取消' : 'Cancel',
+      variant: 'warning',
+    });
+    if (confirmed && onLeaveTeam) {
+      onLeaveTeam();
+    }
+  };
+
   return (
     <div className="flex-1 min-h-0 w-full max-w-lg mx-auto bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
       {/* 1. Mobile Header & Scoreboard */}
@@ -1178,6 +1197,18 @@ export const PlayerHuntView: React.FC<PlayerHuntViewProps> = ({
               </span>
             )}
           </button>
+
+          {/* Leave Squad / Switch Player Button */}
+          {onLeaveTeam && (
+            <button
+              type="button"
+              onClick={handleConfirmLeaveTeam}
+              className="p-1.5 sm:p-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-rose-950/60 hover:border-rose-500/50 text-slate-400 hover:text-rose-300 transition-colors cursor-pointer shrink-0 shadow-sm"
+              title={language === 'zh' ? '退出队伍 / 更换玩家' : 'Leave Squad / Switch Player'}
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Tour Guide Button */}
           <button

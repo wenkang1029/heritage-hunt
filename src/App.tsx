@@ -67,6 +67,7 @@ export const App: React.FC = () => {
     else url.searchParams.delete('mode');
 
     if (params.pin) url.searchParams.set('pin', params.pin);
+    else url.searchParams.delete('pin');
 
     window.history.replaceState({}, '', url.toString());
   }, []);
@@ -95,7 +96,30 @@ export const App: React.FC = () => {
       }
 
       // Determine target game ID to load (defaulting to active room hunt-nkvcz)
-      const targetGameId = urlGameId || savedPlayerSession?.gameId || savedGameId || 'hunt-nkvcz';
+      // Determine target game ID to load:
+      // 1. Explicit ?game= URL param
+      // 2. Global active game in Firestore (so phone and web GM/players stay 100% in sync)
+      // 3. Saved player session (if player already joined a specific game on this device)
+      // 4. Fallback localStorage or hunt-nkvcz
+      let targetGameId = urlGameId;
+
+      if (!targetGameId) {
+        try {
+          const globalActiveId = await gameService.getActiveGameId();
+          if (globalActiveId) {
+            // For GM or for users without an ongoing player session, adopt the global active game!
+            if (urlMode === 'gm' || isGmAuthed || !savedPlayerSession?.gameId) {
+              targetGameId = globalActiveId;
+            }
+          }
+        } catch (_e) {
+          // continue to fallbacks
+        }
+      }
+
+      if (!targetGameId) {
+        targetGameId = savedPlayerSession?.gameId || savedGameId || 'hunt-nkvcz';
+      }
 
       try {
         const loadedGame = await gameService.initializeDefaultGame(targetGameId);
@@ -127,6 +151,32 @@ export const App: React.FC = () => {
     const gameId = game.id;
     const unsubs: (() => void)[] = [];
 
+    // Clear previous submissions immediately so old data is not displayed
+    setSubmissions([]);
+
+    // Check saved player session: must strictly match THIS gameId
+    const savedPlayerSessionRaw = localStorage.getItem(LS_PLAYER_SESSION);
+    let validSessionForGame: PlayerSession | null = null;
+    if (savedPlayerSessionRaw) {
+      try {
+        const parsed: PlayerSession = JSON.parse(savedPlayerSessionRaw);
+        if (parsed.gameId === gameId) {
+          validSessionForGame = parsed;
+        } else {
+          // Stored session belongs to a different game -> purge it
+          localStorage.removeItem(LS_PLAYER_SESSION);
+        }
+      } catch {
+        localStorage.removeItem(LS_PLAYER_SESSION);
+      }
+    }
+
+    if (!validSessionForGame) {
+      setCurrentTeam(null);
+      setPlayerNickname('');
+      setPlayerId('');
+    }
+
     // Subscribe to Game document
     unsubs.push(
       gameService.subscribeToGame(gameId, (g) => {
@@ -139,31 +189,35 @@ export const App: React.FC = () => {
       gameService.subscribeToTeams(gameId, (t) => {
         setTeams(t);
 
-        // Re-connect saved player session seamlessly if present
-        const savedPlayerSessionRaw = localStorage.getItem(LS_PLAYER_SESSION);
-        if (savedPlayerSessionRaw) {
+        // Re-connect saved player session ONLY if it matches the current gameId
+        const currentSessionRaw = localStorage.getItem(LS_PLAYER_SESSION);
+        if (currentSessionRaw) {
           try {
-            const savedSession: PlayerSession = JSON.parse(savedPlayerSessionRaw);
-            if (savedSession.gameId === gameId) {
-              const matchedTeam = t.find((team) => team.id === savedSession.teamId);
+            const session: PlayerSession = JSON.parse(currentSessionRaw);
+            if (session.gameId === gameId) {
+              const matchedTeam = t.find((team) => team.id === session.teamId);
               if (matchedTeam) {
                 setCurrentTeam(matchedTeam);
-                setPlayerNickname(savedSession.nickname);
-                if (savedSession.playerId) {
-                  setPlayerId(savedSession.playerId);
+                setPlayerNickname(session.nickname);
+                if (session.playerId) {
+                  setPlayerId(session.playerId);
                 }
+                return;
               }
             }
           } catch {
-            // Ignore parse error
+            // ignore
           }
-        } else {
-          setCurrentTeam((prev) => (prev ? t.find((item) => item.id === prev.id) || prev : null));
         }
+
+        // If no valid session for THIS game, keep player unjoined
+        setCurrentTeam(null);
+        setPlayerNickname('');
+        setPlayerId('');
       })
     );
 
-    // Subscribe to Clues (guarantees player receives 100% up-to-date GM clues)
+    // Subscribe to Clues
     unsubs.push(
       gameService.subscribeToClues(gameId, (c) => {
         setClues(c);
@@ -238,6 +292,26 @@ export const App: React.FC = () => {
     setGame(newGame);
     localStorage.setItem(LS_ACTIVE_GAME_ID, newGame.id);
     updateUrlParams({ game: newGame.id, mode: role === 'gm' ? 'gm' : undefined });
+
+    // Purge player session of previous game so testing/playing in new game is clean!
+    localStorage.removeItem(LS_PLAYER_SESSION);
+    setCurrentTeam(null);
+    setPlayerNickname('');
+    setPlayerId('');
+    setSubmissions([]);
+
+    gameService.setActiveGameId(newGame.id).catch((err) => {
+      console.warn('Failed to set global active game:', err);
+    });
+  };
+
+  // Leave current team / switch squad cleanly
+  const handleLeaveTeam = () => {
+    localStorage.removeItem(LS_PLAYER_SESSION);
+    setCurrentTeam(null);
+    setPlayerNickname('');
+    setPlayerId('');
+    updateUrlParams({ game: game?.id });
   };
 
   const handleLogoutGm = () => {
@@ -491,6 +565,7 @@ export const App: React.FC = () => {
             playerCoords={playerCoords}
             nickname={playerNickname}
             playerId={playerId}
+            onLeaveTeam={handleLeaveTeam}
           />
         )
       )}
